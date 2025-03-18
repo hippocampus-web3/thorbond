@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Shield, User } from 'lucide-react';
+import { Menu, X, User } from 'lucide-react';
 import Button from '../ui/Button';
 
 interface HeaderProps {
@@ -41,8 +41,12 @@ const Header: React.FC<HeaderProps> = ({
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
               <Link to="/" className="flex items-center">
-                <Shield className="h-8 w-8 text-blue-600" />
-                <span className="ml-2 text-xl font-bold text-gray-900">THORBond</span>
+                <img 
+                  src="https://assets.coingecko.com/coins/images/6595/small/RUNE.png" 
+                  alt="RUNE" 
+                  className="h-8 w-8"
+                />
+                <span className="ml-2 text-xl font-bold text-gray-900">RUNEBond</span>
               </Link>
             </div>
             <nav className="hidden sm:ml-6 sm:flex sm:space-x-8">

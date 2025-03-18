@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, Users, Wallet, Zap } from 'lucide-react';
+import { Users, Wallet, Zap } from 'lucide-react';
 import Button from '../components/ui/Button';
 
 const HomePage: React.FC = () => {
@@ -19,7 +19,7 @@ const HomePage: React.FC = () => {
               </p>
               <div className="mt-10 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
                 <Link to="/node-operators">
-                  <Button variant="primary" size="lg" className="bg-white text-blue-700 hover:bg-blue-50">
+                  <Button variant="outline" size="lg" className="border-white text-white hover:bg-blue-700">
                     Find Node Operators
                   </Button>
                 </Link>
@@ -36,7 +36,11 @@ const HomePage: React.FC = () => {
                 <div className="absolute -bottom-8 -left-8 w-64 h-64 bg-blue-500 rounded-full opacity-20"></div>
                 <div className="relative bg-white p-8 rounded-lg shadow-xl">
                   <div className="flex justify-center">
-                    <Shield className="h-24 w-24 text-blue-600" />
+                    <img 
+                      src="https://assets.coingecko.com/coins/images/6595/small/RUNE.png" 
+                      alt="RUNE" 
+                      className="h-24 w-24"
+                    />
                   </div>
                   <div className="mt-6 space-y-4">
                     <div className="flex items-center p-3 bg-blue-50 rounded-lg">
@@ -72,7 +76,11 @@ const HomePage: React.FC = () => {
           <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-gray-50 p-6 rounded-lg">
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <Shield className="h-6 w-6 text-blue-600" />
+                <img 
+                  src="https://assets.coingecko.com/coins/images/6595/small/RUNE.png" 
+                  alt="RUNE" 
+                  className="h-6 w-6"
+                />
               </div>
               <h3 className="mt-4 text-xl font-medium text-gray-900">For Node Operators</h3>
               <p className="mt-2 text-gray-600">
@@ -119,7 +127,7 @@ const HomePage: React.FC = () => {
               <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
                 <div className="inline-flex rounded-md shadow">
                   <Link to="/node-operators">
-                    <Button variant="primary" size="lg" className="bg-white text-blue-700 hover:bg-blue-50">
+                    <Button variant="outline" size="lg" className="border-white text-white hover:bg-blue-700">
                       Find Node Operators
                     </Button>
                   </Link>

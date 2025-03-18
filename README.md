@@ -1,6 +1,8 @@
-# THORBond
+# THORChain Node Operator Bonding Platform
 
 A web interface for THORChain node operators to publish bonding opportunities and for users to request whitelisting.
+
+![THORChain Node Operator Bonding Platform](https://i.imgur.com/placeholder.png)
 
 ## Overview
 

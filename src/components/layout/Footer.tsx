@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, Twitter, Github } from 'lucide-react';
+import { Twitter, Github } from 'lucide-react';
 
 const Footer: React.FC = () => {
   return (
@@ -9,8 +9,12 @@ const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
             <div className="flex items-center">
-              <Shield className="h-8 w-8 text-blue-400" />
-              <span className="ml-2 text-xl font-bold">THORBond</span>
+              <img 
+                src="https://assets.coingecko.com/coins/images/6595/small/RUNE.png" 
+                alt="RUNE" 
+                className="h-8 w-8"
+              />
+              <span className="ml-2 text-xl font-bold">RUNEBond</span>
             </div>
             <p className="mt-2 text-sm text-gray-300">
               The comprehensive platform for THORChain node operators and users to connect for bonding opportunities.
@@ -74,7 +78,7 @@ const Footer: React.FC = () => {
         </div>
         <div className="mt-8 border-t border-gray-700 pt-8">
           <p className="text-base text-gray-400 text-center">
-            &copy; {new Date().getFullYear()} THORBond. All rights reserved.
+            &copy; {new Date().getFullYear()} RUNEBond. All rights reserved.
           </p>
         </div>
       </div>
