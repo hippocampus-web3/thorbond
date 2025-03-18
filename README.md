@@ -1,8 +1,7 @@
-# THORChain Node Operator Bonding Platform
+# RUNEBond
 
 A web interface for THORChain node operators to publish bonding opportunities and for users to request whitelisting.
 
-![THORChain Node Operator Bonding Platform](https://i.imgur.com/placeholder.png)
 
 ## Overview
 
