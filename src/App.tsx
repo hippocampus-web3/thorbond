@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Layout from './components/layout/Layout';
 import HomePage from './pages/HomePage';
 import NodeOperatorsPage from './pages/NodeOperatorsPage';
@@ -7,26 +9,101 @@ import OperatorDashboardPage from './pages/OperatorDashboardPage';
 import UserRequestsPage from './pages/UserRequestsPage';
 import { NodeOperator, WhitelistRequest, User } from './types';
 import { mockNodeOperators, mockWhitelistRequests, mockUsers } from './lib/mockData';
+import { WalletProvider, useWallet } from './contexts/WalletContext';
 
-const App: React.FC = () => {
+interface NodeOperatorFormData {
+  address: string;
+  bondingCapacity: string;
+  minimumBond: string;
+  feePercentage: string;
+  instantChurnAmount: string;
+  description: string;
+  contactInfo: string;
+}
+
+interface WhitelistRequestFormData {
+  discordUsername: string;
+  xUsername: string;
+  telegramUsername: string;
+  walletAddress: string;
+  intendedBondAmount: string;
+}
+
+const AppContent: React.FC = () => {
   // State
   const [user, setUser] = useState<User | null>(null);
   const [nodeOperators, setNodeOperators] = useState<NodeOperator[]>(mockNodeOperators);
   const [whitelistRequests, setWhitelistRequests] = useState<WhitelistRequest[]>(mockWhitelistRequests);
+  
+  const { address, isConnected, error, connect, disconnect } = useWallet();
+  
+  // Mostrar errores del wallet
+  useEffect(() => {
+    if (error) {
+      toast.error(error, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    }
+  }, [error]);
 
   // Authentication
-  const handleConnect = () => {
-    // In a real app, this would connect to a wallet
-    // For demo purposes, we'll just use the first mock user
-    setUser(mockUsers[0]);
+  const handleConnect = async () => {
+    try {
+      await connect();
+      if (address) {
+        // En una aplicación real, aquí harías una llamada a tu backend para obtener los datos del usuario
+        // Por ahora, usaremos el primer usuario mock
+        setUser({
+          ...mockUsers[0],
+          walletAddress: address,
+        });
+        toast.success('Wallet connected successfully', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
+    } catch (err) {
+      // No mostramos el error aquí ya que el useEffect lo manejará
+      console.error('Connection error:', err);
+    }
   };
 
-  const handleDisconnect = () => {
-    setUser(null);
+  const handleDisconnect = async () => {
+    try {
+      await disconnect();
+      setUser(null);
+      toast.info('Wallet disconnected', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error disconnecting wallet';
+      toast.error(errorMessage, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    }
   };
 
   // Node Operator functions
-  const handleCreateListing = (formData: any) => {
+  const handleCreateListing = (formData: NodeOperatorFormData) => {
     if (!user) return;
 
     const newOperator: NodeOperator = {
@@ -44,7 +121,7 @@ const App: React.FC = () => {
     setNodeOperators([...nodeOperators, newOperator]);
   };
 
-  const handleUpdateListing = (formData: any) => {
+  const handleUpdateListing = (formData: NodeOperatorFormData) => {
     if (!user) return;
 
     setNodeOperators(
@@ -72,7 +149,7 @@ const App: React.FC = () => {
   };
 
   // Whitelist request functions
-  const handleRequestWhitelist = (nodeOperatorId: string, formData: any) => {
+  const handleRequestWhitelist = (nodeOperatorId: string, formData: WhitelistRequestFormData) => {
     if (!user) return;
 
     const newRequest: WhitelistRequest = {
@@ -122,10 +199,11 @@ const App: React.FC = () => {
   return (
     <Router>
       <Layout
-        isAuthenticated={!!user}
+        isAuthenticated={isConnected}
         isNodeOperator={!!userNodeOperator}
         onConnect={handleConnect}
         onDisconnect={handleDisconnect}
+        walletAddress={address}
       >
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -156,17 +234,32 @@ const App: React.FC = () => {
             }
           />
           <Route
-            path="/my-requests"
-            element={
-              <UserRequestsPage
-                requests={userRequests}
-                isAuthenticated={!!user}
-              />
-            }
+            path="/user-requests"
+            element={<UserRequestsPage requests={userRequests} />}
           />
         </Routes>
       </Layout>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </Router>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <WalletProvider>
+      <AppContent />
+    </WalletProvider>
   );
 };
 
