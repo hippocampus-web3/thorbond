@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, DollarSign, Percent, Clock } from 'lucide-react';
+import { Users, DollarSign, Percent } from 'lucide-react';
 import { Card, CardHeader, CardContent } from '../ui/Card';
 import Tabs from '../ui/Tabs';
 import StatCard from './StatCard';
@@ -31,6 +31,20 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
   
   const totalBonded = approvedRequests.reduce((sum, req) => sum + req.intendedBondAmount, 0);
   const remainingCapacity = nodeOperator.bondingCapacity - totalBonded;
+
+  if (!nodeOperator.address) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Become a Node Operator</h2>
+        <p className="text-gray-600 mb-8">
+          Create a listing to start accepting bonding requests from users.
+        </p>
+        <Button onClick={onEditListing}>
+          Create New Listing
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

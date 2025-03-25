@@ -1,16 +1,26 @@
 import React, { useState } from 'react';
-import OperatorDashboard from '../components/dashboard/OperatorDashboard';
-import NodeOperatorForm from '../components/node-operators/NodeOperatorForm';
+import { useWallet } from '../contexts/WalletContext';
 import Alert from '../components/ui/Alert';
 import { NodeOperator, WhitelistRequest } from '../types';
+import NodeOperatorForm from '../components/node-operators/NodeOperatorForm';
+import OperatorDashboard from '../components/dashboard/OperatorDashboard';
+import Button from '../components/ui/Button';
+
+interface NodeOperatorFormData {
+  address: string;
+  bondingCapacity: string;
+  minimumBond: string;
+  feePercentage: string;
+  instantChurnAmount: string;
+  description?: string;
+  contactInfo?: string;
+}
 
 interface OperatorDashboardPageProps {
   nodeOperator: NodeOperator | null;
   requests: WhitelistRequest[];
-  isAuthenticated: boolean;
-  isNodeOperator: boolean;
-  onCreateListing: (formData: any) => void;
-  onUpdateListing: (formData: any) => void;
+  onCreateListing: (data: NodeOperatorFormData) => void;
+  onUpdateListing: (data: NodeOperatorFormData) => void;
   onDeleteListing: () => void;
   onApproveRequest: (requestId: string) => void;
   onRejectRequest: (requestId: string, reason: string) => void;
@@ -19,17 +29,16 @@ interface OperatorDashboardPageProps {
 const OperatorDashboardPage: React.FC<OperatorDashboardPageProps> = ({
   nodeOperator,
   requests,
-  isAuthenticated,
-  isNodeOperator,
   onCreateListing,
   onUpdateListing,
   onDeleteListing,
   onApproveRequest,
   onRejectRequest,
 }) => {
+  const { isConnected } = useWallet();
   const [isEditing, setIsEditing] = useState(false);
 
-  if (!isAuthenticated) {
+  if (!isConnected) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <Alert variant="warning" title="Authentication Required">
@@ -39,51 +48,35 @@ const OperatorDashboardPage: React.FC<OperatorDashboardPageProps> = ({
     );
   }
 
-  if (!isNodeOperator && !isEditing) {
+  if (isEditing) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Become a Node Operator</h2>
-          <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-            Create your node operator listing to publish bonding opportunities for users.
-          </p>
-          <button
-            onClick={() => setIsEditing(true)}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            Create Node Operator Listing
-          </button>
+        <div className="bg-white shadow rounded-lg p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">
+              {nodeOperator ? 'Edit Listing' : 'Create New Listing'}
+            </h2>
+            <Button
+              variant="secondary"
+              onClick={() => setIsEditing(false)}
+            >
+              Cancel
+            </Button>
+          </div>
+          <NodeOperatorForm
+            initialData={nodeOperator ? {
+              address: nodeOperator.address,
+              bondingCapacity: nodeOperator.bondingCapacity.toString(),
+              minimumBond: nodeOperator.minimumBond.toString(),
+              feePercentage: nodeOperator.feePercentage.toString(),
+              instantChurnAmount: nodeOperator.instantChurnAmount.toString(),
+              description: nodeOperator.description,
+              contactInfo: nodeOperator.contactInfo,
+            } : undefined}
+            onSubmit={nodeOperator ? onUpdateListing : onCreateListing}
+            onCancel={() => setIsEditing(false)}
+          />
         </div>
-      </div>
-    );
-  }
-
-  if (isEditing || !nodeOperator) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">
-          {nodeOperator ? 'Edit Node Operator Listing' : 'Create Node Operator Listing'}
-        </h1>
-        <NodeOperatorForm
-          initialData={nodeOperator ? {
-            address: nodeOperator.address,
-            bondingCapacity: nodeOperator.bondingCapacity.toString(),
-            minimumBond: nodeOperator.minimumBond.toString(),
-            feePercentage: nodeOperator.feePercentage.toString(),
-            instantChurnAmount: nodeOperator.instantChurnAmount.toString(),
-            description: nodeOperator.description,
-            contactInfo: nodeOperator.contactInfo,
-          } : undefined}
-          onSubmit={(formData) => {
-            if (nodeOperator) {
-              onUpdateListing(formData);
-            } else {
-              onCreateListing(formData);
-            }
-            setIsEditing(false);
-          }}
-          onCancel={() => setIsEditing(false)}
-        />
       </div>
     );
   }
@@ -91,7 +84,15 @@ const OperatorDashboardPage: React.FC<OperatorDashboardPageProps> = ({
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <OperatorDashboard
-        nodeOperator={nodeOperator}
+        nodeOperator={nodeOperator || {
+          id: 'new',
+          address: '',
+          bondingCapacity: 0,
+          minimumBond: 0,
+          feePercentage: 0,
+          instantChurnAmount: 0,
+          createdAt: new Date()
+        }}
         requests={requests}
         onApproveRequest={onApproveRequest}
         onRejectRequest={onRejectRequest}

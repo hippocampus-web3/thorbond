@@ -10,11 +10,11 @@ const Footer: React.FC = () => {
           <div>
             <div className="flex items-center">
               <img 
-                src="https://assets.coingecko.com/coins/images/6595/small/RUNE.png" 
-                alt="RUNE" 
+                src="/thorbond-logo.png" 
+                alt="ThorBond" 
                 className="h-8 w-8"
               />
-              <span className="ml-2 text-xl font-bold">RUNEBond</span>
+              <span className="ml-2 text-xl font-bold">ThorBond</span>
             </div>
             <p className="mt-2 text-sm text-gray-300">
               The comprehensive platform for THORChain node operators and users to connect for bonding opportunities.

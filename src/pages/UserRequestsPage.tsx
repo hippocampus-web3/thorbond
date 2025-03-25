@@ -16,16 +16,16 @@ const UserRequestsPage: React.FC<UserRequestsPageProps> = ({
 
   if (!isConnected) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <Alert variant="warning" title="Authentication Required">
-          Please connect your wallet to access the Node Operator Dashboard.
+          Please connect your wallet to access the dashboard.
         </Alert>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="space-y-6">
         <div className="bg-white shadow rounded-lg p-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">My Requests</h2>

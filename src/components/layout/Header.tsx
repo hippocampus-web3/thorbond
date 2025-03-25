@@ -16,12 +16,12 @@ const Header: React.FC = () => {
             <div className="flex-shrink-0 flex items-center">
               <Link to="/" className="flex items-center">
                 <img 
-                  src="https://assets.coingecko.com/coins/images/6595/small/RUNE.png" 
-                  alt="RUNE" 
-                  className="h-8 w-8"
+                  src="/thorbond-logo.png" 
+                  alt="ThorBond" 
+                  className="h-12 w-12s"
                 />
                 <span className="ml-2 text-xl font-bold text-gray-900">
-                  RUNEBond
+                  ThorBond
                 </span>
               </Link>
             </div>
