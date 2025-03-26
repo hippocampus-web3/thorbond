@@ -32,22 +32,18 @@ const AppContent: React.FC = () => {
 
   const { address, isConnected, error, connect, disconnect } = useWallet();
   
-  // Inicializar ThorBondEngine y cargar Nodes
+  // Initialize ThorBondEngine and load Nodes
   useEffect(() => {
     const initializeEngine = async () => {
-      try {
-        const engine = ThorBondEngine.getInstance();
-        await engine.initialize();
-        setNodeOperators(engine.getNodes());
-      } catch (error) {
-        console.error('Error initializing ThorBondEngine:', error);
-      }
+      const engine = ThorBondEngine.getInstance();
+      await engine.initialize();
+      setNodeOperators(engine.getNodes());
     };
 
     initializeEngine();
   }, []);
 
-  // Mostrar errores del wallet
+  // Display wallet errors
   useEffect(() => {
     if (error) {
       toast.error(error, {
@@ -61,23 +57,17 @@ const AppContent: React.FC = () => {
     }
   }, [error]);
 
-  // Authentication
   const handleConnect = async () => {
-    try {
-      await connect();
-      if (address) {
-        toast.success('Wallet connected successfully', {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
-      }
-    } catch (err) {
-      // No mostramos el error aquí ya que el useEffect lo manejará
-      console.error('Connection error:', err);
+    await connect();
+    if (address) {
+      toast.success('Wallet connected successfully', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     }
   };
 
@@ -117,7 +107,7 @@ const AppContent: React.FC = () => {
         feePercentage: Number(formData.feePercentage)
       });
 
-      // Actualizar la lista de Nodes después de crear uno nuevo
+      // Update Nodes list after creating a new one
       await engine.refreshActions();
       setNodeOperators(engine.getNodes());
       

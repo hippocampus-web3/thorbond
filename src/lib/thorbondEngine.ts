@@ -73,7 +73,6 @@ class ThorBondEngine {
         feePercentage: Number(parts[5])
       };
     } catch (error) {
-      console.error('Error parsing listing memo:', error);
       return null;
     }
   }
@@ -102,8 +101,6 @@ class ThorBondEngine {
     const nodes: NodeOperator[] = [];
     const processedAddresses = new Set<string>();
 
-    console.log('Actions:', this.actions);
-
     this.actions.forEach(action => {
       const memo = action.data.memo as string;
       if (!memo) return;
@@ -111,7 +108,7 @@ class ThorBondEngine {
       const listingMemo = this.parseListingMemo(memo);
       if (!listingMemo) return;
 
-      // Solo procesar la primera aparición de cada dirección de nodo
+      // Process only the first occurrence of each node address
       if (processedAddresses.has(listingMemo.nodeAddress)) return;
       processedAddresses.add(listingMemo.nodeAddress);
 
@@ -133,27 +130,18 @@ class ThorBondEngine {
   public async initialize(): Promise<void> {
     if (this.isInitialized) return;
 
-    try {
-      const response = await axios.get(`${this.MIDGARD_API_URL}/actions`, {
-        params: {
-          address: this.THORBOND_ADDRESS,
-          limit: 50,
-          offset: 0,
-          type: 'send'
-        }
-      });
+    const response = await axios.get(`${this.MIDGARD_API_URL}/actions`, {
+      params: {
+        address: this.THORBOND_ADDRESS,
+        limit: 50,
+        offset: 0,
+        type: 'send'
+      }
+    });
 
-      const actions = response.data.actions || [];
-      this.actions = actions.map((action: MidgardAction) => this.transformMidgardAction(action));
-      this.isInitialized = true;
-
-      const nodes = this.getNodes();
-      console.log(`Initialized with ${this.actions.length} actions`);
-      console.log('Nodes found:', nodes);
-    } catch (error) {
-      console.error('Error initializing ThorBondEngine:', error);
-      throw error;
-    }
+    const actions = response.data.actions || [];
+    this.actions = actions.map((action: MidgardAction) => this.transformMidgardAction(action));
+    this.isInitialized = true;
   }
 
   public getActions(): ThorBondAction[] {
@@ -169,7 +157,6 @@ class ThorBondEngine {
   }
 
   public createListing(params: ListingParams): string {
-    // Validar los parámetros
     if (!params.nodeAddress.startsWith('thor1')) {
       throw new Error('Invalid node address format');
     }
@@ -186,64 +173,50 @@ class ThorBondEngine {
       throw new Error('Fee percentage must be between 0 and 100');
     }
 
-    // Generar el memo para la transacción
-    const memo = `TB:${params.nodeAddress}:${params.operatorAddress}:${params.minRune}:${params.maxRune}:${params.feePercentage}`;
-    console.log('Listing memo generated:', memo);
-
-    return memo;
+    return `TB:${params.nodeAddress}:${params.operatorAddress}:${params.minRune}:${params.maxRune}:${params.feePercentage}`;
   }
 
   public async sendListingTransaction(params: ListingParams): Promise<string> {
-    try {
-      // Generar el memo para el listing
-      const memo = this.createListing(params);
+    const memo = this.createListing(params);
 
-      // Verificar que XDEFI está disponible
+    if (!window.xfi?.thorchain) {
+      throw new Error('XDEFI wallet not found. Please install XDEFI extension.');
+    }
+
+    return new Promise((resolve, reject) => {
       if (!window.xfi?.thorchain) {
-        throw new Error('XDEFI wallet not found. Please install XDEFI extension.');
+        reject(new Error('XDEFI wallet not found. Please install XDEFI extension.'));
+        return;
       }
 
-      // Crear la transacción usando XDEFI
-      return new Promise((resolve, reject) => {
-        if (!window.xfi?.thorchain) {
-          reject(new Error('XDEFI wallet not found. Please install XDEFI extension.'));
-          return;
-        }
-
-        window.xfi.thorchain.request(
-          {
-            method: 'transfer',
-            params: [{
-              asset: {
-                chain: 'THOR',
-                symbol: 'RUNE',
-                ticker: 'RUNE'
-              },
-              from: params.operatorAddress,
-              recipient: this.THORBOND_ADDRESS,
-              amount: {
-                amount: 10000000, // 0.1 RUNE (8 decimales)
-                decimals: 8
-              },
-              memo,
-              gasLimit: '10000000' // opcional
-            }]
-          },
-          (error, result) => {
-            if (error) {
-              console.error('Error sending listing transaction:', error);
-              reject(error);
-            } else {
-              console.log('Listing transaction sent:', result);
-              resolve(result);
-            }
+      window.xfi.thorchain.request(
+        {
+          method: 'transfer',
+          params: [{
+            asset: {
+              chain: 'THOR',
+              symbol: 'RUNE',
+              ticker: 'RUNE'
+            },
+            from: params.operatorAddress,
+            recipient: this.THORBOND_ADDRESS,
+            amount: {
+              amount: 10000000, // 0.1 RUNE (8 decimals)
+              decimals: 8
+            },
+            memo,
+            gasLimit: '10000000' // optional
+          }]
+        },
+        (error, result) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(result);
           }
-        );
-      });
-    } catch (error) {
-      console.error('Error sending listing transaction:', error);
-      throw error;
-    }
+        }
+      );
+    });
   }
 }
 

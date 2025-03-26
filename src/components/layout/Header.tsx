@@ -18,20 +18,12 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const connect = async () => {
-    try {
-      await onConnect();
-    } catch (error) {
-      console.error('Error connecting wallet:', error);
-    }
+  const handleConnect = async () => {
+    await onConnect();
   };
 
-  const disconnect = async () => {
-    try {
-      await onDisconnect();
-    } catch (error) {
-      console.error('Error disconnecting wallet:', error);
-    }
+  const handleDisconnect = async () => {
+    await onDisconnect();
   };
 
   return (
@@ -83,7 +75,7 @@ const Header: React.FC<HeaderProps> = ({
                 </span>
                 <Button
                   variant="secondary"
-                  onClick={disconnect}
+                  onClick={handleDisconnect}
                   className="text-sm"
                 >
                   Disconnect
@@ -91,7 +83,7 @@ const Header: React.FC<HeaderProps> = ({
               </div>
             ) : (
               <Button
-                onClick={connect}
+                onClick={handleConnect}
                 className="text-sm"
               >
                 Connect Wallet
@@ -150,7 +142,7 @@ const Header: React.FC<HeaderProps> = ({
                 </div>
                 <Button
                   variant="secondary"
-                  onClick={disconnect}
+                  onClick={handleDisconnect}
                   className="w-full text-sm"
                 >
                   Disconnect
@@ -158,7 +150,7 @@ const Header: React.FC<HeaderProps> = ({
               </div>
             ) : (
               <Button
-                onClick={connect}
+                onClick={handleConnect}
                 className="w-full text-sm"
               >
                 Connect Wallet

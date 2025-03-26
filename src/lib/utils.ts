@@ -20,7 +20,7 @@ export const getTimeAgo = (timestamp: number | Date): string => {
   if (timestamp instanceof Date) {
     date = timestamp;
   } else {
-    // Si es un número, asumimos que es un timestamp en nanosegundos
+    // Convert nanoseconds to milliseconds
     date = new Date(Number(timestamp) / 1000000);
   }
 

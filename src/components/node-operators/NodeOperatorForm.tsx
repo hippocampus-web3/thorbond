@@ -4,6 +4,7 @@ import { Card, CardHeader, CardContent } from '../ui/Card';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import { validateThorAddress } from '../../lib/utils';
+import { toast } from 'react-hot-toast';
 
 interface FormData {
   address: string;
@@ -52,53 +53,29 @@ const NodeOperatorForm: React.FC<NodeOperatorFormProps> = ({
 
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    console.log(`Campo ${name} cambiado a:`, value);
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    setErrors(prev => ({
-      ...prev,
-      [name]: undefined
-    }));
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Intentando enviar formulario con datos:', formData);
-    
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
     try {
-      console.log('Validando datos con Zod...');
       const validationResult = validationSchema.safeParse(formData);
-      
+
       if (!validationResult.success) {
-        console.error('Error de validación:', validationResult.error);
-        const formErrors = validationResult.error.errors.reduce((acc, curr) => ({
-          ...acc,
-          [curr.path[0]]: curr.message
-        }), {});
-        setErrors(formErrors);
-        return;
+        throw validationResult.error;
       }
 
-      console.log('Validación exitosa, llamando a onSubmit...');
-      onSubmit(formData);
-      console.log('onSubmit llamado exitosamente');
+      await onSubmit(formData);
+      onCancel();
     } catch (error) {
-      console.error('Error inesperado durante el envío:', error);
       if (error instanceof z.ZodError) {
-        console.error('Error de Zod:', error.errors);
-        const formErrors = error.errors.reduce((acc, curr) => ({
-          ...acc,
-          [curr.path[0]]: curr.message
-        }), {});
-        setErrors(formErrors);
+        const errorMessages = error.errors.map(err => `${err.path.join('.')}: ${err.message}`).join('\n');
+        toast.error(errorMessages);
       } else {
-        setErrors({
-          address: 'Ocurrió un error inesperado al enviar el formulario'
-        });
+        toast.error('An unexpected error occurred');
       }
     }
   };
@@ -110,12 +87,6 @@ const NodeOperatorForm: React.FC<NodeOperatorFormProps> = ({
     Number(formData.bondingCapacity) >= Number(formData.minimumBond) &&
     Number(formData.feePercentage) >= 0 &&
     Number(formData.feePercentage) <= 100;
-
-  console.log('Estado actual del formulario:', {
-    formData,
-    errors,
-    isValid
-  });
 
   return (
     <Card className="max-w-2xl mx-auto">
@@ -136,7 +107,7 @@ const NodeOperatorForm: React.FC<NodeOperatorFormProps> = ({
               placeholder="thor..."
               name="address"
               value={formData.address}
-              onChange={handleChange}
+              onChange={handleInputChange}
               error={errors.address}
               fullWidth
             />
@@ -149,7 +120,7 @@ const NodeOperatorForm: React.FC<NodeOperatorFormProps> = ({
                 step="1"
                 name="bondingCapacity"
                 value={formData.bondingCapacity}
-                onChange={handleChange}
+                onChange={handleInputChange}
                 error={errors.bondingCapacity}
                 fullWidth
               />
@@ -161,7 +132,7 @@ const NodeOperatorForm: React.FC<NodeOperatorFormProps> = ({
                 step="1"
                 name="minimumBond"
                 value={formData.minimumBond}
-                onChange={handleChange}
+                onChange={handleInputChange}
                 error={errors.minimumBond}
                 fullWidth
               />
@@ -175,7 +146,7 @@ const NodeOperatorForm: React.FC<NodeOperatorFormProps> = ({
               step="0.1"
               name="feePercentage"
               value={formData.feePercentage}
-              onChange={handleChange}
+              onChange={handleInputChange}
               error={errors.feePercentage}
               fullWidth
             />
@@ -193,7 +164,7 @@ const NodeOperatorForm: React.FC<NodeOperatorFormProps> = ({
               type="button"
               variant="primary"
               disabled={!isValid}
-              onClick={handleFormSubmit}
+              onClick={handleSubmit}
             >
               Publish Listing
             </Button>
