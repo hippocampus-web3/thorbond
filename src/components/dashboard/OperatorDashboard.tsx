@@ -7,9 +7,10 @@ import RequestList from '../requests/RequestList';
 import Button from '../ui/Button';
 import { NodeOperator, WhitelistRequest } from '../../types';
 import { formatRune } from '../../lib/utils';
+import { useWallet } from '../../contexts/WalletContext';
 
 interface OperatorDashboardProps {
-  nodeOperator: NodeOperator;
+  nodeOperators: NodeOperator[];
   requests: WhitelistRequest[];
   onApproveRequest: (requestId: string) => void;
   onRejectRequest: (requestId: string, reason: string) => void;
@@ -18,21 +19,24 @@ interface OperatorDashboardProps {
 }
 
 const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
-  nodeOperator,
+  nodeOperators,
   requests,
   onApproveRequest,
   onRejectRequest,
   onEditListing,
   onDeleteListing,
 }) => {
-  const pendingRequests = requests.filter(req => req.status === 'pending');
-  const approvedRequests = requests.filter(req => req.status === 'approved');
-  const rejectedRequests = requests.filter(req => req.status === 'rejected');
+  const { address } = useWallet();
+  const nodeOperator = nodeOperators.find(op => op.address === address);
+  
+  const pendingRequests = requests.filter(req => req.status === 'pending' && req.nodeOperatorId === nodeOperator?.id);
+  const approvedRequests = requests.filter(req => req.status === 'approved' && req.nodeOperatorId === nodeOperator?.id);
+  const rejectedRequests = requests.filter(req => req.status === 'rejected' && req.nodeOperatorId === nodeOperator?.id);
   
   const totalBonded = approvedRequests.reduce((sum, req) => sum + req.intendedBondAmount, 0);
-  const remainingCapacity = nodeOperator.bondingCapacity - totalBonded;
+  const remainingCapacity = nodeOperator ? nodeOperator.bondingCapacity - totalBonded : 0;
 
-  if (!nodeOperator.address) {
+  if (!nodeOperator) {
     return (
       <div className="text-center py-12">
         <img 

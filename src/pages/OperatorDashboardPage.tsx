@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useWallet } from '../contexts/WalletContext';
 import Alert from '../components/ui/Alert';
-import { NodeOperator, WhitelistRequest } from '../types';
+import Button from '../components/ui/Button';
 import NodeOperatorForm from '../components/node-operators/NodeOperatorForm';
 import OperatorDashboard from '../components/dashboard/OperatorDashboard';
-import Button from '../components/ui/Button';
+import { NodeOperator, WhitelistRequest } from '../types';
 
 interface NodeOperatorFormData {
   address: string;
@@ -16,17 +16,16 @@ interface NodeOperatorFormData {
 }
 
 interface OperatorDashboardPageProps {
-  nodeOperator: NodeOperator | null;
+  nodeOperators: NodeOperator[];
   requests: WhitelistRequest[];
   onCreateListing: (data: NodeOperatorFormData) => void;
-  onUpdateListing: (data: NodeOperatorFormData) => void;
   onDeleteListing: () => void;
   onApproveRequest: (requestId: string) => void;
   onRejectRequest: (requestId: string, reason: string) => void;
 }
 
 const OperatorDashboardPage: React.FC<OperatorDashboardPageProps> = ({
-  nodeOperator,
+  nodeOperators,
   requests,
   onCreateListing,
   onDeleteListing,
@@ -52,7 +51,7 @@ const OperatorDashboardPage: React.FC<OperatorDashboardPageProps> = ({
         <div className="bg-white shadow rounded-lg p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900">
-              {nodeOperator ? 'Edit Listing' : 'Create New Listing'}
+              Create New Listing
             </h2>
             <Button
               variant="secondary"
@@ -62,14 +61,6 @@ const OperatorDashboardPage: React.FC<OperatorDashboardPageProps> = ({
             </Button>
           </div>
           <NodeOperatorForm
-            initialData={nodeOperator ? {
-              address: nodeOperator.address,
-              bondingCapacity: nodeOperator.bondingCapacity.toString(),
-              minimumBond: nodeOperator.minimumBond.toString(),
-              feePercentage: nodeOperator.feePercentage.toString(),
-              description: nodeOperator.description,
-              contactInfo: nodeOperator.contactInfo,
-            } : undefined}
             onSubmit={onCreateListing}
             onCancel={() => setIsEditing(false)}
           />
@@ -81,14 +72,7 @@ const OperatorDashboardPage: React.FC<OperatorDashboardPageProps> = ({
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <OperatorDashboard
-        nodeOperator={nodeOperator || {
-          id: 'new',
-          address: '',
-          bondingCapacity: 0,
-          minimumBond: 0,
-          feePercentage: 0,
-          createdAt: new Date()
-        }}
+        nodeOperators={nodeOperators}
         requests={requests}
         onApproveRequest={onApproveRequest}
         onRejectRequest={onRejectRequest}

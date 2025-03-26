@@ -118,22 +118,6 @@ const AppContent: React.FC = () => {
     }
   };
 
-  const handleUpdateListing = (formData: NodeOperatorFormData) => {
-    setNodeOperators(
-      nodeOperators.map(op => 
-        op.address === address
-          ? {
-              ...op,
-              address: formData.address,
-              bondingCapacity: Number(formData.bondingCapacity),
-              minimumBond: Number(formData.minimumBond),
-              feePercentage: Number(formData.feePercentage),
-            }
-          : op
-      )
-    );
-  };
-
   const handleDeleteListing = () => {
     setNodeOperators(nodeOperators.filter(op => op.address !== address));
   };
@@ -195,10 +179,9 @@ const AppContent: React.FC = () => {
             path="/operator-dashboard"
             element={
               <OperatorDashboardPage
-                nodeOperator={null}
+                nodeOperators={nodeOperators}
                 requests={whitelistRequests}
                 onCreateListing={handleCreateListing}
-                onUpdateListing={handleUpdateListing}
                 onDeleteListing={handleDeleteListing}
                 onApproveRequest={handleApproveRequest}
                 onRejectRequest={handleRejectRequest}

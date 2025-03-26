@@ -3,8 +3,7 @@ import { z } from 'zod';
 import { Card, CardHeader, CardContent } from '../ui/Card';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
-import { validateThorAddress } from '../../lib/utils';
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify'
 
 interface FormData {
   address: string;
