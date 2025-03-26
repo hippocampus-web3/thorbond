@@ -14,12 +14,20 @@ export function shortenAddress(address: string): string {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
-export function getTimeAgo(date: Date): string {
-  const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+export const getTimeAgo = (timestamp: number | Date): string => {
+  let date: Date;
   
-  if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-  return `${Math.floor(diffInSeconds / 86400)} days ago`;
-}
+  if (timestamp instanceof Date) {
+    date = timestamp;
+  } else {
+    // Si es un número, asumimos que es un timestamp en nanosegundos
+    date = new Date(Number(timestamp) / 1000000);
+  }
+
+  const now = new Date();
+  const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+  
+  if (diffInDays === 0) return 'today';
+  if (diffInDays === 1) return 'yesterday';
+  return `${diffInDays} days ago`;
+};

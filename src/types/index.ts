@@ -4,7 +4,6 @@ export interface NodeOperator {
   bondingCapacity: number;
   minimumBond: number;
   feePercentage: number;
-  instantChurnAmount: number;
   description?: string;
   contactInfo?: string;
   createdAt: Date;

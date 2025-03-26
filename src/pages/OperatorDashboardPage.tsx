@@ -11,7 +11,6 @@ interface NodeOperatorFormData {
   bondingCapacity: string;
   minimumBond: string;
   feePercentage: string;
-  instantChurnAmount: string;
   description?: string;
   contactInfo?: string;
 }
@@ -30,7 +29,6 @@ const OperatorDashboardPage: React.FC<OperatorDashboardPageProps> = ({
   nodeOperator,
   requests,
   onCreateListing,
-  onUpdateListing,
   onDeleteListing,
   onApproveRequest,
   onRejectRequest,
@@ -69,11 +67,10 @@ const OperatorDashboardPage: React.FC<OperatorDashboardPageProps> = ({
               bondingCapacity: nodeOperator.bondingCapacity.toString(),
               minimumBond: nodeOperator.minimumBond.toString(),
               feePercentage: nodeOperator.feePercentage.toString(),
-              instantChurnAmount: nodeOperator.instantChurnAmount.toString(),
               description: nodeOperator.description,
               contactInfo: nodeOperator.contactInfo,
             } : undefined}
-            onSubmit={nodeOperator ? onUpdateListing : onCreateListing}
+            onSubmit={onCreateListing}
             onCancel={() => setIsEditing(false)}
           />
         </div>
@@ -90,7 +87,6 @@ const OperatorDashboardPage: React.FC<OperatorDashboardPageProps> = ({
           bondingCapacity: 0,
           minimumBond: 0,
           feePercentage: 0,
-          instantChurnAmount: 0,
           createdAt: new Date()
         }}
         requests={requests}

@@ -1,87 +1,75 @@
 import React from 'react';
-import { Clock, User } from 'lucide-react';
-import { Card, CardContent, CardFooter } from '../ui/Card';
-import Button from '../ui/Button';
-import Badge from '../ui/Badge';
 import { NodeOperator } from '../../types';
+import Button from '../ui/Button';
 import { formatRune, shortenAddress, getTimeAgo } from '../../lib/utils';
 
 interface NodeOperatorCardProps {
   nodeOperator: NodeOperator;
   onRequestWhitelist: (nodeOperatorId: string) => void;
+  isAuthenticated: boolean;
 }
 
 const NodeOperatorCard: React.FC<NodeOperatorCardProps> = ({
   nodeOperator,
   onRequestWhitelist,
+  isAuthenticated,
 }) => {
   return (
-    <Card className="h-full flex flex-col">
-      <CardContent className="flex-grow">
-        <div className="flex justify-between items-start">
-          <h3 className="text-lg font-medium text-gray-900">
-            Node Operator
-          </h3>
-          <Badge variant="info">Active</Badge>
+    <div className="bg-white shadow rounded-lg p-4">
+      <div className="flex justify-between items-start mb-4">
+        <h3 className="text-lg font-medium text-gray-900">Node Operator</h3>
+        <span className="px-2 py-1 text-sm rounded-full bg-blue-100 text-blue-800">
+          Active
+        </span>
+      </div>
+
+      <div className="flex items-center mb-4">
+        <span className="text-sm text-gray-600">
+          {shortenAddress(nodeOperator.address)}
+        </span>
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex justify-between">
+          <span className="text-gray-600">Bonding Capacity:</span>
+          <span className="font-medium">{formatRune(nodeOperator.bondingCapacity)} RUNE</span>
         </div>
-        
-        <div className="mt-2 text-sm text-gray-500 flex items-center">
-          <User className="h-4 w-4 mr-1" />
-          <span>{shortenAddress(nodeOperator.address)}</span>
+
+        <div className="flex justify-between">
+          <span className="text-gray-600">Minimum Bond:</span>
+          <span className="font-medium">{formatRune(nodeOperator.minimumBond)} RUNE</span>
         </div>
-        
-        <div className="mt-4 space-y-3">
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-500">Bonding Capacity:</span>
-            <span className="text-sm font-medium">{formatRune(nodeOperator.bondingCapacity)} RUNE</span>
-          </div>
-          
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-500">Minimum Bond:</span>
-            <span className="text-sm font-medium">{formatRune(nodeOperator.minimumBond)} RUNE</span>
-          </div>
-          
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-500">Fee Percentage:</span>
-            <span className="text-sm font-medium">{nodeOperator.feePercentage}%</span>
-          </div>
-          
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-500">Instant Churn Amount:</span>
-            <span className="text-sm font-medium">{formatRune(nodeOperator.instantChurnAmount)} RUNE</span>
-          </div>
+
+        <div className="flex justify-between">
+          <span className="text-gray-600">Fee Percentage:</span>
+          <span className="font-medium">{nodeOperator.feePercentage}%</span>
         </div>
-        
-        {nodeOperator.description && (
-          <div className="mt-4">
-            <p className="text-sm text-gray-600">{nodeOperator.description}</p>
-          </div>
-        )}
-        
-        {nodeOperator.contactInfo && (
-          <div className="mt-2">
-            <p className="text-xs text-gray-500">{nodeOperator.contactInfo}</p>
-          </div>
-        )}
-      </CardContent>
-      
-      <CardFooter className="border-t border-gray-200 pt-4">
-        <div className="w-full flex flex-col space-y-3">
-          <div className="flex items-center text-xs text-gray-500">
-            <Clock className="h-3 w-3 mr-1" />
-            <span>Listed {getTimeAgo(nodeOperator.createdAt)}</span>
-          </div>
-          
-          <Button
-            variant="primary"
-            fullWidth
-            onClick={() => onRequestWhitelist(nodeOperator.id)}
-          >
-            Request for Whitelist
-          </Button>
-        </div>
-      </CardFooter>
-    </Card>
+      </div>
+
+      {nodeOperator.description && (
+        <p className="mt-4 text-gray-600">
+          {nodeOperator.description}
+        </p>
+      )}
+
+      {nodeOperator.contactInfo && (
+        <p className="mt-2 text-gray-600">
+          {nodeOperator.contactInfo}
+        </p>
+      )}
+
+      <div className="mt-4 text-sm text-gray-500">
+        Listed {getTimeAgo(nodeOperator.createdAt)}
+      </div>
+
+      <Button
+        onClick={() => onRequestWhitelist(nodeOperator.id)}
+        className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white"
+        disabled={!isAuthenticated}
+      >
+        {isAuthenticated ? 'Request for Whitelist' : 'Connect Wallet to Request'}
+      </Button>
+    </div>
   );
 };
 

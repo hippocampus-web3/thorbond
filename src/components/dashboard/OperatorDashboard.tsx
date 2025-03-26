@@ -35,6 +35,11 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
   if (!nodeOperator.address) {
     return (
       <div className="text-center py-12">
+        <img 
+          src="/thorbond-logo.png" 
+          alt="ThorBond Logo" 
+          className="w-32 h-32 mx-auto mb-8"
+        />
         <h2 className="text-2xl font-bold text-gray-900 mb-4">Become a Node Operator</h2>
         <p className="text-gray-600 mb-8">
           Create a listing to start accepting bonding requests from users.
