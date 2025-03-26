@@ -19,12 +19,12 @@ const HomePage: React.FC = () => {
               </p>
               <div className="mt-10 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
                 <Link to="/node-operators">
-                  <Button variant="outline" size="lg" className="border-white text-white hover:bg-blue-700">
+                  <Button variant="outline" size="lg" className="border-white text-white hover:bg-blue-700 hover:text-blue-700">
                     Find Node Operators
                   </Button>
                 </Link>
                 <Link to="/operator-dashboard">
-                  <Button variant="outline" size="lg" className="border-white text-white hover:bg-blue-700">
+                  <Button variant="outline" size="lg" className="border-white text-white hover:bg-blue-700 hover:text-blue-700">
                     Node Operator Portal
                   </Button>
                 </Link>
@@ -127,14 +127,14 @@ const HomePage: React.FC = () => {
               <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
                 <div className="inline-flex rounded-md shadow">
                   <Link to="/node-operators">
-                    <Button variant="outline" size="lg" className="border-white text-white hover:bg-blue-700">
+                    <Button variant="outline" size="lg" className="border-white text-white hover:bg-blue-700 hover:text-blue-700">
                       Find Node Operators
                     </Button>
                   </Link>
                 </div>
                 <div className="ml-3 inline-flex rounded-md shadow">
                   <Link to="/operator-dashboard">
-                    <Button variant="outline" size="lg" className="border-white text-white hover:bg-blue-800">
+                    <Button variant="outline" size="lg" className="border-white text-white hover:bg-blue-800 hover:text-blue-700">
                       Node Operator Portal
                     </Button>
                   </Link>

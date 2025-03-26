@@ -1,41 +1,15 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, User } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import Button from '../ui/Button';
+import { useWallet } from '../../contexts/WalletContext';
+import { shortenAddress } from '../../lib/utils';
 
-interface HeaderProps {
-  isAuthenticated: boolean;
-  isNodeOperator: boolean;
-  onConnect: () => void;
-  onDisconnect: () => void;
-}
-
-const Header: React.FC<HeaderProps> = ({
-  isAuthenticated,
-  isNodeOperator,
-  onConnect,
-  onDisconnect,
-}) => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const location = useLocation();
-
-  const navigation = [
-    { name: 'Home', href: '/' },
-    { name: 'Node Operators', href: '/node-operators' },
-    ...(isNodeOperator
-      ? [{ name: 'Operator Dashboard', href: '/operator-dashboard' }]
-      : []),
-    ...(isAuthenticated
-      ? [{ name: 'My Requests', href: '/my-requests' }]
-      : []),
-  ];
-
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
+const Header: React.FC = () => {
+  const { address, isConnected, connect, disconnect } = useWallet();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <header className="bg-white shadow-sm">
+    <header className="bg-white shadow">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
@@ -46,45 +20,50 @@ const Header: React.FC<HeaderProps> = ({
                   alt="RUNE" 
                   className="h-8 w-8"
                 />
-                <span className="ml-2 text-xl font-bold text-gray-900">RUNEBond</span>
+                <span className="ml-2 text-xl font-bold text-gray-900">
+                  RUNEBond
+                </span>
               </Link>
             </div>
             <nav className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                    isActive(item.href)
-                      ? 'border-blue-500 text-gray-900'
-                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                  }`}
-                >
-                  {item.name}
-                </Link>
-              ))}
+              <Link
+                to="/node-operators"
+                className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+              >
+                Node Operators
+              </Link>
+              <Link
+                to="/operator-dashboard"
+                className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+              >
+                Operator Dashboard
+              </Link>
+              <Link
+                to="/user-requests"
+                className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+              >
+                My Requests
+              </Link>
             </nav>
           </div>
           <div className="hidden sm:ml-6 sm:flex sm:items-center">
-            {isAuthenticated ? (
-              <div className="flex items-center">
-                <div className="flex items-center mr-4">
-                  <User className="h-5 w-5 text-gray-400" />
-                  <span className="ml-2 text-sm text-gray-700">Connected</span>
-                </div>
+            {isConnected ? (
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-gray-500">
+                  {address && shortenAddress(address)}
+                </span>
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onDisconnect}
+                  variant="secondary"
+                  onClick={disconnect}
+                  className="text-sm"
                 >
                   Disconnect
                 </Button>
               </div>
             ) : (
               <Button
-                variant="primary"
-                size="sm"
-                onClick={onConnect}
+                onClick={connect}
+                className="text-sm"
               >
                 Connect Wallet
               </Button>
@@ -94,13 +73,17 @@ const Header: React.FC<HeaderProps> = ({
             <button
               type="button"
               className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               <span className="sr-only">Open main menu</span>
-              {isMenuOpen ? (
-                <X className="block h-6 w-6" aria-hidden="true" />
+              {!isMobileMenuOpen ? (
+                <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
               ) : (
-                <Menu className="block h-6 w-6" aria-hidden="true" />
+                <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               )}
             </button>
           </div>
@@ -108,55 +91,51 @@ const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Mobile menu */}
-      {isMenuOpen && (
-        <div className="sm:hidden">
-          <div className="pt-2 pb-3 space-y-1">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
-                  isActive(item.href)
-                    ? 'bg-blue-50 border-blue-500 text-blue-700'
-                    : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'
-                }`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {item.name}
-              </Link>
-            ))}
-          </div>
-          <div className="pt-4 pb-3 border-t border-gray-200">
-            <div className="flex items-center px-4">
-              {isAuthenticated ? (
+      <div className={`sm:hidden ${isMobileMenuOpen ? 'block' : 'hidden'}`}>
+        <div className="pt-2 pb-3 space-y-1">
+          <Link
+            to="/node-operators"
+            className="block pl-3 pr-4 py-2 border-l-4 text-base font-medium border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"
+          >
+            Node Operators
+          </Link>
+          <Link
+            to="/operator-dashboard"
+            className="block pl-3 pr-4 py-2 border-l-4 text-base font-medium border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"
+          >
+            Operator Dashboard
+          </Link>
+          <Link
+            to="/user-requests"
+            className="block pl-3 pr-4 py-2 border-l-4 text-base font-medium border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"
+          >
+            My Requests
+          </Link>
+          <div className="pl-3 pr-4 py-2">
+            {isConnected ? (
+              <div className="space-y-2">
+                <div className="text-sm text-gray-500">
+                  {address && shortenAddress(address)}
+                </div>
                 <Button
-                  variant="outline"
-                  size="sm"
-                  fullWidth
-                  onClick={() => {
-                    onDisconnect();
-                    setIsMenuOpen(false);
-                  }}
+                  variant="secondary"
+                  onClick={disconnect}
+                  className="w-full text-sm"
                 >
                   Disconnect
                 </Button>
-              ) : (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  fullWidth
-                  onClick={() => {
-                    onConnect();
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  Connect Wallet
-                </Button>
-              )}
-            </div>
+              </div>
+            ) : (
+              <Button
+                onClick={connect}
+                className="w-full text-sm"
+              >
+                Connect Wallet
+              </Button>
+            )}
           </div>
         </div>
-      )}
+      </div>
     </header>
   );
 };
