@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { Search, SlidersHorizontal } from 'lucide-react';
-import NodeOperatorCard from './NodeOperatorCard';
+import NodeCard from './NodeCard';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
-import { NodeOperator } from '../../types';
+import { Node } from '../../types';
 
-interface NodeOperatorListProps {
-  nodeOperators: NodeOperator[];
-  onRequestWhitelist: (nodeOperatorId: string) => void;
+interface NodeListProps {
+  nodes: Node[];
+  onRequestWhitelist: (node: Node) => void;
 }
 
-const NodeOperatorList: React.FC<NodeOperatorListProps> = ({
-  nodeOperators,
+const NodesList: React.FC<NodeListProps> = ({
+  nodes,
   onRequestWhitelist,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -22,23 +22,23 @@ const NodeOperatorList: React.FC<NodeOperatorListProps> = ({
     setSearchTerm(e.target.value);
   };
 
-  const filteredOperators = nodeOperators
-    .filter((operator) => {
+  const filteredNodes = nodes
+    .filter((node) => {
       // Filter by search term
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
         return (
-          operator.address.toLowerCase().includes(searchLower) ||
-          (operator.description && operator.description.toLowerCase().includes(searchLower)) ||
-          (operator.contactInfo && operator.contactInfo.toLowerCase().includes(searchLower))
+          node.address.toLowerCase().includes(searchLower) ||
+          (node.description && node.description.toLowerCase().includes(searchLower)) ||
+          (node.contactInfo && node.contactInfo.toLowerCase().includes(searchLower))
         );
       }
       return true;
     })
-    .filter((operator) => {
+    .filter((node) => {
       // Filter by minimum bond
       if (filterMinBond) {
-        return operator.minimumBond <= parseInt(filterMinBond);
+        return node.minimumBond <= parseInt(filterMinBond);
       }
       return true;
     })
@@ -110,16 +110,16 @@ const NodeOperatorList: React.FC<NodeOperatorListProps> = ({
         </div>
       </div>
       
-      {filteredOperators.length === 0 ? (
+      {filteredNodes.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-          <p className="text-gray-500">No node operators found matching your criteria.</p>
+          <p className="text-gray-500">No nodes found matching your criteria.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredOperators.map((operator) => (
-            <NodeOperatorCard
-              key={operator.id}
-              nodeOperator={operator}
+          {filteredNodes.map((node) => (
+            <NodeCard
+              key={node.address}
+              node={node}
               onRequestWhitelist={onRequestWhitelist}
             />
           ))}
@@ -129,4 +129,4 @@ const NodeOperatorList: React.FC<NodeOperatorListProps> = ({
   );
 };
 
-export default NodeOperatorList;
+export default NodesList;

@@ -1,6 +1,6 @@
 import React from 'react';
 import { format } from 'date-fns';
-import { Check, X, Clock } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
 import { WhitelistRequest } from '../../types';
@@ -9,8 +9,8 @@ import { formatRune, shortenAddress } from '../../lib/utils';
 interface RequestListProps {
   requests: WhitelistRequest[];
   isNodeOperator?: boolean;
-  onApprove?: (requestId: string) => void;
-  onReject?: (requestId: string, reason: string) => void;
+  onApprove?: (request: WhitelistRequest) => void;
+  onReject?: (request: WhitelistRequest, reason: string) => void;
 }
 
 const RequestList: React.FC<RequestListProps> = ({
@@ -27,10 +27,12 @@ const RequestList: React.FC<RequestListProps> = ({
     );
   }
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, request?: WhitelistRequest) => {
     switch (status) {
       case 'approved':
         return <Badge variant="success">Approved</Badge>;
+      case 'bonded':
+        return <Badge variant="success" link={`https://rune.tools/bond?bond_address=${request?.walletAddress}&node_address=${request?.node?.address}`}>Bonded</Badge>;
       case 'rejected':
         return <Badge variant="danger">Rejected</Badge>;
       default:
@@ -38,11 +40,11 @@ const RequestList: React.FC<RequestListProps> = ({
     }
   };
 
-  const handleReject = (requestId: string) => {
+  const handleReject = (request: WhitelistRequest) => {
     if (onReject) {
       const reason = prompt('Please provide a reason for rejection:');
       if (reason !== null) {
-        onReject(requestId, reason);
+        onReject(request, reason);
       }
     }
   };
@@ -52,9 +54,6 @@ const RequestList: React.FC<RequestListProps> = ({
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              User
-            </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Wallet Address
             </th>
@@ -76,8 +75,8 @@ const RequestList: React.FC<RequestListProps> = ({
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {requests.map((request) => (
-            <tr key={request.id}>
-              <td className="px-6 py-4 whitespace-nowrap">
+            <tr key={request.node.address}>
+              {/* <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex flex-col">
                   <div className="text-sm font-medium text-gray-900">
                     {request.discordUsername}
@@ -86,7 +85,7 @@ const RequestList: React.FC<RequestListProps> = ({
                     {request.xUsername} / {request.telegramUsername}
                   </div>
                 </div>
-              </td>
+              </td> */}
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {shortenAddress(request.walletAddress)}
               </td>
@@ -97,7 +96,7 @@ const RequestList: React.FC<RequestListProps> = ({
                 {format(request.createdAt, 'MMM d, yyyy')}
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                {getStatusBadge(request.status)}
+                {getStatusBadge(request.status, request)}
                 {request.status === 'rejected' && request.rejectionReason && (
                   <div className="mt-1 text-xs text-gray-500">
                     Reason: {request.rejectionReason}
@@ -109,9 +108,10 @@ const RequestList: React.FC<RequestListProps> = ({
                   {request.status === 'pending' && (
                     <div className="flex justify-end space-x-2">
                       <Button
+                        disabled
                         variant="outline"
                         size="sm"
-                        onClick={() => handleReject(request.id)}
+                        onClick={() => handleReject(request)}
                       >
                         <X className="h-4 w-4 mr-1" />
                         Reject
@@ -119,10 +119,23 @@ const RequestList: React.FC<RequestListProps> = ({
                       <Button
                         variant="primary"
                         size="sm"
-                        onClick={() => onApprove && onApprove(request.id)}
+                        onClick={() => onApprove && onApprove(request)}
                       >
                         <Check className="h-4 w-4 mr-1" />
                         Approve
+                      </Button>
+                    </div>
+                  )}
+                  {request.status === 'bonded' && (
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        disabled
+                        variant="danger"
+                        size="sm"
+                        onClick={() => handleReject(request)}
+                      >
+                        <X className="h-4 w-4 mr-1" />
+                        Revoke
                       </Button>
                     </div>
                   )}

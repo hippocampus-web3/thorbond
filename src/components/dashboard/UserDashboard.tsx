@@ -13,6 +13,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ requests }) => {
   const pendingRequests = requests.filter(req => req.status === 'pending');
   const approvedRequests = requests.filter(req => req.status === 'approved');
   const rejectedRequests = requests.filter(req => req.status === 'rejected');
+  const bondedRequests = requests.filter(req => req.status === 'bonded');
 
   return (
     <div className="space-y-6">
@@ -75,11 +76,6 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ requests }) => {
           <Tabs
             tabs={[
               {
-                id: 'all',
-                label: `All Requests (${requests.length})`,
-                content: <RequestList requests={requests} />,
-              },
-              {
                 id: 'pending',
                 label: `Pending (${pendingRequests.length})`,
                 content: <RequestList requests={pendingRequests} />,
@@ -93,6 +89,11 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ requests }) => {
                 id: 'rejected',
                 label: `Rejected (${rejectedRequests.length})`,
                 content: <RequestList requests={rejectedRequests} />,
+              },
+              {
+                id: 'bonded',
+                label: `Bonded (${bondedRequests.length})`,
+                content: <RequestList requests={bondedRequests} />,
               },
             ]}
           />

@@ -63,7 +63,7 @@ src/
 ├── components/         # UI components
 │   ├── dashboard/      # Dashboard components
 │   ├── layout/         # Layout components
-│   ├── node-operators/ # Node operator components
+│   ├── nodes/ # Node operator components
 │   ├── requests/       # Request components
 │   └── ui/             # Reusable UI components
 ├── lib/                # Utility functions and mock data

@@ -12,15 +12,15 @@ const HomePage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div>
               <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-                THORChain Node Operator Bonding Platform
+                THORChain Node Bonding Platform
               </h1>
               <p className="mt-6 text-xl text-blue-100">
-                Connect node operators with users for seamless RUNE token bonding opportunities.
+                Connect nodes with users for seamless RUNE token bonding opportunities.
               </p>
               <div className="mt-10 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                <Link to="/node-operators">
+                <Link to="/nodes">
                   <Button variant="outline" size="lg" className="border-white text-white hover:bg-blue-700 hover:text-blue-700">
-                    Find Node Operators
+                    Find Nodes
                   </Button>
                 </Link>
                 <Link to="/operator-dashboard">
@@ -45,7 +45,7 @@ const HomePage: React.FC = () => {
                   <div className="mt-6 space-y-4">
                     <div className="flex items-center p-3 bg-blue-50 rounded-lg">
                       <Users className="h-5 w-5 text-blue-600 mr-3" />
-                      <span className="text-gray-700">Connect with trusted node operators</span>
+                      <span className="text-gray-700">Connect with trusted nodes</span>
                     </div>
                     <div className="flex items-center p-3 bg-blue-50 rounded-lg">
                       <Wallet className="h-5 w-5 text-blue-600 mr-3" />
@@ -69,7 +69,7 @@ const HomePage: React.FC = () => {
           <div className="text-center">
             <h2 className="text-3xl font-bold text-gray-900">How It Works</h2>
             <p className="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">
-              Our platform simplifies the THORChain node operator bonding process for both operators and users.
+              Our platform simplifies the THORChain node bonding process for both operators and users.
             </p>
           </div>
 
@@ -126,7 +126,7 @@ const HomePage: React.FC = () => {
               </div>
               <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
                 <div className="inline-flex rounded-md shadow">
-                  <Link to="/node-operators">
+                  <Link to="/nodes">
                     <Button variant="outline" size="lg" className="border-white text-white hover:bg-blue-700 hover:text-blue-700">
                       Find Node Operators
                     </Button>

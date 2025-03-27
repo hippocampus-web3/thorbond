@@ -1,25 +1,19 @@
-export interface NodeOperator {
-  id: string;
+export interface NodeOperatorFormData {
+  address: string;
+  bondingCapacity: string;
+  minimumBond: string;
+  feePercentage: string;
+  description?: string;
+  contactInfo?: string;
+}
+export interface Node {
+  operator: string;
   address: string;
   bondingCapacity: number;
   minimumBond: number;
   feePercentage: number;
-  instantChurnAmount: number;
   description?: string;
   contactInfo?: string;
-  createdAt: Date;
-}
-
-export interface WhitelistRequest {
-  id: string;
-  nodeOperatorId: string;
-  discordUsername: string;
-  xUsername: string;
-  telegramUsername: string;
-  walletAddress: string;
-  intendedBondAmount: number;
-  status: 'pending' | 'approved' | 'rejected';
-  rejectionReason?: string;
   createdAt: Date;
 }
 
@@ -28,3 +22,18 @@ export interface User {
   walletAddress: string;
   isNodeOperator: boolean;
 }
+
+export interface WhitelistRequest {
+  node: Node;
+  walletAddress: string;
+  intendedBondAmount: number;
+  status: 'pending' | 'approved' | 'rejected' | 'bonded';
+  rejectionReason?: string;
+  createdAt: Date;
+}
+
+export interface WhitelistRequestFormData {
+  walletAddress: string;
+  intendedBondAmount: string;
+}
+

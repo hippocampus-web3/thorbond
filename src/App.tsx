@@ -1,43 +1,40 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Layout from './components/layout/Layout';
 import HomePage from './pages/HomePage';
-import NodeOperatorsPage from './pages/NodeOperatorsPage';
+import NodesPage from './pages/NodesPage';
 import OperatorDashboardPage from './pages/OperatorDashboardPage';
 import UserRequestsPage from './pages/UserRequestsPage';
-import { NodeOperator, WhitelistRequest, User } from './types';
-import { mockNodeOperators, mockWhitelistRequests, mockUsers } from './lib/mockData';
+import { Node, NodeOperatorFormData, WhitelistRequest, WhitelistRequestFormData } from './types';
 import { WalletProvider, useWallet } from './contexts/WalletContext';
-
-interface NodeOperatorFormData {
-  address: string;
-  bondingCapacity: string;
-  minimumBond: string;
-  feePercentage: string;
-  instantChurnAmount: string;
-  description: string;
-  contactInfo: string;
-}
-
-interface WhitelistRequestFormData {
-  discordUsername: string;
-  xUsername: string;
-  telegramUsername: string;
-  walletAddress: string;
-  intendedBondAmount: string;
-}
+import ThorBondEngine from './lib/thorbondEngine';
 
 const AppContent: React.FC = () => {
-  // State
-  const [user, setUser] = useState<User | null>(null);
-  const [nodeOperators, setNodeOperators] = useState<NodeOperator[]>(mockNodeOperators);
-  const [whitelistRequests, setWhitelistRequests] = useState<WhitelistRequest[]>(mockWhitelistRequests);
-  
+  const [nodes, setNodes] = useState<Node[]>([]);
+  const [witheListsRequests, setWhitelistRequests] = useState<{ operator: WhitelistRequest[], user: WhitelistRequest[] }>({ operator: [], user: [] });
+
   const { address, isConnected, error, connect, disconnect } = useWallet();
   
-  // Mostrar errores del wallet
+  // Initialize ThorBondEngine and load Nodes
+  useEffect(() => {
+    const initializeEngine = async () => {
+      const engine = ThorBondEngine.getInstance();
+      await engine.initialize();
+      setNodes(engine.getNodes())
+
+      if (address) {
+        const requests = await engine.getWhitelistRequests(address as string)
+        setWhitelistRequests(requests);
+      } 
+    };
+
+    initializeEngine();
+  }, [address]);
+
+  // Display wallet errors
   useEffect(() => {
     if (error) {
       toast.error(error, {
@@ -51,36 +48,23 @@ const AppContent: React.FC = () => {
     }
   }, [error]);
 
-  // Authentication
   const handleConnect = async () => {
-    try {
-      await connect();
-      if (address) {
-        // En una aplicación real, aquí harías una llamada a tu backend para obtener los datos del usuario
-        // Por ahora, usaremos el primer usuario mock
-        setUser({
-          ...mockUsers[0],
-          walletAddress: address,
-        });
-        toast.success('Wallet connected successfully', {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
-      }
-    } catch (err) {
-      // No mostramos el error aquí ya que el useEffect lo manejará
-      console.error('Connection error:', err);
+    await connect();
+    if (address) {
+      toast.success('Wallet connected successfully', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     }
   };
 
   const handleDisconnect = async () => {
     try {
       await disconnect();
-      setUser(null);
       toast.info('Wallet disconnected', {
         position: "top-right",
         autoClose: 3000,
@@ -102,105 +86,50 @@ const AppContent: React.FC = () => {
     }
   };
 
-  // Node Operator functions
-  const handleCreateListing = (formData: NodeOperatorFormData) => {
-    if (!user) return;
+  // Node functions
+  const handleCreateListing = async (formData: NodeOperatorFormData) => {
+    try {
+      const engine = ThorBondEngine.getInstance();
+      await engine.sendListingTransaction({
+        nodeAddress: formData.address,
+        operatorAddress: address || '',
+        minRune: Number(formData.minimumBond),
+        maxRune: Number(formData.bondingCapacity),
+        feePercentage: Number(formData.feePercentage)
+      });
 
-    const newOperator: NodeOperator = {
-      id: Date.now().toString(),
-      address: formData.address,
-      bondingCapacity: Number(formData.bondingCapacity),
-      minimumBond: Number(formData.minimumBond),
-      feePercentage: Number(formData.feePercentage),
-      instantChurnAmount: Number(formData.instantChurnAmount),
-      description: formData.description,
-      contactInfo: formData.contactInfo,
-      createdAt: new Date(),
-    };
-
-    setNodeOperators([...nodeOperators, newOperator]);
-  };
-
-  const handleUpdateListing = (formData: NodeOperatorFormData) => {
-    if (!user) return;
-
-    setNodeOperators(
-      nodeOperators.map(op => 
-        op.address === user.walletAddress
-          ? {
-              ...op,
-              address: formData.address,
-              bondingCapacity: Number(formData.bondingCapacity),
-              minimumBond: Number(formData.minimumBond),
-              feePercentage: Number(formData.feePercentage),
-              instantChurnAmount: Number(formData.instantChurnAmount),
-              description: formData.description,
-              contactInfo: formData.contactInfo,
-            }
-          : op
-      )
-    );
+      // Update Nodes list after creating a new one
+      await engine.refreshActions();
+      setNodes(engine.getNodes());
+      
+      toast.success('Listing created successfully!');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error creating listing';
+      toast.error(errorMessage);
+    }
   };
 
   const handleDeleteListing = () => {
-    if (!user) return;
-
-    setNodeOperators(nodeOperators.filter(op => op.address !== user.walletAddress));
+    // TODO: Implement logic
   };
 
   // Whitelist request functions
-  const handleRequestWhitelist = (nodeOperatorId: string, formData: WhitelistRequestFormData) => {
-    if (!user) return;
-
-    const newRequest: WhitelistRequest = {
-      id: Date.now().toString(),
-      nodeOperatorId,
-      discordUsername: formData.discordUsername,
-      xUsername: formData.xUsername,
-      telegramUsername: formData.telegramUsername,
-      walletAddress: formData.walletAddress,
-      intendedBondAmount: Number(formData.intendedBondAmount),
-      status: 'pending',
-      createdAt: new Date(),
-    };
-
-    setWhitelistRequests([...whitelistRequests, newRequest]);
+  const handleRequestWhitelist = (_formData: WhitelistRequestFormData) => {
+    // TODO: This method is necessary ?
   };
 
-  const handleApproveRequest = (requestId: string) => {
-    setWhitelistRequests(
-      whitelistRequests.map(req =>
-        req.id === requestId ? { ...req, status: 'approved' } : req
-      )
-    );
+  const handleApproveRequest = (request: WhitelistRequest) => {
+    window.open(`https://app.thorswap.finance/nodes/${request.node.address}`, '_blank');
   };
 
-  const handleRejectRequest = (requestId: string, reason: string) => {
-    setWhitelistRequests(
-      whitelistRequests.map(req =>
-        req.id === requestId ? { ...req, status: 'rejected', rejectionReason: reason } : req
-      )
-    );
+  const handleRejectRequest = (_request: WhitelistRequest, _reason: string) => {
+    // TODO: Implement logic
   };
-
-  // Filter data based on user
-  const userNodeOperator = user?.isNodeOperator
-    ? nodeOperators.find(op => op.address === user.walletAddress) || null
-    : null;
-
-  const operatorRequests = userNodeOperator
-    ? whitelistRequests.filter(req => req.nodeOperatorId === userNodeOperator.id)
-    : [];
-
-  const userRequests = user
-    ? whitelistRequests.filter(req => req.walletAddress === user.walletAddress)
-    : [];
 
   return (
     <Router>
       <Layout
         isAuthenticated={isConnected}
-        isNodeOperator={!!userNodeOperator}
         onConnect={handleConnect}
         onDisconnect={handleDisconnect}
         walletAddress={address}
@@ -208,12 +137,12 @@ const AppContent: React.FC = () => {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route
-            path="/node-operators"
+            path="/nodes"
             element={
-              <NodeOperatorsPage
-                nodeOperators={nodeOperators}
-                isAuthenticated={!!user}
+              <NodesPage
+                nodes={nodes}
                 onRequestWhitelist={handleRequestWhitelist}
+                isAuthenticated={isConnected}
               />
             }
           />
@@ -221,12 +150,9 @@ const AppContent: React.FC = () => {
             path="/operator-dashboard"
             element={
               <OperatorDashboardPage
-                nodeOperator={userNodeOperator}
-                requests={operatorRequests}
-                isAuthenticated={!!user}
-                isNodeOperator={!!userNodeOperator}
+                nodes={nodes.filter(op => op.operator === address)}
+                requests={witheListsRequests.operator}
                 onCreateListing={handleCreateListing}
-                onUpdateListing={handleUpdateListing}
                 onDeleteListing={handleDeleteListing}
                 onApproveRequest={handleApproveRequest}
                 onRejectRequest={handleRejectRequest}
@@ -235,7 +161,7 @@ const AppContent: React.FC = () => {
           />
           <Route
             path="/user-requests"
-            element={<UserRequestsPage requests={userRequests} />}
+            element={<UserRequestsPage requests={witheListsRequests.user} />}
           />
         </Routes>
       </Layout>

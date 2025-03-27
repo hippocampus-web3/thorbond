@@ -6,7 +6,6 @@ interface WalletContextType {
   error: string | null;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
-  getBalance: () => Promise<string>;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
@@ -67,33 +66,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
-  const getBalance = async () => {
-    try {
-      if (!window.xfi?.thorchain || !address) {
-        throw new Error('XDEFI wallet not found or no address connected');
-      }
-
-      const thorchain = window.xfi.thorchain;
-      return new Promise<string>((resolve, reject) => {
-        thorchain.request(
-          { method: 'get_balance', params: [address] },
-          (error, balance) => {
-            if (error) {
-              setError(error.message);
-              reject(error);
-              return;
-            }
-            resolve(balance as string);
-          }
-        );
-      });
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error getting balance';
-      setError(errorMessage);
-      throw err;
-    }
-  };
-
   return (
     <WalletContext.Provider
       value={{
@@ -101,8 +73,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         isConnected,
         error,
         connect,
-        disconnect,
-        getBalance,
+        disconnect
       }}
     >
       {children}

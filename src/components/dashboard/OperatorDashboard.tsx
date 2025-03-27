@@ -1,36 +1,63 @@
 import React from 'react';
-import { Users, DollarSign, Percent, Clock } from 'lucide-react';
+import { Users, DollarSign, Percent } from 'lucide-react';
 import { Card, CardHeader, CardContent } from '../ui/Card';
 import Tabs from '../ui/Tabs';
 import StatCard from './StatCard';
 import RequestList from '../requests/RequestList';
 import Button from '../ui/Button';
-import { NodeOperator, WhitelistRequest } from '../../types';
+import { Node, WhitelistRequest } from '../../types';
 import { formatRune } from '../../lib/utils';
+import Dropdown from '../ui/Dropdown';
 
 interface OperatorDashboardProps {
-  nodeOperator: NodeOperator;
+  nodes: Node[];
   requests: WhitelistRequest[];
-  onApproveRequest: (requestId: string) => void;
-  onRejectRequest: (requestId: string, reason: string) => void;
+  onApproveRequest: (request: WhitelistRequest) => void;
+  onRejectRequest: (request: WhitelistRequest, reason: string) => void;
   onEditListing: () => void;
   onDeleteListing: () => void;
 }
 
 const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
-  nodeOperator,
+  nodes,
   requests,
   onApproveRequest,
   onRejectRequest,
   onEditListing,
   onDeleteListing,
 }) => {
-  const pendingRequests = requests.filter(req => req.status === 'pending');
-  const approvedRequests = requests.filter(req => req.status === 'approved');
-  const rejectedRequests = requests.filter(req => req.status === 'rejected');
+  const [ selectedNodeValue, setSelectedNodeValue ] = React.useState<string>(nodes[0]?.address);
+  // const node = nodes.filter(op => op.operator === address).map(node => ({ value: node.address, label: node.address }))[0];
+
+  const options = nodes.map(node => ({ value: node.address, label: node.address }));
+  const selectedNode = nodes.find(n => n.address === selectedNodeValue)
+  
+  const pendingRequests = requests.filter(req => req.status === 'pending' && req.node.address === selectedNode?.address);
+  const approvedRequests = requests.filter(req => req.status === 'approved' && req.node.address === selectedNode?.address);
+  const rejectedRequests = requests.filter(req => req.status === 'rejected' && req.node.address === selectedNode?.address);
+  const bondedRequests = requests.filter(req => req.status === 'bonded' && req.node.address === selectedNode?.address);
   
   const totalBonded = approvedRequests.reduce((sum, req) => sum + req.intendedBondAmount, 0);
-  const remainingCapacity = nodeOperator.bondingCapacity - totalBonded;
+  const remainingCapacity = selectedNode ? selectedNode.bondingCapacity - totalBonded : 0;
+
+  if (!selectedNode) {
+    return (
+      <div className="text-center py-12">
+        <img 
+          src="/thorbond-logo.png" 
+          alt="ThorBond Logo" 
+          className="w-32 h-32 mx-auto mb-8"
+        />
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Become a Node Operator</h2>
+        <p className="text-gray-600 mb-8">
+          Create a listing to start accepting bonding requests from users.
+        </p>
+        <Button onClick={onEditListing}>
+          Create New Listing
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -42,10 +69,16 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
           </p>
         </div>
         <div className="mt-4 md:mt-0 flex space-x-4">
+          <Dropdown
+            options={options}
+            value={selectedNodeValue}
+            onChange={(value) => setSelectedNodeValue(value)}
+            placeholder="Elige una opción"
+          />
           <Button variant="outline" onClick={onEditListing}>
-            Edit Listing
+            New Listing
           </Button>
-          <Button variant="danger" onClick={onDeleteListing}>
+          <Button variant="danger" onClick={onDeleteListing} disabled>
             Delete Listing
           </Button>
         </div>
@@ -60,12 +93,12 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
         />
         <StatCard
           title="Minimum Bond"
-          value={`${formatRune(nodeOperator.minimumBond)} RUNE`}
+          value={`${formatRune(selectedNode?.minimumBond)} RUNE`}
           icon={DollarSign}
         />
         <StatCard
           title="Fee Percentage"
-          value={`${nodeOperator.feePercentage}%`}
+          value={`${selectedNode?.feePercentage}%`}
           icon={Percent}
         />
         <StatCard
@@ -111,6 +144,16 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
                 content: (
                   <RequestList
                     requests={rejectedRequests}
+                    isNodeOperator={true}
+                  />
+                ),
+              },
+              {
+                id: 'bonded',
+                label: `Bonded (${bondedRequests.length})`,
+                content: (
+                  <RequestList
+                    requests={bondedRequests}
                     isNodeOperator={true}
                   />
                 ),
