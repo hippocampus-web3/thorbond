@@ -108,6 +108,7 @@ const RequestList: React.FC<RequestListProps> = ({
                   {request.status === 'pending' && (
                     <div className="flex justify-end space-x-2">
                       <Button
+                        disabled
                         variant="outline"
                         size="sm"
                         onClick={() => handleReject(request)}
@@ -128,6 +129,7 @@ const RequestList: React.FC<RequestListProps> = ({
                   {request.status === 'bonded' && (
                     <div className="flex justify-end space-x-2">
                       <Button
+                        disabled
                         variant="danger"
                         size="sm"
                         onClick={() => handleReject(request)}

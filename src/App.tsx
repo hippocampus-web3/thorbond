@@ -118,11 +118,11 @@ const AppContent: React.FC = () => {
     // TODO: This method is necessary ?
   };
 
-  const handleApproveRequest = (_requestId: WhitelistRequest) => {
-    // TODO: Implement logic
+  const handleApproveRequest = (request: WhitelistRequest) => {
+    window.open(`https://app.thorswap.finance/nodes/${request.node.address}`, '_blank');
   };
 
-  const handleRejectRequest = (_requestId: WhitelistRequest, _reason: string) => {
+  const handleRejectRequest = (_request: WhitelistRequest, _reason: string) => {
     // TODO: Implement logic
   };
 
@@ -150,7 +150,7 @@ const AppContent: React.FC = () => {
             path="/operator-dashboard"
             element={
               <OperatorDashboardPage
-                nodes={nodes}
+                nodes={nodes.filter(op => op.operator === address)}
                 requests={witheListsRequests.operator}
                 onCreateListing={handleCreateListing}
                 onDeleteListing={handleDeleteListing}

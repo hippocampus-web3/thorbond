@@ -7,7 +7,7 @@ import RequestList from '../requests/RequestList';
 import Button from '../ui/Button';
 import { Node, WhitelistRequest } from '../../types';
 import { formatRune } from '../../lib/utils';
-import { useWallet } from '../../contexts/WalletContext';
+import Dropdown from '../ui/Dropdown';
 
 interface OperatorDashboardProps {
   nodes: Node[];
@@ -26,22 +26,21 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
   onEditListing,
   onDeleteListing,
 }) => {
-  const { address } = useWallet();
-  const node = nodes.find(op => op.operator === address);
+  const [ selectedNodeValue, setSelectedNodeValue ] = React.useState<string>(nodes[0]?.address);
+  // const node = nodes.filter(op => op.operator === address).map(node => ({ value: node.address, label: node.address }))[0];
 
-
-  console.log('node', node)
-  console.log('requests', requests)
+  const options = nodes.map(node => ({ value: node.address, label: node.address }));
+  const selectedNode = nodes.find(n => n.address === selectedNodeValue)
   
-  const pendingRequests = requests.filter(req => req.status === 'pending' && req.node.address === node?.address);
-  const approvedRequests = requests.filter(req => req.status === 'approved' && req.node.address === node?.address);
-  const rejectedRequests = requests.filter(req => req.status === 'rejected' && req.node.address === node?.address);
-  const bondedRequests = requests.filter(req => req.status === 'bonded' && req.node.address === node?.address);
+  const pendingRequests = requests.filter(req => req.status === 'pending' && req.node.address === selectedNode?.address);
+  const approvedRequests = requests.filter(req => req.status === 'approved' && req.node.address === selectedNode?.address);
+  const rejectedRequests = requests.filter(req => req.status === 'rejected' && req.node.address === selectedNode?.address);
+  const bondedRequests = requests.filter(req => req.status === 'bonded' && req.node.address === selectedNode?.address);
   
   const totalBonded = approvedRequests.reduce((sum, req) => sum + req.intendedBondAmount, 0);
-  const remainingCapacity = node ? node.bondingCapacity - totalBonded : 0;
+  const remainingCapacity = selectedNode ? selectedNode.bondingCapacity - totalBonded : 0;
 
-  if (!node) {
+  if (!selectedNode) {
     return (
       <div className="text-center py-12">
         <img 
@@ -70,6 +69,12 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
           </p>
         </div>
         <div className="mt-4 md:mt-0 flex space-x-4">
+          <Dropdown
+            options={options}
+            value={selectedNodeValue}
+            onChange={(value) => setSelectedNodeValue(value)}
+            placeholder="Elige una opción"
+          />
           <Button variant="outline" onClick={onEditListing}>
             New Listing
           </Button>
@@ -88,12 +93,12 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
         />
         <StatCard
           title="Minimum Bond"
-          value={`${formatRune(node.minimumBond)} RUNE`}
+          value={`${formatRune(selectedNode?.minimumBond)} RUNE`}
           icon={DollarSign}
         />
         <StatCard
           title="Fee Percentage"
-          value={`${node.feePercentage}%`}
+          value={`${selectedNode?.feePercentage}%`}
           icon={Percent}
         />
         <StatCard
