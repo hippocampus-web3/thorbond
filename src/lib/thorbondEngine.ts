@@ -44,6 +44,12 @@ interface ListingMemo {
   feePercentage: number;
 }
 
+interface WhitelistRequestParams {
+  nodeAddress: string;
+  userAddress: string;
+  amount: number;
+}
+
 class ThorBondEngine {
   private static instance: ThorBondEngine;
   private readonly MIDGARD_API_URL = 'https://midgard.ninerealms.com/v2';
@@ -72,7 +78,7 @@ class ThorBondEngine {
         maxRune: Number(parts[4]),
         feePercentage: Number(parts[5])
       };
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -199,6 +205,63 @@ class ThorBondEngine {
               ticker: 'RUNE'
             },
             from: params.operatorAddress,
+            recipient: this.THORBOND_ADDRESS,
+            amount: {
+              amount: 10000000, // 0.1 RUNE (8 decimals)
+              decimals: 8
+            },
+            memo,
+            gasLimit: '10000000' // optional
+          }]
+        },
+        (error, result) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(result);
+          }
+        }
+      );
+    });
+  }
+
+  public createWhitelistRequest(params: WhitelistRequestParams): string {
+    if (!params.nodeAddress.startsWith('thor1')) {
+      throw new Error('Invalid node address format');
+    }
+    if (!params.userAddress.startsWith('thor1')) {
+      throw new Error('Invalid user address format');
+    }
+    if (params.amount <= 0) {
+      throw new Error('Amount must be greater than 0');
+    }
+
+    return `TB:${params.nodeAddress}:${params.userAddress}:${params.amount}`;
+  }
+
+  public async sendWhitelistRequest(params: WhitelistRequestParams): Promise<string> {
+    const memo = this.createWhitelistRequest(params);
+
+    if (!window.xfi?.thorchain) {
+      throw new Error('XDEFI wallet not found. Please install XDEFI extension.');
+    }
+
+    return new Promise((resolve, reject) => {
+      if (!window.xfi?.thorchain) {
+        reject(new Error('XDEFI wallet not found. Please install XDEFI extension.'));
+        return;
+      }
+
+      window.xfi.thorchain.request(
+        {
+          method: 'transfer',
+          params: [{
+            asset: {
+              chain: 'THOR',
+              symbol: 'RUNE',
+              ticker: 'RUNE'
+            },
+            from: params.userAddress,
             recipient: this.THORBOND_ADDRESS,
             amount: {
               amount: 10000000, // 0.1 RUNE (8 decimals)

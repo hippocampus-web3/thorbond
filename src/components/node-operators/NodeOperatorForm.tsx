@@ -1,144 +1,132 @@
 import React, { useState } from 'react';
-import { z } from 'zod';
-import { Card, CardHeader, CardContent } from '../ui/Card';
+import { Card, CardHeader, CardContent, CardFooter } from '../ui/Card';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import { toast } from 'react-toastify'
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 
 interface FormData {
   address: string;
   bondingCapacity: string;
   minimumBond: string;
   feePercentage: string;
-  description?: string;
-  contactInfo?: string;
+  description: string;
+  contactInfo: string;
 }
 
 const validationSchema = z.object({
-  address: z.string().min(1, 'Node Address is required'),
-  bondingCapacity: z.string().refine(val => {
-    const num = Number(val);
-    return !isNaN(num) && num > 0;
-  }, 'Bonding Capacity must be greater than 0'),
-  minimumBond: z.string().refine(val => {
-    const num = Number(val);
-    return !isNaN(num) && num > 0;
-  }, 'Minimum Bond must be greater than 0'),
-  feePercentage: z.string().refine(val => {
-    const num = Number(val);
-    return !isNaN(num) && num >= 0 && num <= 100;
-  }, 'Fee Percentage must be between 0 and 100'),
-  description: z.string().optional(),
-  contactInfo: z.string().optional(),
+  address: z.string().min(1, 'Address is required'),
+  bondingCapacity: z.string().min(1, 'Bonding capacity is required'),
+  minimumBond: z.string().min(1, 'Minimum bond is required'),
+  feePercentage: z.string().min(1, 'Fee percentage is required'),
+  description: z.string().min(1, 'Description is required'),
+  contactInfo: z.string().min(1, 'Contact info is required'),
 });
 
 interface NodeOperatorFormProps {
-  initialData?: FormData;
   onSubmit: (data: FormData) => void;
   onCancel: () => void;
+  initialData?: FormData;
 }
 
 const NodeOperatorForm: React.FC<NodeOperatorFormProps> = ({
-  initialData,
   onSubmit,
   onCancel,
+  initialData,
 }) => {
-  const [formData, setFormData] = useState<FormData>(initialData || {
-    address: '',
-    bondingCapacity: '',
-    minimumBond: '',
-    feePercentage: '16',
+  const [formData, setFormData] = useState<FormData>({
+    address: initialData?.address || '',
+    bondingCapacity: initialData?.bondingCapacity || '',
+    minimumBond: initialData?.minimumBond || '',
+    feePercentage: initialData?.feePercentage || '16',
+    description: initialData?.description || '',
+    contactInfo: initialData?.contactInfo || ''
   });
 
-  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+  const {
+    handleSubmit,
+    formState: { errors },
+    setValue,
+  } = useForm<FormData>({
+    resolver: zodResolver(validationSchema),
+    mode: 'onChange',
+    defaultValues: formData,
+  });
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    setValue(name as keyof FormData, value);
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    try {
-      const validationResult = validationSchema.safeParse(formData);
-
-      if (!validationResult.success) {
-        throw validationResult.error;
-      }
-
-      await onSubmit(formData);
-      onCancel();
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const errorMessages = error.errors.map(err => `${err.path.join('.')}: ${err.message}`).join('\n');
-        toast.error(errorMessages);
-      } else {
-        toast.error('An unexpected error occurred');
-      }
-    }
+  const handleSubmitForm = async (data: FormData) => {
+    onSubmit(data);
   };
 
-  const isValid = 
-    formData.address && 
-    Number(formData.bondingCapacity) > 0 &&
-    Number(formData.minimumBond) > 0 &&
-    Number(formData.bondingCapacity) >= Number(formData.minimumBond) &&
-    Number(formData.feePercentage) >= 0 &&
-    Number(formData.feePercentage) <= 100;
+  const isValid = formData.address && 
+                 formData.bondingCapacity && 
+                 formData.minimumBond && 
+                 formData.feePercentage && 
+                 formData.description && 
+                 formData.contactInfo;
 
   return (
     <Card className="max-w-2xl mx-auto">
       <CardHeader>
         <h2 className="text-xl font-semibold text-gray-900">
-          Publish Node Operator Listing
+          {initialData ? 'Edit Node Operator Listing' : 'Create New Node Operator Listing'}
         </h2>
         <p className="mt-1 text-sm text-gray-600">
-          Provide your node details to publish a bonding opportunity for users.
+          {initialData 
+            ? 'Update your node operator listing details below.'
+            : 'Fill in the details below to create a new node operator listing.'}
         </p>
       </CardHeader>
       
       <CardContent>
-        <form className="space-y-6">
+        <form onSubmit={handleSubmit(handleSubmitForm)} className="space-y-6">
           <div className="grid grid-cols-1 gap-6">
             <Input
-              label="Node Address"
+              label="THORChain Address"
               placeholder="thor..."
               name="address"
               value={formData.address}
               onChange={handleInputChange}
-              error={errors.address}
+              error={errors.address?.message}
               fullWidth
             />
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label="Available Bonding Capacity (RUNE)"
-                type="number"
-                min="0"
-                step="1"
-                name="bondingCapacity"
-                value={formData.bondingCapacity}
-                onChange={handleInputChange}
-                error={errors.bondingCapacity}
-                fullWidth
-              />
-              
-              <Input
-                label="Minimum Bond Requirement (RUNE)"
-                type="number"
-                min="0"
-                step="1"
-                name="minimumBond"
-                value={formData.minimumBond}
-                onChange={handleInputChange}
-                error={errors.minimumBond}
-                fullWidth
-              />
-            </div>
+            <Input
+              label="Available Bonding Capacity (RUNE)"
+              type="number"
+              min="0"
+              step="1"
+              name="bondingCapacity"
+              value={formData.bondingCapacity}
+              onChange={handleInputChange}
+              error={errors.bondingCapacity?.message}
+              fullWidth
+            />
             
             <Input
-              label="Node Operator Fee (%)"
+              label="Minimum Bond Requirement (RUNE)"
+              type="number"
+              min="0"
+              step="1"
+              name="minimumBond"
+              value={formData.minimumBond}
+              onChange={handleInputChange}
+              error={errors.minimumBond?.message}
+              fullWidth
+            />
+            
+            <Input
+              label="Fee Percentage"
               type="number"
               min="0"
               max="100"
@@ -146,30 +134,49 @@ const NodeOperatorForm: React.FC<NodeOperatorFormProps> = ({
               name="feePercentage"
               value={formData.feePercentage}
               onChange={handleInputChange}
-              error={errors.feePercentage}
+              error={errors.feePercentage?.message}
+              fullWidth
+            />
+            
+            <Input
+              label="Description"
+              placeholder="Describe your node operator service..."
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              error={errors.description?.message}
+              fullWidth
+            />
+            
+            <Input
+              label="Contact Information"
+              placeholder="How can users contact you?"
+              name="contactInfo"
+              value={formData.contactInfo}
+              onChange={handleInputChange}
+              error={errors.contactInfo?.message}
               fullWidth
             />
           </div>
-
-          <div className="flex justify-end space-x-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onCancel}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="primary"
-              disabled={!isValid}
-              onClick={handleSubmit}
-            >
-              Publish Listing
-            </Button>
-          </div>
         </form>
       </CardContent>
+
+      <CardFooter className="flex justify-end space-x-4">
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={onCancel}
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          onClick={handleSubmit(handleSubmitForm)}
+          disabled={!isValid}
+        >
+          {initialData ? 'Update Listing' : 'Publish Listing'}
+        </Button>
+      </CardFooter>
     </Card>
   );
 };

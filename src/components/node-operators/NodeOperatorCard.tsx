@@ -2,18 +2,20 @@ import React from 'react';
 import { NodeOperator } from '../../types';
 import Button from '../ui/Button';
 import { formatRune, shortenAddress, getTimeAgo } from '../../lib/utils';
+import { useWallet } from '../../contexts/WalletContext';
 
 interface NodeOperatorCardProps {
   nodeOperator: NodeOperator;
   onRequestWhitelist: (nodeOperatorId: string) => void;
-  isAuthenticated: boolean;
 }
 
 const NodeOperatorCard: React.FC<NodeOperatorCardProps> = ({
   nodeOperator,
   onRequestWhitelist,
-  isAuthenticated,
 }) => {
+  const { isConnected, address } = useWallet();
+  const isOperator = address === nodeOperator.address;
+
   return (
     <div className="bg-white shadow rounded-lg p-4">
       <div className="flex justify-between items-start mb-4">
@@ -62,13 +64,22 @@ const NodeOperatorCard: React.FC<NodeOperatorCardProps> = ({
         Listed {getTimeAgo(nodeOperator.createdAt)}
       </div>
 
-      <Button
-        onClick={() => onRequestWhitelist(nodeOperator.id)}
-        className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white"
-        disabled={!isAuthenticated}
-      >
-        {isAuthenticated ? 'Request for Whitelist' : 'Connect Wallet to Request'}
-      </Button>
+      {isOperator ? (
+        <Button
+          disabled
+          className="w-full mt-4 bg-gray-100 text-gray-500 cursor-not-allowed"
+        >
+          Your Node
+        </Button>
+      ) : (
+        <Button
+          onClick={() => onRequestWhitelist(nodeOperator.id)}
+          className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white"
+          disabled={!isConnected}
+        >
+          {isConnected ? 'Request for Whitelist' : 'Connect Wallet to Request'}
+        </Button>
+      )}
     </div>
   );
 };

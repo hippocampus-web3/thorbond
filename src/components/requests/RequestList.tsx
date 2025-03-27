@@ -1,6 +1,6 @@
 import React from 'react';
 import { format } from 'date-fns';
-import { Check, X, Clock } from 'lucide-react';
+import { Check, X, Users } from 'lucide-react';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
 import { WhitelistRequest } from '../../types';
