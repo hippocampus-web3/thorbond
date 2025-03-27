@@ -19,8 +19,8 @@ interface ThorchainTransferParams {
 }
 
 interface ThorchainRequest {
-  method: 'transfer';
-  params: [ThorchainTransferParams];
+  method: 'transfer' | 'request_accounts';
+  params: [ThorchainTransferParams] | [];
 }
 
 interface ThorchainProvider {

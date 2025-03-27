@@ -2,30 +2,20 @@ import React, { useState } from 'react';
 import { useWallet } from '../contexts/WalletContext';
 import Alert from '../components/ui/Alert';
 import Button from '../components/ui/Button';
-import NodeOperatorForm from '../components/node-operators/NodeOperatorForm';
+import NodeOperatorForm from '../components/nodes/NodeForm';
 import OperatorDashboard from '../components/dashboard/OperatorDashboard';
-import { NodeOperator, WhitelistRequest } from '../types';
-
-interface NodeOperatorFormData {
-  address: string;
-  bondingCapacity: string;
-  minimumBond: string;
-  feePercentage: string;
-  description?: string;
-  contactInfo?: string;
-}
-
+import { Node, NodeOperatorFormData, WhitelistRequest } from '../types';
 interface OperatorDashboardPageProps {
-  nodeOperators: NodeOperator[];
+  nodes: Node[];
   requests: WhitelistRequest[];
   onCreateListing: (data: NodeOperatorFormData) => void;
   onDeleteListing: () => void;
-  onApproveRequest: (requestId: string) => void;
-  onRejectRequest: (requestId: string, reason: string) => void;
+  onApproveRequest: (requestId: WhitelistRequest) => void;
+  onRejectRequest: (requestId: WhitelistRequest, reason: string) => void;
 }
 
 const OperatorDashboardPage: React.FC<OperatorDashboardPageProps> = ({
-  nodeOperators,
+  nodes,
   requests,
   onCreateListing,
   onDeleteListing,
@@ -72,7 +62,7 @@ const OperatorDashboardPage: React.FC<OperatorDashboardPageProps> = ({
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <OperatorDashboard
-        nodeOperators={nodeOperators}
+        nodes={nodes}
         requests={requests}
         onApproveRequest={onApproveRequest}
         onRejectRequest={onRejectRequest}

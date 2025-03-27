@@ -5,21 +5,21 @@ import Tabs from '../ui/Tabs';
 import StatCard from './StatCard';
 import RequestList from '../requests/RequestList';
 import Button from '../ui/Button';
-import { NodeOperator, WhitelistRequest } from '../../types';
+import { Node, WhitelistRequest } from '../../types';
 import { formatRune } from '../../lib/utils';
 import { useWallet } from '../../contexts/WalletContext';
 
 interface OperatorDashboardProps {
-  nodeOperators: NodeOperator[];
+  nodes: Node[];
   requests: WhitelistRequest[];
-  onApproveRequest: (requestId: string) => void;
-  onRejectRequest: (requestId: string, reason: string) => void;
+  onApproveRequest: (request: WhitelistRequest) => void;
+  onRejectRequest: (request: WhitelistRequest, reason: string) => void;
   onEditListing: () => void;
   onDeleteListing: () => void;
 }
 
 const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
-  nodeOperators,
+  nodes,
   requests,
   onApproveRequest,
   onRejectRequest,
@@ -27,16 +27,21 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
   onDeleteListing,
 }) => {
   const { address } = useWallet();
-  const nodeOperator = nodeOperators.find(op => op.address === address);
+  const node = nodes.find(op => op.operator === address);
+
+
+  console.log('node', node)
+  console.log('requests', requests)
   
-  const pendingRequests = requests.filter(req => req.status === 'pending' && req.nodeOperatorId === nodeOperator?.id);
-  const approvedRequests = requests.filter(req => req.status === 'approved' && req.nodeOperatorId === nodeOperator?.id);
-  const rejectedRequests = requests.filter(req => req.status === 'rejected' && req.nodeOperatorId === nodeOperator?.id);
+  const pendingRequests = requests.filter(req => req.status === 'pending' && req.node.address === node?.address);
+  const approvedRequests = requests.filter(req => req.status === 'approved' && req.node.address === node?.address);
+  const rejectedRequests = requests.filter(req => req.status === 'rejected' && req.node.address === node?.address);
+  const bondedRequests = requests.filter(req => req.status === 'bonded' && req.node.address === node?.address);
   
   const totalBonded = approvedRequests.reduce((sum, req) => sum + req.intendedBondAmount, 0);
-  const remainingCapacity = nodeOperator ? nodeOperator.bondingCapacity - totalBonded : 0;
+  const remainingCapacity = node ? node.bondingCapacity - totalBonded : 0;
 
-  if (!nodeOperator) {
+  if (!node) {
     return (
       <div className="text-center py-12">
         <img 
@@ -66,9 +71,9 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
         </div>
         <div className="mt-4 md:mt-0 flex space-x-4">
           <Button variant="outline" onClick={onEditListing}>
-            Edit Listing
+            New Listing
           </Button>
-          <Button variant="danger" onClick={onDeleteListing}>
+          <Button variant="danger" onClick={onDeleteListing} disabled>
             Delete Listing
           </Button>
         </div>
@@ -83,12 +88,12 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
         />
         <StatCard
           title="Minimum Bond"
-          value={`${formatRune(nodeOperator.minimumBond)} RUNE`}
+          value={`${formatRune(node.minimumBond)} RUNE`}
           icon={DollarSign}
         />
         <StatCard
           title="Fee Percentage"
-          value={`${nodeOperator.feePercentage}%`}
+          value={`${node.feePercentage}%`}
           icon={Percent}
         />
         <StatCard
@@ -134,6 +139,16 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
                 content: (
                   <RequestList
                     requests={rejectedRequests}
+                    isNodeOperator={true}
+                  />
+                ),
+              },
+              {
+                id: 'bonded',
+                label: `Bonded (${bondedRequests.length})`,
+                content: (
+                  <RequestList
+                    requests={bondedRequests}
                     isNodeOperator={true}
                   />
                 ),

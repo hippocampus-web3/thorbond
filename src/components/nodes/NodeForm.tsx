@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Card, CardHeader, CardContent, CardFooter } from '../ui/Card';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
-import { toast } from 'react-toastify'
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -12,26 +11,22 @@ interface FormData {
   bondingCapacity: string;
   minimumBond: string;
   feePercentage: string;
-  description: string;
-  contactInfo: string;
 }
 
 const validationSchema = z.object({
   address: z.string().min(1, 'Address is required'),
   bondingCapacity: z.string().min(1, 'Bonding capacity is required'),
   minimumBond: z.string().min(1, 'Minimum bond is required'),
-  feePercentage: z.string().min(1, 'Fee percentage is required'),
-  description: z.string().min(1, 'Description is required'),
-  contactInfo: z.string().min(1, 'Contact info is required'),
+  feePercentage: z.string().min(1, 'Fee percentage is required')
 });
 
-interface NodeOperatorFormProps {
+interface NodeFormProps {
   onSubmit: (data: FormData) => void;
   onCancel: () => void;
   initialData?: FormData;
 }
 
-const NodeOperatorForm: React.FC<NodeOperatorFormProps> = ({
+const NodeForm: React.FC<NodeFormProps> = ({
   onSubmit,
   onCancel,
   initialData,
@@ -41,8 +36,6 @@ const NodeOperatorForm: React.FC<NodeOperatorFormProps> = ({
     bondingCapacity: initialData?.bondingCapacity || '',
     minimumBond: initialData?.minimumBond || '',
     feePercentage: initialData?.feePercentage || '16',
-    description: initialData?.description || '',
-    contactInfo: initialData?.contactInfo || ''
   });
 
   const {
@@ -71,20 +64,18 @@ const NodeOperatorForm: React.FC<NodeOperatorFormProps> = ({
   const isValid = formData.address && 
                  formData.bondingCapacity && 
                  formData.minimumBond && 
-                 formData.feePercentage && 
-                 formData.description && 
-                 formData.contactInfo;
+                 formData.feePercentage
 
   return (
     <Card className="max-w-2xl mx-auto">
       <CardHeader>
         <h2 className="text-xl font-semibold text-gray-900">
-          {initialData ? 'Edit Node Operator Listing' : 'Create New Node Operator Listing'}
+          {initialData ? 'Edit Node Listing' : 'Create New Node Listing'}
         </h2>
         <p className="mt-1 text-sm text-gray-600">
           {initialData 
-            ? 'Update your node operator listing details below.'
-            : 'Fill in the details below to create a new node operator listing.'}
+            ? 'Update your node listing details below.'
+            : 'Fill in the details below to create a new node listing.'}
         </p>
       </CardHeader>
       
@@ -92,7 +83,7 @@ const NodeOperatorForm: React.FC<NodeOperatorFormProps> = ({
         <form onSubmit={handleSubmit(handleSubmitForm)} className="space-y-6">
           <div className="grid grid-cols-1 gap-6">
             <Input
-              label="THORChain Address"
+              label="Node address"
               placeholder="thor..."
               name="address"
               value={formData.address}
@@ -137,26 +128,6 @@ const NodeOperatorForm: React.FC<NodeOperatorFormProps> = ({
               error={errors.feePercentage?.message}
               fullWidth
             />
-            
-            <Input
-              label="Description"
-              placeholder="Describe your node operator service..."
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              error={errors.description?.message}
-              fullWidth
-            />
-            
-            <Input
-              label="Contact Information"
-              placeholder="How can users contact you?"
-              name="contactInfo"
-              value={formData.contactInfo}
-              onChange={handleInputChange}
-              error={errors.contactInfo?.message}
-              fullWidth
-            />
           </div>
         </form>
       </CardContent>
@@ -181,4 +152,4 @@ const NodeOperatorForm: React.FC<NodeOperatorFormProps> = ({
   );
 };
 
-export default NodeOperatorForm;
+export default NodeForm;

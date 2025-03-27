@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { NodeOperator } from '../types';
+import { Node, WhitelistRequest } from '../types';
 
 interface ThorBondAction {
   type: string;
@@ -99,12 +99,12 @@ class ThorBondEngine {
     };
   }
 
-  public getNodes(): NodeOperator[] {
+  public getNodes(): Node[] {
     if (!this.isInitialized) {
       throw new Error('ThorBondEngine not initialized');
     }
 
-    const nodes: NodeOperator[] = [];
+    const nodes: Node[] = [];
     const processedAddresses = new Set<string>();
 
     this.actions.forEach(action => {
@@ -119,18 +119,51 @@ class ThorBondEngine {
       processedAddresses.add(listingMemo.nodeAddress);
 
       nodes.push({
-        id: action.data.height as string,
+        operator: listingMemo.operatorAddress,
         address: listingMemo.nodeAddress,
         bondingCapacity: listingMemo.maxRune,
         minimumBond: listingMemo.minRune,
         feePercentage: listingMemo.feePercentage,
-        description: '',
-        contactInfo: '',
         createdAt: new Date(action.timestamp / 1000000)
       });
     });
 
     return nodes;
+  }
+
+  public async getBondInfoForUser(
+    nodeAddress: string,
+    userAddress: string
+  ): Promise<{ isBondProvider: boolean; bond: number }> {
+    if (!nodeAddress.startsWith('thor1') || !userAddress.startsWith('thor1')) {
+      throw new Error('Invalid THORChain address');
+    }
+  
+    const THORNODE_API_URL = 'https://thornode.ninerealms.com/thorchain/node';
+  
+    try {
+      const response = await axios.get(`${THORNODE_API_URL}/${nodeAddress}`);
+      const bondProviders = response.data?.bond_providers?.providers ?? [];
+  
+      const provider = bondProviders.find(
+        (bp: { bond_address: string; bond: string }) => bp.bond_address === userAddress
+      );
+  
+      if (provider) {
+        return {
+          isBondProvider: true,
+          bond: Number(provider.bond)
+        };
+      }
+  
+      return {
+        isBondProvider: false,
+        bond: 0
+      };
+    } catch (error) {
+      console.error('Failed to fetch node data:', error);
+      throw new Error('Failed to retrieve bond info');
+    }
   }
 
   public async initialize(): Promise<void> {
@@ -207,11 +240,10 @@ class ThorBondEngine {
             from: params.operatorAddress,
             recipient: this.THORBOND_ADDRESS,
             amount: {
-              amount: 10000000, // 0.1 RUNE (8 decimals)
+              amount: 1000000, // 0.01 RUNE (8 decimals)
               decimals: 8
             },
             memo,
-            gasLimit: '10000000' // optional
           }]
         },
         (error, result) => {
@@ -264,11 +296,10 @@ class ThorBondEngine {
             from: params.userAddress,
             recipient: this.THORBOND_ADDRESS,
             amount: {
-              amount: 10000000, // 0.1 RUNE (8 decimals)
+              amount: 1000000, // 0.01 RUNE (8 decimals)
               decimals: 8
             },
             memo,
-            gasLimit: '10000000' // optional
           }]
         },
         (error, result) => {
@@ -280,6 +311,85 @@ class ThorBondEngine {
         }
       );
     });
+  }
+
+  public async getWhitelistRequests(connectedAddress: string): Promise<{ operator: WhitelistRequest[], user: WhitelistRequest[] }> {
+    if (!this.isInitialized) {
+      throw new Error('ThorBondEngine not initialized');
+    }
+  
+    const requestsUser: WhitelistRequest[] = [];
+    const requestsOperator: WhitelistRequest[] = [];
+  
+    for (const action of this.actions) { // TODO: Optimize taking into account rate limits
+
+      console.log(this.actions)
+
+      const memo = action.data.memo as string;
+      if (!memo) continue;
+  
+      const parts = memo.split(':');
+      if (parts.length !== 4 || parts[0] !== 'TB') continue;
+  
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const [_, nodeAddress, userAddress, amountStr] = parts;
+  
+      if (!nodeAddress.startsWith('thor1') || !userAddress.startsWith('thor1')) continue;
+  
+      const amount = Number(amountStr);
+      if (isNaN(amount) || amount <= 0) continue;
+
+      console.log('nodes', this.getNodes())
+
+      const node = this.getNodes().find(node => node.address === nodeAddress);
+  
+      if (!node) {
+        throw new Error('Node not found');
+      }
+
+      if (userAddress === connectedAddress || node.operator === connectedAddress) {
+
+        const bondInfo = await this.getBondInfoForUser(node.address, userAddress)
+
+        // Calculate status
+        let status: "pending" | "approved" | "rejected" | "bonded" = 'pending'
+
+        // -> If userAddress whitelisted on node.address -> Approved
+        if (bondInfo.isBondProvider) {
+          status = 'approved';
+        }
+        // -> If userAddress not whitelisted on node.address + userAddress active position on node -> bonded
+        if (bondInfo.isBondProvider && bondInfo.bond > 0) {
+          status = 'bonded';
+        }
+
+        if (userAddress === connectedAddress) {  
+          requestsUser.push({
+            node: node,
+            walletAddress: userAddress,
+            intendedBondAmount: amount,
+            status,
+            createdAt: new Date(action.timestamp / 1000000)
+          });
+        }
+  
+        if (node.operator === connectedAddress) {
+          console.log('Pushing')
+          requestsOperator.push({
+            node: node,
+            walletAddress: userAddress,
+            intendedBondAmount: amount,
+            status,
+            createdAt: new Date(action.timestamp / 1000000)
+          });
+        }
+      }
+    };
+  
+    return {
+      operator: requestsOperator,
+      user: requestsUser
+    };
   }
 }
 

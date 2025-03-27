@@ -59,8 +59,8 @@ const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/node-operators" className="text-base text-gray-300 hover:text-white">
-                  Node Operators
+                <Link to="/nodes" className="text-base text-gray-300 hover:text-white">
+                  Nodes
                 </Link>
               </li>
               <li>

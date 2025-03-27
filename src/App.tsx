@@ -1,34 +1,20 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Layout from './components/layout/Layout';
 import HomePage from './pages/HomePage';
-import NodeOperatorsPage from './pages/NodeOperatorsPage';
+import NodesPage from './pages/NodesPage';
 import OperatorDashboardPage from './pages/OperatorDashboardPage';
 import UserRequestsPage from './pages/UserRequestsPage';
-import { NodeOperator, WhitelistRequest } from './types';
+import { Node, NodeOperatorFormData, WhitelistRequest, WhitelistRequestFormData } from './types';
 import { WalletProvider, useWallet } from './contexts/WalletContext';
 import ThorBondEngine from './lib/thorbondEngine';
 
-interface NodeOperatorFormData {
-  address: string;
-  bondingCapacity: string;
-  minimumBond: string;
-  feePercentage: string;
-}
-
-interface WhitelistRequestFormData {
-  discordUsername: string;
-  xUsername: string;
-  telegramUsername: string;
-  walletAddress: string;
-  intendedBondAmount: string;
-}
-
 const AppContent: React.FC = () => {
-  const [nodeOperators, setNodeOperators] = useState<NodeOperator[]>([]);
-  const [whitelistRequests, setWhitelistRequests] = useState<WhitelistRequest[]>([]);
+  const [nodes, setNodes] = useState<Node[]>([]);
+  const [witheListsRequests, setWhitelistRequests] = useState<{ operator: WhitelistRequest[], user: WhitelistRequest[] }>({ operator: [], user: [] });
 
   const { address, isConnected, error, connect, disconnect } = useWallet();
   
@@ -37,11 +23,16 @@ const AppContent: React.FC = () => {
     const initializeEngine = async () => {
       const engine = ThorBondEngine.getInstance();
       await engine.initialize();
-      setNodeOperators(engine.getNodes());
+      setNodes(engine.getNodes())
+
+      if (address) {
+        const requests = await engine.getWhitelistRequests(address as string)
+        setWhitelistRequests(requests);
+      } 
     };
 
     initializeEngine();
-  }, []);
+  }, [address]);
 
   // Display wallet errors
   useEffect(() => {
@@ -109,7 +100,7 @@ const AppContent: React.FC = () => {
 
       // Update Nodes list after creating a new one
       await engine.refreshActions();
-      setNodeOperators(engine.getNodes());
+      setNodes(engine.getNodes());
       
       toast.success('Listing created successfully!');
     } catch (error) {
@@ -119,40 +110,20 @@ const AppContent: React.FC = () => {
   };
 
   const handleDeleteListing = () => {
-    setNodeOperators(nodeOperators.filter(op => op.address !== address));
+    // TODO: Implement logic
   };
 
   // Whitelist request functions
-  const handleRequestWhitelist = (nodeOperatorId: string, formData: WhitelistRequestFormData) => {
-    const newRequest: WhitelistRequest = {
-      id: Date.now().toString(),
-      nodeOperatorId,
-      discordUsername: formData.discordUsername,
-      xUsername: formData.xUsername,
-      telegramUsername: formData.telegramUsername,
-      walletAddress: formData.walletAddress,
-      intendedBondAmount: Number(formData.intendedBondAmount),
-      status: 'pending',
-      createdAt: new Date(),
-    };
-
-    setWhitelistRequests([...whitelistRequests, newRequest]);
+  const handleRequestWhitelist = (_formData: WhitelistRequestFormData) => {
+    // TODO: This method is necessary ?
   };
 
-  const handleApproveRequest = (requestId: string) => {
-    setWhitelistRequests(
-      whitelistRequests.map(req =>
-        req.id === requestId ? { ...req, status: 'approved' } : req
-      )
-    );
+  const handleApproveRequest = (_requestId: WhitelistRequest) => {
+    // TODO: Implement logic
   };
 
-  const handleRejectRequest = (requestId: string, reason: string) => {
-    setWhitelistRequests(
-      whitelistRequests.map(req =>
-        req.id === requestId ? { ...req, status: 'rejected', rejectionReason: reason } : req
-      )
-    );
+  const handleRejectRequest = (_requestId: WhitelistRequest, _reason: string) => {
+    // TODO: Implement logic
   };
 
   return (
@@ -166,10 +137,10 @@ const AppContent: React.FC = () => {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route
-            path="/node-operators"
+            path="/nodes"
             element={
-              <NodeOperatorsPage
-                nodeOperators={nodeOperators}
+              <NodesPage
+                nodes={nodes}
                 onRequestWhitelist={handleRequestWhitelist}
                 isAuthenticated={isConnected}
               />
@@ -179,8 +150,8 @@ const AppContent: React.FC = () => {
             path="/operator-dashboard"
             element={
               <OperatorDashboardPage
-                nodeOperators={nodeOperators}
-                requests={whitelistRequests}
+                nodes={nodes}
+                requests={witheListsRequests.operator}
                 onCreateListing={handleCreateListing}
                 onDeleteListing={handleDeleteListing}
                 onApproveRequest={handleApproveRequest}
@@ -190,7 +161,7 @@ const AppContent: React.FC = () => {
           />
           <Route
             path="/user-requests"
-            element={<UserRequestsPage requests={whitelistRequests} />}
+            element={<UserRequestsPage requests={witheListsRequests.user} />}
           />
         </Routes>
       </Layout>

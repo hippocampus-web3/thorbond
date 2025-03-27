@@ -7,7 +7,7 @@ import Input from '../ui/Input';
 import Button from '../ui/Button';
 import Alert from '../ui/Alert';
 import { validateThorAddress } from '../../lib/utils';
-import { NodeOperator } from '../../types';
+import { Node } from '../../types';
 
 // Form validation schema
 const requestSchema = z.object({
@@ -25,19 +25,19 @@ const requestSchema = z.object({
 type RequestFormData = z.infer<typeof requestSchema>;
 
 interface WhitelistRequestFormProps {
-  nodeOperator: NodeOperator;
+  node: Node;
   onSubmit: (data: RequestFormData) => void;
   onCancel: () => void;
 }
 
 const WhitelistRequestForm: React.FC<WhitelistRequestFormProps> = ({
-  nodeOperator,
+  node,
   onSubmit,
   onCancel,
 }) => {
   const [formData, setFormData] = useState<RequestFormData>({
     walletAddress: '',
-    intendedBondAmount: nodeOperator.minimumBond.toString(),
+    intendedBondAmount: node.minimumBond.toString(),
   });
 
   const {
@@ -59,15 +59,12 @@ const WhitelistRequestForm: React.FC<WhitelistRequestFormProps> = ({
     setValue(name as keyof RequestFormData, value);
   };
 
-  const isBondAmountValid = Number(formData.intendedBondAmount) >= nodeOperator.minimumBond;
+  const isBondAmountValid = Number(formData.intendedBondAmount) >= node.minimumBond;
   const isFormValid = validateThorAddress(formData.walletAddress) && 
                      Number(formData.intendedBondAmount) > 0 && 
                      isBondAmountValid;
 
   const handleFormSubmit = (data: RequestFormData) => {
-    // Generar el memo para la transacción
-    const memo = `TB:${nodeOperator.address}:${data.walletAddress}:${data.intendedBondAmount}`;
-    console.log('Whitelist Transaction Memo:', memo);
     onSubmit(data);
   };
 
@@ -76,7 +73,7 @@ const WhitelistRequestForm: React.FC<WhitelistRequestFormProps> = ({
       <CardHeader>
         <h2 className="text-xl font-semibold text-gray-900">Request Whitelist for Bonding</h2>
         <p className="mt-1 text-sm text-gray-600">
-          Submit your information to request whitelisting with this node operator.
+          Submit your information to request whitelisting with this node.
         </p>
       </CardHeader>
       
@@ -87,19 +84,19 @@ const WhitelistRequestForm: React.FC<WhitelistRequestFormProps> = ({
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-gray-500">Address:</span>
-                <p className="font-medium">{nodeOperator.address.slice(0, 10)}...{nodeOperator.address.slice(-6)}</p>
+                <p className="font-medium">{node.address.slice(0, 10)}...{node.address.slice(-6)}</p>
               </div>
               <div>
                 <span className="text-gray-500">Minimum Bond:</span>
-                <p className="font-medium">{nodeOperator.minimumBond.toLocaleString()} RUNE</p>
+                <p className="font-medium">{node.minimumBond.toLocaleString()} RUNE</p>
               </div>
               <div>
                 <span className="text-gray-500">Fee Percentage:</span>
-                <p className="font-medium">{nodeOperator.feePercentage}%</p>
+                <p className="font-medium">{node.feePercentage}%</p>
               </div>
               <div>
                 <span className="text-gray-500">Available Capacity:</span>
-                <p className="font-medium">{nodeOperator.bondingCapacity.toLocaleString()} RUNE</p>
+                <p className="font-medium">{node.bondingCapacity.toLocaleString()} RUNE</p>
               </div>
             </div>
           </div>
@@ -118,7 +115,7 @@ const WhitelistRequestForm: React.FC<WhitelistRequestFormProps> = ({
             <Input
               label="Intended Bond Amount (RUNE)"
               type="number"
-              min={nodeOperator.minimumBond}
+              min={node.minimumBond}
               name="intendedBondAmount"
               value={formData.intendedBondAmount}
               onChange={handleInputChange}
@@ -128,7 +125,7 @@ const WhitelistRequestForm: React.FC<WhitelistRequestFormProps> = ({
             
             {!isBondAmountValid && Number(formData.intendedBondAmount) > 0 && (
               <Alert variant="warning">
-                The bond amount must be at least {nodeOperator.minimumBond.toLocaleString()} RUNE.
+                The bond amount must be at least {node.minimumBond.toLocaleString()} RUNE.
               </Alert>
             )}
           </div>
