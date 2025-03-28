@@ -1,6 +1,5 @@
 import React from 'react';
 import { format } from 'date-fns';
-import { Check, X } from 'lucide-react';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
 import { WhitelistRequest } from '../../types';
@@ -8,16 +7,12 @@ import { formatRune, shortenAddress } from '../../lib/utils';
 
 interface RequestListProps {
   requests: WhitelistRequest[];
-  isNodeOperator?: boolean;
-  onApprove?: (request: WhitelistRequest) => void;
-  onReject?: (request: WhitelistRequest, reason: string) => void;
+  actionList?: { title: string, type: 'primary' | 'danger' | 'outline', isDisabled?: (request: WhitelistRequest) => boolean, action: (request: WhitelistRequest) => void }[];
 }
 
 const RequestList: React.FC<RequestListProps> = ({
   requests,
-  isNodeOperator = false,
-  onApprove,
-  onReject,
+  actionList = [],
 }) => {
   if (requests.length === 0) {
     return (
@@ -40,15 +35,6 @@ const RequestList: React.FC<RequestListProps> = ({
     }
   };
 
-  const handleReject = (request: WhitelistRequest) => {
-    if (onReject) {
-      const reason = prompt('Please provide a reason for rejection:');
-      if (reason !== null) {
-        onReject(request, reason);
-      }
-    }
-  };
-
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full divide-y divide-gray-200">
@@ -58,7 +44,13 @@ const RequestList: React.FC<RequestListProps> = ({
               Wallet Address
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Bond Amount
+              Node Address
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Intended Bond
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Real Bond
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Date
@@ -66,16 +58,16 @@ const RequestList: React.FC<RequestListProps> = ({
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Status
             </th>
-            {isNodeOperator && (
+            {actionList.length ? (
               <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
-            )}
+            ): null}
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {requests.map((request) => (
-            <tr key={request.node.address}>
+          {requests.map((request, index) => (
+            <tr key={index}>
               {/* <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex flex-col">
                   <div className="text-sm font-medium text-gray-900">
@@ -90,7 +82,13 @@ const RequestList: React.FC<RequestListProps> = ({
                 {shortenAddress(request.walletAddress)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {shortenAddress(request.node.address)}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {formatRune(request.intendedBondAmount)} RUNE
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {formatRune(request.realBond)} RUNE
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {format(request.createdAt, 'MMM d, yyyy')}
@@ -103,44 +101,23 @@ const RequestList: React.FC<RequestListProps> = ({
                   </div>
                 )}
               </td>
-              {isNodeOperator && (
+              {actionList.length ? (
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  {request.status === 'pending' && (
-                    <div className="flex justify-end space-x-2">
+                  {
+                    actionList.map((action) =>
                       <Button
-                        disabled
-                        variant="outline"
+                        key={`${action.title}-${action.type}`}
+                        variant={action.type}
+                        disabled={action.isDisabled ? action.isDisabled(request) : false}
                         size="sm"
-                        onClick={() => handleReject(request)}
+                        onClick={() => action.action(request)}
                       >
-                        <X className="h-4 w-4 mr-1" />
-                        Reject
+                        {action.title}
                       </Button>
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={() => onApprove && onApprove(request)}
-                      >
-                        <Check className="h-4 w-4 mr-1" />
-                        Approve
-                      </Button>
-                    </div>
-                  )}
-                  {request.status === 'bonded' && (
-                    <div className="flex justify-end space-x-2">
-                      <Button
-                        disabled
-                        variant="danger"
-                        size="sm"
-                        onClick={() => handleReject(request)}
-                      >
-                        <X className="h-4 w-4 mr-1" />
-                        Revoke
-                      </Button>
-                    </div>
-                  )}
+                    )
+                  }
                 </td>
-              )}
+              ) : null}
             </tr>
           ))}
         </tbody>

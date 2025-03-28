@@ -13,7 +13,7 @@ interface OperatorDashboardProps {
   nodes: Node[];
   requests: WhitelistRequest[];
   onApproveRequest: (request: WhitelistRequest) => void;
-  onRejectRequest: (request: WhitelistRequest, reason: string) => void;
+  onRejectRequest: (request: WhitelistRequest) => void;
   onEditListing: () => void;
   onDeleteListing: () => void;
 }
@@ -122,9 +122,7 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
                 content: (
                   <RequestList
                     requests={pendingRequests}
-                    isNodeOperator={true}
-                    onApprove={onApproveRequest}
-                    onReject={onRejectRequest}
+                    actionList={[{title: 'Reject', type: 'outline', action: onRejectRequest}, {title: 'Approve', type: 'primary', action: onApproveRequest}]}
                   />
                 ),
               },
@@ -134,7 +132,6 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
                 content: (
                   <RequestList
                     requests={approvedRequests}
-                    isNodeOperator={true}
                   />
                 ),
               },
@@ -144,7 +141,6 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
                 content: (
                   <RequestList
                     requests={rejectedRequests}
-                    isNodeOperator={true}
                   />
                 ),
               },
@@ -154,7 +150,9 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
                 content: (
                   <RequestList
                     requests={bondedRequests}
-                    isNodeOperator={true}
+                    actionList={[{
+                      title: 'Revoke', action: () => console.log('Pending implement'), type: 'danger'
+                    }]}
                   />
                 ),
               },

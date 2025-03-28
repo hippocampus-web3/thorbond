@@ -12,14 +12,14 @@ interface ThorchainAmount {
 interface ThorchainTransferParams {
   asset: ThorchainAsset;
   from: string;
-  recipient: string;
+  recipient?: string;
   amount: ThorchainAmount;
   memo: string;
   gasLimit?: string;
 }
 
 interface ThorchainRequest {
-  method: 'transfer' | 'request_accounts';
+  method: 'transfer' | 'request_accounts' | 'deposit';
   params: [ThorchainTransferParams] | [];
 }
 
