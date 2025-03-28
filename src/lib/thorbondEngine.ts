@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { Node, WhitelistRequest } from '../types';
+import { assetToBase, assetAmount, baseAmount, baseToAsset } from '@xchainjs/xchain-util';
 
 interface ThorBondAction {
   type: string;
@@ -134,7 +135,7 @@ class ThorBondEngine {
   public async getBondInfoForUser(
     nodeAddress: string,
     userAddress: string
-  ): Promise<{ isBondProvider: boolean; bond: number }> {
+  ): Promise<{ isBondProvider: boolean; status: string; bond: number }> {
     if (!nodeAddress.startsWith('thor1') || !userAddress.startsWith('thor1')) {
       throw new Error('Invalid THORChain address');
     }
@@ -152,12 +153,14 @@ class ThorBondEngine {
       if (provider) {
         return {
           isBondProvider: true,
+          status: response.data?.status,
           bond: Number(provider.bond)
         };
       }
   
       return {
         isBondProvider: false,
+        status: response.data?.status,
         bond: 0
       };
     } catch (error) {
@@ -271,6 +274,21 @@ class ThorBondEngine {
     return `TB:${params.nodeAddress}:${params.userAddress}:${params.amount}`;
   }
 
+  public createBond(params: WhitelistRequest): string {
+    if (!params.node.address.startsWith('thor1')) {
+      throw new Error('Invalid node address format');
+    }
+    return `BOND:${params.node.address}`;
+  }
+
+  public createUnbond(params: WhitelistRequest): string {
+    if (!params.node.address.startsWith('thor1')) {
+      throw new Error('Invalid node address format');
+    }
+    const amount = assetToBase(assetAmount(params.realBond, 8)).amount().toString();
+    return `UNBOND:${params.node.address}:${amount}`;
+  }
+
   public async sendWhitelistRequest(params: WhitelistRequestParams): Promise<string> {
     const memo = this.createWhitelistRequest(params);
 
@@ -313,6 +331,92 @@ class ThorBondEngine {
     });
   }
 
+  public async sendBondRequest(params: WhitelistRequest): Promise<string> {
+    const memo = this.createBond(params);
+
+    if (!window.xfi?.thorchain) {
+      throw new Error('XDEFI wallet not found. Please install XDEFI extension.');
+    }
+
+    return new Promise((resolve, reject) => {
+      if (!window.xfi?.thorchain) {
+        reject(new Error('XDEFI wallet not found. Please install XDEFI extension.'));
+        return;
+      }
+
+      console.log('memo', memo)
+
+      window.xfi.thorchain.request(
+        {
+          method: 'deposit',
+          params: [{
+            asset: {
+              chain: 'THOR',
+              symbol: 'RUNE',
+              ticker: 'RUNE'
+            },
+            from: params.walletAddress,
+            amount: {
+              amount: assetToBase(assetAmount(params.intendedBondAmount, 8)).amount().toNumber(),
+              decimals: 8
+            },
+            memo,
+          }]
+        },
+        (error, result) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(result);
+          }
+        }
+      );
+    });
+  }
+
+  public async sendUnbondRequest(params: WhitelistRequest): Promise<string> {
+    const memo = this.createUnbond(params);
+
+    if (!window.xfi?.thorchain) {
+      throw new Error('XDEFI wallet not found. Please install XDEFI extension.');
+    }
+
+    return new Promise((resolve, reject) => {
+      if (!window.xfi?.thorchain) {
+        reject(new Error('XDEFI wallet not found. Please install XDEFI extension.'));
+        return;
+      }
+
+      console.log('memo', memo)
+
+      window.xfi.thorchain.request(
+        {
+          method: 'deposit',
+          params: [{
+            asset: {
+              chain: 'THOR',
+              symbol: 'RUNE',
+              ticker: 'RUNE'
+            },
+            from: params.walletAddress,
+            amount: {
+              amount: 0,
+              decimals: 8
+            },
+            memo,
+          }]
+        },
+        (error, result) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(result);
+          }
+        }
+      );
+    });
+  }
+
   public async getWhitelistRequests(connectedAddress: string): Promise<{ operator: WhitelistRequest[], user: WhitelistRequest[] }> {
     if (!this.isInitialized) {
       throw new Error('ThorBondEngine not initialized');
@@ -322,8 +426,6 @@ class ThorBondEngine {
     const requestsOperator: WhitelistRequest[] = [];
   
     for (const action of this.actions) { // TODO: Optimize taking into account rate limits
-
-      console.log(this.actions)
 
       const memo = action.data.memo as string;
       if (!memo) continue;
@@ -365,30 +467,46 @@ class ThorBondEngine {
 
         if (userAddress === connectedAddress) {  
           requestsUser.push({
-            node: node,
+            node: {
+              ...node,
+              status: bondInfo.status
+            },
             walletAddress: userAddress,
             intendedBondAmount: amount,
+            realBond: baseToAsset(baseAmount(bondInfo.bond, 8)).amount().toNumber(),
             status,
             createdAt: new Date(action.timestamp / 1000000)
           });
         }
   
         if (node.operator === connectedAddress) {
-          console.log('Pushing')
           requestsOperator.push({
-            node: node,
+            node: {
+              ...node,
+              status: bondInfo.status
+            },
             walletAddress: userAddress,
             intendedBondAmount: amount,
+            realBond: baseToAsset(baseAmount(bondInfo.bond, 8)).amount().toNumber(),
             status,
             createdAt: new Date(action.timestamp / 1000000)
           });
         }
       }
     };
+
+    // Remove duplicates
+    const dedupedOperatorRequestsByNode = Array.from(
+      new Map(requestsOperator.map(ro => [ro.node.address, ro])).values()
+    );
+
+    const dedupedUserRequestsByNode = Array.from(
+      new Map(requestsUser.map(ru => [ru.node.address, ru])).values()
+    );
   
     return {
-      operator: requestsOperator,
-      user: requestsUser
+      operator: dedupedOperatorRequestsByNode,
+      user: dedupedUserRequestsByNode
     };
   }
 }

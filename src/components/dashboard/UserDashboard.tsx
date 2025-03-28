@@ -4,6 +4,8 @@ import { Card, CardHeader, CardContent } from '../ui/Card';
 import Tabs from '../ui/Tabs';
 import RequestList from '../requests/RequestList';
 import { WhitelistRequest } from '../../types';
+import ThorBondEngine from '../../lib/thorbondEngine';
+import { toast } from 'react-toastify';
 
 interface UserDashboardProps {
   requests: WhitelistRequest[];
@@ -14,6 +16,30 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ requests }) => {
   const approvedRequests = requests.filter(req => req.status === 'approved');
   const rejectedRequests = requests.filter(req => req.status === 'rejected');
   const bondedRequests = requests.filter(req => req.status === 'bonded');
+  const engine = ThorBondEngine.getInstance();
+  
+  const handleBondRequest = async (request: WhitelistRequest) => {
+    try {
+      await engine.sendBondRequest(request);
+
+      toast.success('Bond request submitted successfully!');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error submitting bond request';
+      toast.error(errorMessage);
+    }
+  };
+
+  const handleUnbondRequest = async (request: WhitelistRequest) => {
+    try {
+      await engine.sendUnbondRequest(request);
+
+      toast.success('Unbond request submitted successfully!');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error submitting unbond request';
+      toast.error(errorMessage);
+    }
+  };
+
 
   return (
     <div className="space-y-6">
@@ -83,7 +109,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ requests }) => {
               {
                 id: 'approved',
                 label: `Approved (${approvedRequests.length})`,
-                content: <RequestList requests={approvedRequests} />,
+                content: <RequestList requests={approvedRequests} actionList={[{title: 'Bond', type: 'primary', action: (request) => handleBondRequest(request)}]} />,
               },
               {
                 id: 'rejected',
@@ -93,7 +119,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ requests }) => {
               {
                 id: 'bonded',
                 label: `Bonded (${bondedRequests.length})`,
-                content: <RequestList requests={bondedRequests} />,
+                content: <RequestList requests={bondedRequests} actionList={[{title: 'Unbound', isDisabled: (request) => request.node.status === 'Active' || request.node.status === 'Ready', type: 'outline', action: (request) => handleUnbondRequest(request)}]} />,
               },
             ]}
           />

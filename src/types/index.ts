@@ -9,6 +9,7 @@ export interface NodeOperatorFormData {
 export interface Node {
   operator: string;
   address: string;
+  status?: string;
   bondingCapacity: number;
   minimumBond: number;
   feePercentage: number;
@@ -27,6 +28,7 @@ export interface WhitelistRequest {
   node: Node;
   walletAddress: string;
   intendedBondAmount: number;
+  realBond: number,
   status: 'pending' | 'approved' | 'rejected' | 'bonded';
   rejectionReason?: string;
   createdAt: Date;
