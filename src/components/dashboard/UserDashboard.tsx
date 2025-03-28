@@ -4,7 +4,7 @@ import { Card, CardHeader, CardContent } from '../ui/Card';
 import Tabs from '../ui/Tabs';
 import RequestList from '../requests/RequestList';
 import { WhitelistRequest } from '../../types';
-import ThorBondEngine from '../../lib/thorbondEngine';
+import ThorBondEngine from '../../lib/thorbondEngine/thorbondEngine';
 import { toast } from 'react-toastify';
 
 interface UserDashboardProps {

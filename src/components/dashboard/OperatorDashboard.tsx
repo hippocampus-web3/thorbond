@@ -37,7 +37,7 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
   const rejectedRequests = requests.filter(req => req.status === 'rejected' && req.node.address === selectedNode?.address);
   const bondedRequests = requests.filter(req => req.status === 'bonded' && req.node.address === selectedNode?.address);
   
-  const totalBonded = approvedRequests.reduce((sum, req) => sum + req.intendedBondAmount, 0);
+  const totalBonded = bondedRequests.reduce((sum, req) => sum + req.realBond, 0);
   const remainingCapacity = selectedNode ? selectedNode.bondingCapacity - totalBonded : 0;
 
   if (!selectedNode) {
@@ -48,7 +48,7 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
           alt="ThorBond Logo" 
           className="w-32 h-32 mx-auto mb-8"
         />
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Become a Node Operator</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Welcome Node Operator</h2>
         <p className="text-gray-600 mb-8">
           Create a listing to start accepting bonding requests from users.
         </p>
@@ -122,7 +122,7 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
                 content: (
                   <RequestList
                     requests={pendingRequests}
-                    actionList={[{title: 'Reject', type: 'outline', action: onRejectRequest}, {title: 'Approve', type: 'primary', action: onApproveRequest}]}
+                    actionList={[{title: 'Approve', type: 'primary', action: onApproveRequest}, {title: 'Reject', isDisabled: () => true, type: 'danger', action: onRejectRequest}]}
                   />
                 ),
               },
@@ -151,7 +151,7 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
                   <RequestList
                     requests={bondedRequests}
                     actionList={[{
-                      title: 'Revoke', action: () => console.log('Pending implement'), type: 'danger'
+                      title: 'Revoke', isDisabled: () => true,  action: () => console.log('Pending implement'), type: 'danger'
                     }]}
                   />
                 ),

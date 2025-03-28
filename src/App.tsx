@@ -8,12 +8,14 @@ import HomePage from './pages/HomePage';
 import NodesPage from './pages/NodesPage';
 import OperatorDashboardPage from './pages/OperatorDashboardPage';
 import UserRequestsPage from './pages/UserRequestsPage';
-import { Node, NodeOperatorFormData, WhitelistRequest, WhitelistRequestFormData } from './types';
+import { Node, NodeOperatorFormData, WhitelistRequest } from './types';
 import { WalletProvider, useWallet } from './contexts/WalletContext';
-import ThorBondEngine from './lib/thorbondEngine';
+import ThorBondEngine from './lib/thorbondEngine/thorbondEngine';
 
 const AppContent: React.FC = () => {
-  const [nodes, setNodes] = useState<Node[]>([]);
+  const [listedNodes, setListedNodes] = useState<Node[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [allNodes, setAllNodes] = useState<any[]>([]); // TODO: Fix types
   const [witheListsRequests, setWhitelistRequests] = useState<{ operator: WhitelistRequest[], user: WhitelistRequest[] }>({ operator: [], user: [] });
 
   const { address, isConnected, error, connect, disconnect } = useWallet();
@@ -23,7 +25,10 @@ const AppContent: React.FC = () => {
     const initializeEngine = async () => {
       const engine = ThorBondEngine.getInstance();
       await engine.initialize();
-      setNodes(engine.getNodes())
+      setListedNodes(engine.getListedNodes())
+      
+      const nodes = await engine.getAllNodes()
+      setAllNodes(nodes)
 
       if (address) {
         const requests = await engine.getWhitelistRequests(address as string)
@@ -100,7 +105,7 @@ const AppContent: React.FC = () => {
 
       // Update Nodes list after creating a new one
       await engine.refreshActions();
-      setNodes(engine.getNodes());
+      setListedNodes(engine.getListedNodes());
       
       toast.success('Listing created successfully!');
     } catch (error) {
@@ -113,16 +118,19 @@ const AppContent: React.FC = () => {
     // TODO: Implement logic
   };
 
-  // Whitelist request functions
-  const handleRequestWhitelist = (_formData: WhitelistRequestFormData) => {
-    // TODO: This method is necessary ?
+  const handleApproveRequest = async (request: WhitelistRequest) => {
+    try {
+      const engine = ThorBondEngine.getInstance();
+      await engine.sendEnableBondRequest(request);
+
+      toast.success('Enable bond request submitted successfully!');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error submitting enable bond request';
+      toast.error(errorMessage);
+    }
   };
 
-  const handleApproveRequest = (request: WhitelistRequest) => {
-    window.open(`https://app.thorswap.finance/nodes/${request.node.address}`, '_blank');
-  };
-
-  const handleRejectRequest = (_request: WhitelistRequest, _reason: string) => {
+  const handleRejectRequest = (_request: WhitelistRequest) => {
     // TODO: Implement logic
   };
 
@@ -140,8 +148,7 @@ const AppContent: React.FC = () => {
             path="/nodes"
             element={
               <NodesPage
-                nodes={nodes}
-                onRequestWhitelist={handleRequestWhitelist}
+                nodes={listedNodes}
                 isAuthenticated={isConnected}
               />
             }
@@ -150,7 +157,8 @@ const AppContent: React.FC = () => {
             path="/operator-dashboard"
             element={
               <OperatorDashboardPage
-                nodes={nodes.filter(op => op.operator === address)}
+                nodes={listedNodes.filter(op => op.operator === address)}
+                availableNodes={allNodes.filter(node => import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR ? node.node_operator_address === import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR : node.node_operator_address === address)}
                 requests={witheListsRequests.operator}
                 onCreateListing={handleCreateListing}
                 onDeleteListing={handleDeleteListing}

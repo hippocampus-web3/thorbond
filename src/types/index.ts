@@ -39,3 +39,51 @@ export interface WhitelistRequestFormData {
   intendedBondAmount: string;
 }
 
+export interface WhitelistRequestParams {
+  nodeAddress: string;
+  userAddress: string;
+  amount: number;
+}
+
+export interface ThorBondAction {
+  type: string;
+  data: Record<string, unknown>;
+  timestamp: number;
+}
+
+export interface MidgardAction {
+  type: string;
+  date: string;
+  height: string;
+  in: unknown[];
+  out: unknown[];
+  pools: string[];
+  status: string;
+  metadata: {
+    send?: {
+      code: string;
+      memo: string;
+      networkFees: Array<{
+        amount: string;
+        asset: string;
+      }>;
+      reason: string;
+    };
+  };
+}
+
+export interface ListingParams {
+  nodeAddress: string;
+  operatorAddress: string;
+  minRune: number;
+  maxRune: number;
+  feePercentage: number;
+}
+
+export interface ListingMemo {
+  nodeAddress: string;
+  operatorAddress: string;
+  minRune: number;
+  maxRune: number;
+  feePercentage: number;
+}

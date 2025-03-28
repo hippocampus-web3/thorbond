@@ -5,6 +5,7 @@ import Button from '../ui/Button';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import Dropdown from '../ui/Dropdown';
 
 interface FormData {
   address: string;
@@ -21,12 +22,15 @@ const validationSchema = z.object({
 });
 
 interface NodeFormProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  availableNodes: any[]; // TODO: Fix types
   onSubmit: (data: FormData) => void;
   onCancel: () => void;
   initialData?: FormData;
 }
 
 const NodeForm: React.FC<NodeFormProps> = ({
+  availableNodes,
   onSubmit,
   onCancel,
   initialData,
@@ -48,8 +52,7 @@ const NodeForm: React.FC<NodeFormProps> = ({
     defaultValues: formData,
   });
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target;
+  const handleInputChange = (name: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -82,15 +85,25 @@ const NodeForm: React.FC<NodeFormProps> = ({
       <CardContent>
         <form onSubmit={handleSubmit(handleSubmitForm)} className="space-y-6">
           <div className="grid grid-cols-1 gap-6">
-            <Input
-              label="Node address"
-              placeholder="thor..."
-              name="address"
-              value={formData.address}
-              onChange={handleInputChange}
-              error={errors.address?.message}
-              fullWidth
-            />
+
+            {
+              import.meta.env.VITE_FEATURE_FLAG_ENFORCE_NODE_OPERATOR === 'true' ?
+              <Dropdown
+                options={availableNodes.map(node => ({ value: node.node_address, label: node.node_address }))}
+                value={formData.address}
+                onChange={(value) => handleInputChange('address', value)}
+                placeholder="Choose your node"
+              /> : 
+              <Input
+                label="Node address"
+                placeholder="thor..."
+                name="address"
+                value={formData.address}
+                onChange={({target}: React.ChangeEvent<HTMLInputElement>) => handleInputChange(target.name, target.value)}
+                error={errors.address?.message}
+                fullWidth
+              />
+            }
             
             <Input
               label="Available Bonding Capacity (RUNE)"
@@ -99,7 +112,7 @@ const NodeForm: React.FC<NodeFormProps> = ({
               step="1"
               name="bondingCapacity"
               value={formData.bondingCapacity}
-              onChange={handleInputChange}
+              onChange={({target}: React.ChangeEvent<HTMLInputElement>)  => handleInputChange(target.name, target.value)}
               error={errors.bondingCapacity?.message}
               fullWidth
             />
@@ -111,7 +124,7 @@ const NodeForm: React.FC<NodeFormProps> = ({
               step="1"
               name="minimumBond"
               value={formData.minimumBond}
-              onChange={handleInputChange}
+              onChange={({target}: React.ChangeEvent<HTMLInputElement>)  => handleInputChange(target.name, target.value)}
               error={errors.minimumBond?.message}
               fullWidth
             />
@@ -124,7 +137,7 @@ const NodeForm: React.FC<NodeFormProps> = ({
               step="0.1"
               name="feePercentage"
               value={formData.feePercentage}
-              onChange={handleInputChange}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>)  => handleInputChange(name, value)}
               error={errors.feePercentage?.message}
               fullWidth
             />
