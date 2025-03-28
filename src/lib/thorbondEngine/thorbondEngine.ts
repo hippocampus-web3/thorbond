@@ -1,60 +1,12 @@
 import axios from 'axios';
-import { Node, WhitelistRequest } from '../types';
+import { ListingMemo, ListingParams, MidgardAction, Node, ThorBondAction, WhitelistRequest, WhitelistRequestParams } from '../../types';
 import { assetToBase, assetAmount, baseAmount, baseToAsset } from '@xchainjs/xchain-util';
-
-interface ThorBondAction {
-  type: string;
-  data: Record<string, unknown>;
-  timestamp: number;
-}
-
-interface MidgardAction {
-  type: string;
-  date: string;
-  height: string;
-  in: unknown[];
-  out: unknown[];
-  pools: string[];
-  status: string;
-  metadata: {
-    send?: {
-      code: string;
-      memo: string;
-      networkFees: Array<{
-        amount: string;
-        asset: string;
-      }>;
-      reason: string;
-    };
-  };
-}
-
-interface ListingParams {
-  nodeAddress: string;
-  operatorAddress: string;
-  minRune: number;
-  maxRune: number;
-  feePercentage: number;
-}
-
-interface ListingMemo {
-  nodeAddress: string;
-  operatorAddress: string;
-  minRune: number;
-  maxRune: number;
-  feePercentage: number;
-}
-
-interface WhitelistRequestParams {
-  nodeAddress: string;
-  userAddress: string;
-  amount: number;
-}
+import { createBondMemo, createEnableBondMemo, createUnbondMemo, createWhitelistRequestMemo } from './memoBuilder';
 
 class ThorBondEngine {
   private static instance: ThorBondEngine;
   private readonly MIDGARD_API_URL = 'https://midgard.ninerealms.com/v2';
-  private readonly THORBOND_ADDRESS = 'thor1xazgmh7sv0p393t9ntj6q9p52ahycc8jjlaap9';
+  private readonly THORBOND_ADDRESS = import.meta.env.VITE_THORBOND_ADDRESS || 'thor1xazgmh7sv0p393t9ntj6q9p52ahycc8jjlaap9';
   private actions: ThorBondAction[] = [];
   private isInitialized: boolean = false;
 
@@ -100,7 +52,21 @@ class ThorBondEngine {
     };
   }
 
-  public getNodes(): Node[] {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public async getAllNodes(): Promise<any[]> {
+    const THORNODE_API_URL = 'https://thornode.ninerealms.com/thorchain/nodes';
+  
+    try {
+      const response = await axios.get(THORNODE_API_URL);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch all nodes:', error);
+      throw new Error('Failed to retrieve all nodes');
+    }
+  }
+  
+
+  public getListedNodes(): Node[] {
     if (!this.isInitialized) {
       throw new Error('ThorBondEngine not initialized');
     }
@@ -175,13 +141,14 @@ class ThorBondEngine {
     const response = await axios.get(`${this.MIDGARD_API_URL}/actions`, {
       params: {
         address: this.THORBOND_ADDRESS,
-        limit: 50,
+        limit: 600,
         offset: 0,
-        type: 'send'
+        type: 'send',
+        fromHeight: import.meta.env.VITE_INITIAL_HEIGHT
       }
     });
-
     const actions = response.data.actions || [];
+
     this.actions = actions.map((action: MidgardAction) => this.transformMidgardAction(action));
     this.isInitialized = true;
   }
@@ -221,10 +188,6 @@ class ThorBondEngine {
   public async sendListingTransaction(params: ListingParams): Promise<string> {
     const memo = this.createListing(params);
 
-    if (!window.xfi?.thorchain) {
-      throw new Error('XDEFI wallet not found. Please install XDEFI extension.');
-    }
-
     return new Promise((resolve, reject) => {
       if (!window.xfi?.thorchain) {
         reject(new Error('XDEFI wallet not found. Please install XDEFI extension.'));
@@ -260,41 +223,8 @@ class ThorBondEngine {
     });
   }
 
-  public createWhitelistRequest(params: WhitelistRequestParams): string {
-    if (!params.nodeAddress.startsWith('thor1')) {
-      throw new Error('Invalid node address format');
-    }
-    if (!params.userAddress.startsWith('thor1')) {
-      throw new Error('Invalid user address format');
-    }
-    if (params.amount <= 0) {
-      throw new Error('Amount must be greater than 0');
-    }
-
-    return `TB:${params.nodeAddress}:${params.userAddress}:${params.amount}`;
-  }
-
-  public createBond(params: WhitelistRequest): string {
-    if (!params.node.address.startsWith('thor1')) {
-      throw new Error('Invalid node address format');
-    }
-    return `BOND:${params.node.address}`;
-  }
-
-  public createUnbond(params: WhitelistRequest): string {
-    if (!params.node.address.startsWith('thor1')) {
-      throw new Error('Invalid node address format');
-    }
-    const amount = assetToBase(assetAmount(params.realBond, 8)).amount().toString();
-    return `UNBOND:${params.node.address}:${amount}`;
-  }
-
   public async sendWhitelistRequest(params: WhitelistRequestParams): Promise<string> {
-    const memo = this.createWhitelistRequest(params);
-
-    if (!window.xfi?.thorchain) {
-      throw new Error('XDEFI wallet not found. Please install XDEFI extension.');
-    }
+    const memo = createWhitelistRequestMemo(params);
 
     return new Promise((resolve, reject) => {
       if (!window.xfi?.thorchain) {
@@ -332,19 +262,13 @@ class ThorBondEngine {
   }
 
   public async sendBondRequest(params: WhitelistRequest): Promise<string> {
-    const memo = this.createBond(params);
-
-    if (!window.xfi?.thorchain) {
-      throw new Error('XDEFI wallet not found. Please install XDEFI extension.');
-    }
+    const memo = createBondMemo(params);
 
     return new Promise((resolve, reject) => {
       if (!window.xfi?.thorchain) {
         reject(new Error('XDEFI wallet not found. Please install XDEFI extension.'));
         return;
       }
-
-      console.log('memo', memo)
 
       window.xfi.thorchain.request(
         {
@@ -375,19 +299,13 @@ class ThorBondEngine {
   }
 
   public async sendUnbondRequest(params: WhitelistRequest): Promise<string> {
-    const memo = this.createUnbond(params);
-
-    if (!window.xfi?.thorchain) {
-      throw new Error('XDEFI wallet not found. Please install XDEFI extension.');
-    }
+    const memo = createUnbondMemo(params);
 
     return new Promise((resolve, reject) => {
       if (!window.xfi?.thorchain) {
         reject(new Error('XDEFI wallet not found. Please install XDEFI extension.'));
         return;
       }
-
-      console.log('memo', memo)
 
       window.xfi.thorchain.request(
         {
@@ -417,7 +335,44 @@ class ThorBondEngine {
     });
   }
 
-  public async getWhitelistRequests(connectedAddress: string): Promise<{ operator: WhitelistRequest[], user: WhitelistRequest[] }> {
+  public async sendEnableBondRequest(params: WhitelistRequest): Promise<string> {
+    const memo = createEnableBondMemo(params);
+
+    return new Promise((resolve, reject) => {
+      if (!window.xfi?.thorchain) {
+        reject(new Error('XDEFI wallet not found. Please install XDEFI extension.'));
+        return;
+      }
+      
+      window.xfi.thorchain.request(
+        {
+          method: 'deposit',
+          params: [{
+            asset: {
+              chain: 'THOR',
+              symbol: 'RUNE',
+              ticker: 'RUNE'
+            },
+            from: params.node.operator,
+            amount: {
+              amount: assetToBase(assetAmount(1, 8)).amount().toNumber(),
+              decimals: 8
+            },
+            memo,
+          }]
+        },
+        (error, result) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(result);
+          }
+        }
+      );
+    });
+  }
+
+  public async getWhitelistRequests(connectedAddress?: string): Promise<{ operator: WhitelistRequest[], user: WhitelistRequest[] }> {
     if (!this.isInitialized) {
       throw new Error('ThorBondEngine not initialized');
     }
@@ -441,9 +396,7 @@ class ThorBondEngine {
       const amount = Number(amountStr);
       if (isNaN(amount) || amount <= 0) continue;
 
-      console.log('nodes', this.getNodes())
-
-      const node = this.getNodes().find(node => node.address === nodeAddress);
+      const node = this.getListedNodes().find(node => node.address === nodeAddress);
   
       if (!node) {
         throw new Error('Node not found');
@@ -453,14 +406,11 @@ class ThorBondEngine {
 
         const bondInfo = await this.getBondInfoForUser(node.address, userAddress)
 
-        // Calculate status
         let status: "pending" | "approved" | "rejected" | "bonded" = 'pending'
 
-        // -> If userAddress whitelisted on node.address -> Approved
         if (bondInfo.isBondProvider) {
           status = 'approved';
         }
-        // -> If userAddress not whitelisted on node.address + userAddress active position on node -> bonded
         if (bondInfo.isBondProvider && bondInfo.bond > 0) {
           status = 'bonded';
         }

@@ -20,9 +20,9 @@ const NodeCard: React.FC<NodeCardProps> = ({
     <div className="bg-white shadow rounded-lg p-4">
       <div className="flex justify-between items-start mb-4">
         <h3 className="text-lg font-medium text-gray-900">Node</h3>
-        <span className="px-2 py-1 text-sm rounded-full bg-blue-100 text-blue-800">
+        {/* <span className="px-2 py-1 text-sm rounded-full bg-blue-100 text-blue-800">
           Active
-        </span>
+        </span> */}
       </div>
 
       <div className="flex items-center mb-4">

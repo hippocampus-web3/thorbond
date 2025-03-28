@@ -2,20 +2,18 @@ import React, { useState } from 'react';
 import NodesList from '../components/nodes/NodesList';
 import WhitelistRequestForm from '../components/nodes/WhitelistRequestForm';
 import { Node, WhitelistRequestFormData } from '../types';
-import ThorBondEngine from '../lib/thorbondEngine';
+import ThorBondEngine from '../lib/thorbondEngine/thorbondEngine';
 import { useWallet } from '../contexts/WalletContext';
 import { toast } from 'react-toastify';
 
 interface NodesPageProps {
   nodes: Node[];
   isAuthenticated: boolean;
-  onRequestWhitelist: (formData: WhitelistRequestFormData) => void;
 }
 
 const NodesPage: React.FC<NodesPageProps> = ({
   nodes,
   isAuthenticated,
-  onRequestWhitelist,
 }) => {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const { address } = useWallet();
@@ -44,7 +42,6 @@ const NodesPage: React.FC<NodesPageProps> = ({
       });
 
       toast.success('Whitelist request submitted successfully!');
-      onRequestWhitelist(formData);
       setSelectedNode(null);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error submitting whitelist request';

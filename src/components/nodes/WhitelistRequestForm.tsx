@@ -8,6 +8,7 @@ import Button from '../ui/Button';
 import Alert from '../ui/Alert';
 import { validateThorAddress } from '../../lib/utils';
 import { Node } from '../../types';
+import { useWallet } from '../../contexts/WalletContext';
 
 // Form validation schema
 const requestSchema = z.object({
@@ -35,8 +36,9 @@ const WhitelistRequestForm: React.FC<WhitelistRequestFormProps> = ({
   onSubmit,
   onCancel,
 }) => {
+  const { address } = useWallet();
   const [formData, setFormData] = useState<RequestFormData>({
-    walletAddress: '',
+    walletAddress: address || '',
     intendedBondAmount: node.minimumBond.toString(),
   });
 
@@ -107,7 +109,8 @@ const WhitelistRequestForm: React.FC<WhitelistRequestFormProps> = ({
               placeholder="thor..."
               name="walletAddress"
               value={formData.walletAddress}
-              onChange={handleInputChange}
+              disabled={import.meta.env.VITE_FEATURE_FLAG_ENFORCE_ADDRESS === 'true'}
+              onChange={import.meta.env.VITE_FEATURE_FLAG_ENFORCE_ADDRESS !== 'true' ?  handleInputChange : () => {}}
               error={errors.walletAddress?.message}
               fullWidth
             />

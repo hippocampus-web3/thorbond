@@ -111,6 +111,7 @@ const RequestList: React.FC<RequestListProps> = ({
                         disabled={action.isDisabled ? action.isDisabled(request) : false}
                         size="sm"
                         onClick={() => action.action(request)}
+                        className='ml-2'
                       >
                         {action.title}
                       </Button>
