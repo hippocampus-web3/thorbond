@@ -9,6 +9,7 @@ class ThorBondEngine {
   private readonly THORBOND_ADDRESS = import.meta.env.VITE_THORBOND_ADDRESS || 'thor1xazgmh7sv0p393t9ntj6q9p52ahycc8jjlaap9';
   private actions: ThorBondAction[] = [];
   private isInitialized: boolean = false;
+  private RUNE_DUST = 10000000
 
   private constructor() {}
 
@@ -66,7 +67,7 @@ class ThorBondEngine {
   }
   
 
-  public getListedNodes(): Node[] {
+  public getListedNodes(oficialNodes: any[]): Node[] {
     if (!this.isInitialized) {
       throw new Error('ThorBondEngine not initialized');
     }
@@ -78,6 +79,9 @@ class ThorBondEngine {
       const memo = action.data.memo as string;
       if (!memo) return;
 
+      const runeActionValue = (action.data.in as any)[0]?.coins.find((coin: { amount: string, asset: string}) => coin.asset === 'THOR.RUNE')
+      if (!runeActionValue || Number(runeActionValue.amount) < this.RUNE_DUST) return;
+
       const listingMemo = this.parseListingMemo(memo);
       if (!listingMemo) return;
 
@@ -85,9 +89,16 @@ class ThorBondEngine {
       if (processedAddresses.has(listingMemo.nodeAddress)) return;
       processedAddresses.add(listingMemo.nodeAddress);
 
+      const officialNodeInfo = oficialNodes.find(on => import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR ?
+         on.node_address === listingMemo.nodeAddress && on.node_operator_address === import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR : 
+         on.node_address === listingMemo.nodeAddress && on.node_operator_address === listingMemo.operatorAddress
+      )
+
+      if (!officialNodeInfo) return;
+
       nodes.push({
-        operator: listingMemo.operatorAddress,
-        address: listingMemo.nodeAddress,
+        operator: officialNodeInfo.node_operator_address,
+        address: officialNodeInfo.node_address,
         bondingCapacity: listingMemo.maxRune,
         minimumBond: listingMemo.minRune,
         feePercentage: listingMemo.feePercentage,
@@ -206,7 +217,7 @@ class ThorBondEngine {
             from: params.operatorAddress,
             recipient: this.THORBOND_ADDRESS,
             amount: {
-              amount: 1000000, // 0.01 RUNE (8 decimals)
+              amount: this.RUNE_DUST, // 0.01 RUNE (8 decimals)
               decimals: 8
             },
             memo,
@@ -244,7 +255,7 @@ class ThorBondEngine {
             from: params.userAddress,
             recipient: this.THORBOND_ADDRESS,
             amount: {
-              amount: 1000000, // 0.01 RUNE (8 decimals)
+              amount: this.RUNE_DUST, // 0.01 RUNE (8 decimals)
               decimals: 8
             },
             memo,
@@ -372,14 +383,14 @@ class ThorBondEngine {
     });
   }
 
-  public async getWhitelistRequests(connectedAddress?: string): Promise<{ operator: WhitelistRequest[], user: WhitelistRequest[] }> {
+  public async getWhitelistRequests(connectedAddress: string, oficialNodes: any[]): Promise<{ operator: WhitelistRequest[], user: WhitelistRequest[] }> {
     if (!this.isInitialized) {
       throw new Error('ThorBondEngine not initialized');
     }
   
     const requestsUser: WhitelistRequest[] = [];
     const requestsOperator: WhitelistRequest[] = [];
-  
+
     for (const action of this.actions) { // TODO: Optimize taking into account rate limits
 
       const memo = action.data.memo as string;
@@ -390,16 +401,22 @@ class ThorBondEngine {
   
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const [_, nodeAddress, userAddress, amountStr] = parts;
+
+      if (userAddress !== (action.data.in as any)[0]?.address) continue;
+
+      const runeActionValue = (action.data.in as any)[0]?.coins.find((coin: { amount: string, asset: string}) => coin.asset === 'THOR.RUNE')
+
+      if (!runeActionValue || Number(runeActionValue.amount) < this.RUNE_DUST) continue;
   
       if (!nodeAddress.startsWith('thor1') || !userAddress.startsWith('thor1')) continue;
   
       const amount = Number(amountStr);
       if (isNaN(amount) || amount <= 0) continue;
 
-      const node = this.getListedNodes().find(node => node.address === nodeAddress);
+      const node = this.getListedNodes(oficialNodes).find(node => node.address === nodeAddress);
   
       if (!node) {
-        throw new Error('Node not found');
+        continue
       }
 
       if (userAddress === connectedAddress || node.operator === connectedAddress) {
@@ -447,11 +464,11 @@ class ThorBondEngine {
 
     // Remove duplicates
     const dedupedOperatorRequestsByNode = Array.from(
-      new Map(requestsOperator.map(ro => [ro.node.address, ro])).values()
+      new Map(requestsOperator.reverse().map(ro => [ro.node.address, ro])).values()
     );
 
     const dedupedUserRequestsByNode = Array.from(
-      new Map(requestsUser.map(ru => [ru.node.address, ru])).values()
+      new Map(requestsUser.reverse().map(ru => [ru.node.address, ru])).values()
     );
   
     return {

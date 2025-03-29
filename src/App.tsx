@@ -25,13 +25,15 @@ const AppContent: React.FC = () => {
     const initializeEngine = async () => {
       const engine = ThorBondEngine.getInstance();
       await engine.initialize();
-      setListedNodes(engine.getListedNodes())
-      
+
       const nodes = await engine.getAllNodes()
+      const listedNodes = engine.getListedNodes(nodes)
+
       setAllNodes(nodes)
+      setListedNodes(listedNodes)
 
       if (address) {
-        const requests = await engine.getWhitelistRequests(address as string)
+        const requests = await engine.getWhitelistRequests(address as string, nodes)
         setWhitelistRequests(requests);
       } 
     };
@@ -102,10 +104,6 @@ const AppContent: React.FC = () => {
         maxRune: Number(formData.bondingCapacity),
         feePercentage: Number(formData.feePercentage)
       });
-
-      // Update Nodes list after creating a new one
-      await engine.refreshActions();
-      setListedNodes(engine.getListedNodes());
       
       toast.success('Listing created successfully!');
     } catch (error) {
