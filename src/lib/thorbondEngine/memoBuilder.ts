@@ -12,7 +12,7 @@ export function createWhitelistRequestMemo(params: WhitelistRequestParams): stri
       throw new Error('Amount must be greater than 0');
     }
 
-    return `TB:${params.nodeAddress}:${params.userAddress}:${params.amount}`;
+    return `TB:WHT:${params.nodeAddress}:${params.userAddress}:${params.amount}`;
   }
 
 export function createBondMemo(params: WhitelistRequest): string {

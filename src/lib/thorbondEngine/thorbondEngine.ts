@@ -23,14 +23,14 @@ class ThorBondEngine {
   private parseListingMemo(memo: string): ListingMemo | null {
     try {
       const parts = memo.split(':');
-      if (parts.length !== 6 || parts[0] !== 'TB') return null;
+      if (parts.length !== 7 || parts[0] !== 'TB') return null;
 
       return {
-        nodeAddress: parts[1],
-        operatorAddress: parts[2],
-        minRune: Number(parts[3]),
-        maxRune: Number(parts[4]),
-        feePercentage: Number(parts[5])
+        nodeAddress: parts[2],
+        operatorAddress: parts[3],
+        minRune: Number(parts[4]),
+        maxRune: Number(parts[5]),
+        feePercentage: Number(parts[6])
       };
     } catch {
       return null;
@@ -84,6 +84,8 @@ class ThorBondEngine {
 
       const listingMemo = this.parseListingMemo(memo);
       if (!listingMemo) return;
+
+      if (listingMemo.operatorAddress !== (action.data.in as any)[0]?.address) return;
 
       // Process only the first occurrence of each node address
       if (processedAddresses.has(listingMemo.nodeAddress)) return;
@@ -193,7 +195,7 @@ class ThorBondEngine {
       throw new Error('Fee percentage must be between 0 and 100');
     }
 
-    return `TB:${params.nodeAddress}:${params.operatorAddress}:${params.minRune}:${params.maxRune}:${params.feePercentage}`;
+    return `TB:LIST:${params.nodeAddress}:${params.operatorAddress}:${params.minRune}:${params.maxRune}:${params.feePercentage}`;
   }
 
   public async sendListingTransaction(params: ListingParams): Promise<string> {
@@ -397,10 +399,10 @@ class ThorBondEngine {
       if (!memo) continue;
   
       const parts = memo.split(':');
-      if (parts.length !== 4 || parts[0] !== 'TB') continue;
+      if (parts.length !== 5 || parts[0] !== 'TB') continue;
   
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const [_, nodeAddress, userAddress, amountStr] = parts;
+      const [_1, _2, nodeAddress, userAddress, amountStr] = parts;
 
       if (userAddress !== (action.data.in as any)[0]?.address) continue;
 
