@@ -6,9 +6,10 @@ import { Card, CardHeader, CardContent, CardFooter } from '../ui/Card';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import Alert from '../ui/Alert';
-import { validateThorAddress } from '../../lib/utils';
+import { formatRune, validateThorAddress } from '../../lib/utils';
 import { Node } from '../../types';
 import { useWallet } from '../../contexts/WalletContext';
+import { baseAmount, baseToAsset } from '@xchainjs/xchain-util';
 
 // Form validation schema
 const requestSchema = z.object({
@@ -39,7 +40,7 @@ const WhitelistRequestForm: React.FC<WhitelistRequestFormProps> = ({
   const { address } = useWallet();
   const [formData, setFormData] = useState<RequestFormData>({
     walletAddress: address || '',
-    intendedBondAmount: node.minimumBond.toString(),
+    intendedBondAmount: baseToAsset(baseAmount(node.minRune)).amount().toString(),
   });
 
   const {
@@ -61,7 +62,7 @@ const WhitelistRequestForm: React.FC<WhitelistRequestFormProps> = ({
     setValue(name as keyof RequestFormData, value);
   };
 
-  const isBondAmountValid = Number(formData.intendedBondAmount) >= node.minimumBond;
+  const isBondAmountValid = Number(formData.intendedBondAmount) >= baseToAsset(baseAmount(node.minRune)).amount().toNumber();
   const isFormValid = validateThorAddress(formData.walletAddress) && 
                      Number(formData.intendedBondAmount) > 0 && 
                      isBondAmountValid;
@@ -86,19 +87,19 @@ const WhitelistRequestForm: React.FC<WhitelistRequestFormProps> = ({
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-gray-500">Address:</span>
-                <p className="font-medium">{node.address.slice(0, 10)}...{node.address.slice(-6)}</p>
+                <p className="font-medium">{node.nodeAddress.slice(0, 10)}...{node.nodeAddress.slice(-6)}</p>
               </div>
               <div>
                 <span className="text-gray-500">Minimum Bond:</span>
-                <p className="font-medium">{node.minimumBond.toLocaleString()} RUNE</p>
+                <p className="font-medium">{formatRune(baseAmount(node.minRune))} RUNE</p>
               </div>
               <div>
                 <span className="text-gray-500">Fee Percentage:</span>
-                <p className="font-medium">{node.feePercentage}%</p>
+                <p className="font-medium">{node.feePercentage / 100}%</p>
               </div>
               <div>
                 <span className="text-gray-500">Available Capacity:</span>
-                <p className="font-medium">{node.bondingCapacity.toLocaleString()} RUNE</p>
+                <p className="font-medium">{formatRune(baseAmount(node.maxRune))} RUNE</p>
               </div>
             </div>
           </div>
@@ -118,7 +119,7 @@ const WhitelistRequestForm: React.FC<WhitelistRequestFormProps> = ({
             <Input
               label="Intended Bond Amount (RUNE)"
               type="number"
-              min={node.minimumBond}
+              min={node.minRune}
               name="intendedBondAmount"
               value={formData.intendedBondAmount}
               onChange={handleInputChange}
@@ -128,7 +129,7 @@ const WhitelistRequestForm: React.FC<WhitelistRequestFormProps> = ({
             
             {!isBondAmountValid && Number(formData.intendedBondAmount) > 0 && (
               <Alert variant="warning">
-                The bond amount must be at least {node.minimumBond.toLocaleString()} RUNE.
+                The bond amount must be at least {formatRune(baseAmount(node.minRune))} RUNE.
               </Alert>
             )}
           </div>

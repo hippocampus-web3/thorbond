@@ -7,31 +7,27 @@ export interface NodeOperatorFormData {
   contactInfo?: string;
 }
 export interface Node {
-  operator: string;
-  address: string;
+  operatorAddress: string;
+  nodeAddress: string;
   status?: string;
-  bondingCapacity: number;
-  minimumBond: number;
+  maxRune: number;
+  minRune: number;
   feePercentage: number;
+  txId: string;
+  height: number;
+  timestamp: string;
   description?: string;
   contactInfo?: string;
-  createdAt: Date;
-}
-
-export interface User {
-  id: string;
-  walletAddress: string;
-  isNodeOperator: boolean;
 }
 
 export interface WhitelistRequest {
   node: Node;
-  walletAddress: string;
+  userAddress: string;
   intendedBondAmount: number;
   realBond: number,
   status: 'pending' | 'approved' | 'rejected' | 'bonded';
   rejectionReason?: string;
-  createdAt: Date;
+  timestamp: string;
 }
 
 export interface WhitelistRequestFormData {
@@ -44,34 +40,6 @@ export interface WhitelistRequestParams {
   userAddress: string;
   amount: number;
 }
-
-export interface ThorBondAction {
-  type: string;
-  data: Record<string, unknown>;
-  timestamp: number;
-}
-
-export interface MidgardAction {
-  type: string;
-  date: string;
-  height: string;
-  in: unknown[];
-  out: unknown[];
-  pools: string[];
-  status: string;
-  metadata: {
-    send?: {
-      code: string;
-      memo: string;
-      networkFees: Array<{
-        amount: string;
-        asset: string;
-      }>;
-      reason: string;
-    };
-  };
-}
-
 export interface ListingParams {
   nodeAddress: string;
   operatorAddress: string;

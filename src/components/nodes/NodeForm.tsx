@@ -137,7 +137,7 @@ const NodeForm: React.FC<NodeFormProps> = ({
               step="0.1"
               name="feePercentage"
               value={formData.feePercentage}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>)  => handleInputChange(name, value)}
+              onChange={({target}: React.ChangeEvent<HTMLInputElement>)  => handleInputChange(target.name, target.value)}
               error={errors.feePercentage?.message}
               fullWidth
             />

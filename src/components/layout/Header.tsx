@@ -34,11 +34,11 @@ const Header: React.FC<HeaderProps> = ({
             <div className="flex-shrink-0 flex items-center">
               <Link to="/" className="flex items-center">
                 <img 
-                  src="thorbond-logo.png" 
+                  src="runebond-logo.png" 
                   alt="RUNE" 
                   className="h-8 w-8"
                 />
-                <span className="ml-2 text-xl font-bold text-gray-900">THORBond</span>
+                <span className="ml-2 text-xl font-bold text-gray-900">RUNEBond</span>
               </Link>
             </div>
 

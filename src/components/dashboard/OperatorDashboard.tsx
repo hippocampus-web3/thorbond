@@ -8,6 +8,7 @@ import Button from '../ui/Button';
 import { Node, WhitelistRequest } from '../../types';
 import { formatRune } from '../../lib/utils';
 import Dropdown from '../ui/Dropdown';
+import { baseAmount } from '@xchainjs/xchain-util';
 
 interface OperatorDashboardProps {
   nodes: Node[];
@@ -26,26 +27,26 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
   onEditListing,
   onDeleteListing,
 }) => {
-  const [ selectedNodeValue, setSelectedNodeValue ] = React.useState<string>(nodes[0]?.address);
-  // const node = nodes.filter(op => op.operator === address).map(node => ({ value: node.address, label: node.address }))[0];
+  const [ selectedNodeValue, setSelectedNodeValue ] = React.useState<string>(nodes[0]?.nodeAddress);
+  // const node = nodes.filter(op => op.operator === address).map(node => ({ value: node.nodeAddress, label: node.nodeAddress }))[0];
 
-  const options = nodes.map(node => ({ value: node.address, label: node.address }));
-  const selectedNode = nodes.find(n => n.address === selectedNodeValue)
+  const options = nodes.map(node => ({ value: node.nodeAddress, label: node.nodeAddress }));
+  const selectedNode = nodes.find(n => n.nodeAddress === selectedNodeValue)
   
-  const pendingRequests = requests.filter(req => req.status === 'pending' && req.node.address === selectedNode?.address);
-  const approvedRequests = requests.filter(req => req.status === 'approved' && req.node.address === selectedNode?.address);
-  const rejectedRequests = requests.filter(req => req.status === 'rejected' && req.node.address === selectedNode?.address);
-  const bondedRequests = requests.filter(req => req.status === 'bonded' && req.node.address === selectedNode?.address);
+  const pendingRequests = requests.filter(req => req.status === 'pending' && req.node.nodeAddress === selectedNode?.nodeAddress);
+  const approvedRequests = requests.filter(req => req.status === 'approved' && req.node.nodeAddress === selectedNode?.nodeAddress);
+  const rejectedRequests = requests.filter(req => req.status === 'rejected' && req.node.nodeAddress === selectedNode?.nodeAddress);
+  const bondedRequests = requests.filter(req => req.status === 'bonded' && req.node.nodeAddress === selectedNode?.nodeAddress);
   
   const totalBonded = bondedRequests.reduce((sum, req) => sum + req.realBond, 0);
-  const remainingCapacity = selectedNode ? selectedNode.bondingCapacity - totalBonded : 0;
+  const remainingCapacity = selectedNode ? selectedNode.maxRune - totalBonded : 0;
 
   if (!selectedNode) {
     return (
       <div className="text-center py-12">
         <img 
-          src="/thorbond-logo.png" 
-          alt="ThorBond Logo" 
+          src="/runebond-logo.png" 
+          alt="RuneBond Logo" 
           className="w-32 h-32 mx-auto mb-8"
         />
         <h2 className="text-2xl font-bold text-gray-900 mb-4">Welcome Node Operator</h2>
@@ -87,18 +88,18 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Available Capacity"
-          value={`${formatRune(remainingCapacity)} RUNE`}
+          value={`${formatRune(baseAmount(remainingCapacity))} RUNE`}
           icon={DollarSign}
-          description={`${formatRune(totalBonded)} RUNE bonded`}
+          description={`${formatRune(baseAmount(totalBonded))} RUNE bonded`}
         />
         <StatCard
           title="Minimum Bond"
-          value={`${formatRune(selectedNode?.minimumBond)} RUNE`}
+          value={`${formatRune(baseAmount(selectedNode?.minRune))} RUNE`}
           icon={DollarSign}
         />
         <StatCard
           title="Fee Percentage"
-          value={`${selectedNode?.feePercentage}%`}
+          value={`${selectedNode?.feePercentage / 100}%`}
           icon={Percent}
         />
         <StatCard

@@ -68,8 +68,8 @@ const OperatorDashboardPage: React.FC<OperatorDashboardPageProps> = ({
     return (
       <div className="text-center py-12">
         <img 
-          src="/thorbond-logo.png" 
-          alt="ThorBond Logo" 
+          src="/runebond-logo.png" 
+          alt="RuneBond Logo" 
           className="w-32 h-32 mx-auto mb-8"
         />
         <h2 className="text-2xl font-bold text-gray-900 mb-4">You are not a Node Operator</h2>

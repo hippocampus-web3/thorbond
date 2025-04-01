@@ -4,7 +4,7 @@ import { Card, CardHeader, CardContent } from '../ui/Card';
 import Tabs from '../ui/Tabs';
 import RequestList from '../requests/RequestList';
 import { WhitelistRequest } from '../../types';
-import ThorBondEngine from '../../lib/thorbondEngine/thorbondEngine';
+import RuneBondEngine from '../../lib/runebondEngine/runebondEngine';
 import { toast } from 'react-toastify';
 
 interface UserDashboardProps {
@@ -16,7 +16,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ requests }) => {
   const approvedRequests = requests.filter(req => req.status === 'approved');
   const rejectedRequests = requests.filter(req => req.status === 'rejected');
   const bondedRequests = requests.filter(req => req.status === 'bonded');
-  const engine = ThorBondEngine.getInstance();
+  const engine = RuneBondEngine.getInstance();
   
   const handleBondRequest = async (request: WhitelistRequest) => {
     try {

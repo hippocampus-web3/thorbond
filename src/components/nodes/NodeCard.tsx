@@ -3,6 +3,7 @@ import { Node } from '../../types';
 import Button from '../ui/Button';
 import { formatRune, shortenAddress, getTimeAgo } from '../../lib/utils';
 import { useWallet } from '../../contexts/WalletContext';
+import { baseAmount } from "@xchainjs/xchain-util";
 
 interface NodeCardProps {
   node: Node;
@@ -14,7 +15,7 @@ const NodeCard: React.FC<NodeCardProps> = ({
   onRequestWhitelist,
 }) => {
   const { isConnected, address } = useWallet();
-  const isOperator = address === node.operator;
+  const isOperator = address === node.operatorAddress;
 
   return (
     <div className="bg-white shadow rounded-lg p-4">
@@ -27,7 +28,7 @@ const NodeCard: React.FC<NodeCardProps> = ({
 
       <div className="flex items-center mb-4">
         <span className="text-sm text-gray-600">
-          {shortenAddress(node.address)}
+          {shortenAddress(node.nodeAddress)}
         </span>
       </div>
 
@@ -35,26 +36,26 @@ const NodeCard: React.FC<NodeCardProps> = ({
 
         <div className="flex justify-between">
           <span className="text-gray-600">Node operator:</span>
-          <span className="font-medium">{shortenAddress(node.operator)}</span>
+          <span className="font-medium">{shortenAddress(node.operatorAddress)}</span>
         </div>
 
         <div className="flex justify-between">
           <span className="text-gray-600">Bonding Capacity:</span>
-          <span className="font-medium">{formatRune(node.bondingCapacity)} RUNE</span>
+          <span className="font-medium">{formatRune(baseAmount(node.maxRune))} RUNE</span>
         </div>
 
         <div className="flex justify-between">
           <span className="text-gray-600">Minimum Bond:</span>
-          <span className="font-medium">{formatRune(node.minimumBond)} RUNE</span>
+          <span className="font-medium">{formatRune(baseAmount(node.minRune))} RUNE</span>
         </div>
 
         <div className="flex justify-between">
           <span className="text-gray-600">Fee Percentage:</span>
-          <span className="font-medium">{node.feePercentage}%</span>
+          <span className="font-medium">{node.feePercentage / 100}%</span>
         </div>
       </div>
 
-      {node.description && (
+      {node && (
         <p className="mt-4 text-gray-600">
           {node.description}
         </p>
@@ -67,7 +68,7 @@ const NodeCard: React.FC<NodeCardProps> = ({
       )}
 
       <div className="mt-4 text-sm text-gray-500">
-        Listed {getTimeAgo(node.createdAt)}
+        Listed {getTimeAgo(node.timestamp)}
       </div>
 
       {isOperator ? (

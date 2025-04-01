@@ -1,7 +1,9 @@
-export function formatRune(amount: number): string {
+import { BaseAmount, baseToAsset } from "@xchainjs/xchain-util";
+
+export function formatRune(baseAmount: BaseAmount): string {
   return new Intl.NumberFormat('en-US', {
     maximumFractionDigits: 2,
-  }).format(amount);
+  }).format(baseToAsset(baseAmount).amount().toNumber());
 }
 
 export function validateThorAddress(address: string): boolean {
@@ -14,16 +16,8 @@ export function shortenAddress(address: string): string {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
-export const getTimeAgo = (timestamp: number | Date): string => {
-  let date: Date;
-  
-  if (timestamp instanceof Date) {
-    date = timestamp;
-  } else {
-    // Convert nanoseconds to milliseconds
-    date = new Date(Number(timestamp) / 1000000);
-  }
-
+export const getTimeAgo = (timestamp: string): string => {
+  const date = new Date(timestamp)
   const now = new Date();
   const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
   

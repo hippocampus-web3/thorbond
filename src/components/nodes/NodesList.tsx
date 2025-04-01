@@ -28,7 +28,7 @@ const NodesList: React.FC<NodeListProps> = ({
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
         return (
-          node.address.toLowerCase().includes(searchLower) ||
+          node.nodeAddress.toLowerCase().includes(searchLower) ||
           (node.description && node.description.toLowerCase().includes(searchLower)) ||
           (node.contactInfo && node.contactInfo.toLowerCase().includes(searchLower))
         );
@@ -38,7 +38,7 @@ const NodesList: React.FC<NodeListProps> = ({
     .filter((node) => {
       // Filter by minimum bond
       if (filterMinBond) {
-        return node.minimumBond <= parseInt(filterMinBond);
+        return node.minRune <= parseInt(filterMinBond);
       }
       return true;
     })
@@ -46,13 +46,13 @@ const NodesList: React.FC<NodeListProps> = ({
       // Sort by selected criteria
       switch (sortBy) {
         case 'bondingCapacity':
-          return b.bondingCapacity - a.bondingCapacity;
+          return b.maxRune - a.maxRune;
         case 'minimumBond':
-          return a.minimumBond - b.minimumBond;
+          return a.minRune - b.minRune;
         case 'feePercentage':
           return a.feePercentage - b.feePercentage;
         case 'newest':
-          return b.createdAt.getTime() - a.createdAt.getTime();
+          return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
         default:
           return 0;
       }
@@ -118,7 +118,7 @@ const NodesList: React.FC<NodeListProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredNodes.map((node) => (
             <NodeCard
-              key={node.address}
+              key={node.nodeAddress}
               node={node}
               onRequestWhitelist={onRequestWhitelist}
             />

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import NodesList from '../components/nodes/NodesList';
 import WhitelistRequestForm from '../components/nodes/WhitelistRequestForm';
 import { Node, WhitelistRequestFormData } from '../types';
-import ThorBondEngine from '../lib/thorbondEngine/thorbondEngine';
+import RuneBondEngine from '../lib/runebondEngine/runebondEngine';
 import { useWallet } from '../contexts/WalletContext';
 import { toast } from 'react-toastify';
 
@@ -17,7 +17,7 @@ const NodesPage: React.FC<NodesPageProps> = ({
 }) => {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const { address } = useWallet();
-  const engine = ThorBondEngine.getInstance();
+  const engine = RuneBondEngine.getInstance();
 
   const handleRequestWhitelist = (node: Node) => {
     if (!isAuthenticated) {
@@ -25,7 +25,7 @@ const NodesPage: React.FC<NodesPageProps> = ({
       return;
     }
     
-    const selectedNode = nodes.find(n => n.address === node.address);
+    const selectedNode = nodes.find(n => n.nodeAddress === node.nodeAddress);
     if (selectedNode) {
       setSelectedNode(selectedNode);
     }
@@ -36,7 +36,7 @@ const NodesPage: React.FC<NodesPageProps> = ({
 
     try {
       await engine.sendWhitelistRequest({
-        nodeAddress: selectedNode.address,
+        nodeAddress: selectedNode.nodeAddress,
         userAddress: formData.walletAddress,
         amount: Number(formData.intendedBondAmount)
       });

@@ -4,6 +4,7 @@ import Badge from '../ui/Badge';
 import Button from '../ui/Button';
 import { WhitelistRequest } from '../../types';
 import { formatRune, shortenAddress } from '../../lib/utils';
+import { baseAmount } from '@xchainjs/xchain-util';
 
 interface RequestListProps {
   requests: WhitelistRequest[];
@@ -27,7 +28,7 @@ const RequestList: React.FC<RequestListProps> = ({
       case 'approved':
         return <Badge variant="success">Approved</Badge>;
       case 'bonded':
-        return <Badge variant="success" link={`https://rune.tools/bond?bond_address=${request?.walletAddress}&node_address=${request?.node?.address}`}>Bonded</Badge>;
+        return <Badge variant="success" link={`https://rune.tools/bond?bond_address=${request?.userAddress}&node_address=${request?.node?.nodeAddress}`}>Bonded</Badge>;
       case 'rejected':
         return <Badge variant="danger">Rejected</Badge>;
       default:
@@ -79,19 +80,19 @@ const RequestList: React.FC<RequestListProps> = ({
                 </div>
               </td> */}
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {shortenAddress(request.walletAddress)}
+                {shortenAddress(request.userAddress)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {shortenAddress(request.node.address)}
+                {shortenAddress(request.node.nodeAddress)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {formatRune(request.intendedBondAmount)} RUNE
+                {formatRune(baseAmount(request.intendedBondAmount))} RUNE
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {formatRune(request.realBond)} RUNE
+                {formatRune(baseAmount(request.realBond))} RUNE
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {format(request.createdAt, 'MMM d, yyyy')}
+                {format(new Date(request.timestamp), 'MMM d, yyyy')}
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 {getStatusBadge(request.status, request)}

@@ -10,7 +10,7 @@ import OperatorDashboardPage from './pages/OperatorDashboardPage';
 import UserRequestsPage from './pages/UserRequestsPage';
 import { Node, NodeOperatorFormData, WhitelistRequest } from './types';
 import { WalletProvider, useWallet } from './contexts/WalletContext';
-import ThorBondEngine from './lib/thorbondEngine/thorbondEngine';
+import RuneBondEngine from './lib/runebondEngine/runebondEngine';
 
 const AppContent: React.FC = () => {
   const [listedNodes, setListedNodes] = useState<Node[]>([]);
@@ -20,20 +20,20 @@ const AppContent: React.FC = () => {
 
   const { address, isConnected, error, connect, disconnect } = useWallet();
   
-  // Initialize ThorBondEngine and load Nodes
+  // Initialize RuneBondEngine and load Nodes
   useEffect(() => {
     const initializeEngine = async () => {
-      const engine = ThorBondEngine.getInstance();
+      const engine = RuneBondEngine.getInstance();
       await engine.initialize();
 
       const nodes = await engine.getAllNodes()
-      const listedNodes = engine.getListedNodes(nodes)
+      const listedNodes = engine.getListedNodes()
 
       setAllNodes(nodes)
       setListedNodes(listedNodes)
 
       if (address) {
-        const requests = await engine.getWhitelistRequests(address as string, nodes)
+        const requests = await engine.getWhitelistRequests(address as string)
         setWhitelistRequests(requests);
       } 
     };
@@ -96,7 +96,7 @@ const AppContent: React.FC = () => {
   // Node functions
   const handleCreateListing = async (formData: NodeOperatorFormData) => {
     try {
-      const engine = ThorBondEngine.getInstance();
+      const engine = RuneBondEngine.getInstance();
       await engine.sendListingTransaction({
         nodeAddress: formData.address,
         operatorAddress: address || '',
@@ -118,7 +118,7 @@ const AppContent: React.FC = () => {
 
   const handleApproveRequest = async (request: WhitelistRequest) => {
     try {
-      const engine = ThorBondEngine.getInstance();
+      const engine = RuneBondEngine.getInstance();
       await engine.sendEnableBondRequest(request);
 
       toast.success('Enable bond request submitted successfully!');
@@ -155,7 +155,7 @@ const AppContent: React.FC = () => {
             path="/operator-dashboard"
             element={
               <OperatorDashboardPage
-                nodes={listedNodes.filter(op => op.operator === address)}
+                nodes={listedNodes.filter(op => op.operatorAddress === address)}
                 availableNodes={allNodes.filter(node => import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR ? node.node_operator_address === import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR : node.node_operator_address === address)}
                 requests={witheListsRequests.operator}
                 onCreateListing={handleCreateListing}
