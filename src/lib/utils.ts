@@ -6,6 +6,19 @@ export function formatRune(baseAmount: BaseAmount): string {
   }).format(baseToAsset(baseAmount).amount().toNumber());
 }
 
+export function formatDuration(seconds: number): string {
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+
+  const parts = [];
+  if (days > 0) parts.push(`${days} ${days === 1 ? 'd' : 'd'}`);
+  if (hours > 0) parts.push(`${hours} ${hours === 1 ? 'h' : 'h'}`);
+  if (minutes > 0 || parts.length === 0) parts.push(`${minutes} ${minutes === 1 ? 'm' : 'm'}`);
+
+  return parts.join(' ');
+}
+
 export function validateThorAddress(address: string): boolean {
   // Basic validation - in a real app, this would be more sophisticated
   return address.startsWith('thor') && address.length === 43;

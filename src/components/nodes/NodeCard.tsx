@@ -1,7 +1,7 @@
 import React from 'react';
 import { Node } from '../../types';
 import Button from '../ui/Button';
-import { formatRune, shortenAddress, getTimeAgo } from '../../lib/utils';
+import { formatRune, shortenAddress, getTimeAgo, formatDuration } from '../../lib/utils';
 import { useWallet } from '../../contexts/WalletContext';
 import { baseAmount } from "@xchainjs/xchain-util";
 
@@ -21,9 +21,9 @@ const NodeCard: React.FC<NodeCardProps> = ({
     <div className="bg-white shadow rounded-lg p-4">
       <div className="flex justify-between items-start mb-4">
         <h3 className="text-lg font-medium text-gray-900">Node</h3>
-        {/* <span className="px-2 py-1 text-sm rounded-full bg-blue-100 text-blue-800">
-          Active
-        </span> */}
+        <span className="px-2 py-1 text-sm rounded-full bg-blue-100 text-blue-800">
+          {node.status}
+        </span>
       </div>
 
       <div className="flex items-center mb-4">
@@ -50,8 +50,23 @@ const NodeCard: React.FC<NodeCardProps> = ({
         </div>
 
         <div className="flex justify-between">
+          <span className="text-gray-600">Bond providers:</span>
+          <span className="font-medium">{node.bondProvidersCount} / 100</span>
+        </div>
+
+        <div className="flex justify-between">
+          <span className="text-gray-600">Slash points:</span>
+          <span className="font-medium">{node.slashPoints}</span>
+        </div>
+
+        <div className="flex justify-between">
           <span className="text-gray-600">Fee Percentage:</span>
           <span className="font-medium">{node.feePercentage / 100}%</span>
+        </div>
+
+        <div className="flex justify-between">
+          <span className="text-gray-600">Last status update:</span>
+          <span className="font-medium">{formatDuration(node.activeTime)}</span>
         </div>
       </div>
 

@@ -16,6 +16,9 @@ export interface Node {
   txId: string;
   height: number;
   timestamp: string;
+  slashPoints: number;
+  activeTime: number;
+  bondProvidersCount: number;
   description?: string;
   contactInfo?: string;
 }
