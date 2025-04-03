@@ -49,14 +49,12 @@ const Header: React.FC<HeaderProps> = ({
               >
                 Nodes
               </Link>
-              {isAuthenticated && (
-                <Link
-                  to="/operator-dashboard"
-                  className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                >
-                  Operator Dashboard
-                </Link>
-              )}
+              <Link
+                to="/operator-dashboard"
+                className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+              >
+                Operator Dashboard
+              </Link>
               {isAuthenticated && (
                 <Link
                   to="/user-requests"

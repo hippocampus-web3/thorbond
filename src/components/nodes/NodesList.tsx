@@ -8,11 +8,13 @@ import { Node } from '../../types';
 interface NodeListProps {
   nodes: Node[];
   onRequestWhitelist: (node: Node) => void;
+  isLoading?: boolean;
 }
 
 const NodesList: React.FC<NodeListProps> = ({
   nodes,
   onRequestWhitelist,
+  isLoading = false,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('bondingCapacity');
@@ -57,6 +59,45 @@ const NodesList: React.FC<NodeListProps> = ({
           return 0;
       }
     });
+
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, index) => (
+            <div key={index} className="bg-white rounded-lg shadow-sm p-6 animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+              <div className="space-y-3">
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    if (filteredNodes.length === 0) {
+      return (
+        <div className="text-center py-12 bg-white rounded-lg shadow-sm">
+          <p className="text-gray-500">No nodes found matching your criteria.</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredNodes.map((node) => (
+          <NodeCard
+            key={node.nodeAddress}
+            node={node}
+            onRequestWhitelist={onRequestWhitelist}
+          />
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div>
@@ -110,21 +151,7 @@ const NodesList: React.FC<NodeListProps> = ({
         </div>
       </div>
       
-      {filteredNodes.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-          <p className="text-gray-500">No nodes found matching your criteria.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredNodes.map((node) => (
-            <NodeCard
-              key={node.nodeAddress}
-              node={node}
-              onRequestWhitelist={onRequestWhitelist}
-            />
-          ))}
-        </div>
-      )}
+      {renderContent()}
     </div>
   );
 };

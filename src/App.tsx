@@ -17,25 +17,37 @@ const AppContent: React.FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [allNodes, setAllNodes] = useState<any[]>([]); // TODO: Fix types
   const [witheListsRequests, setWhitelistRequests] = useState<{ operator: WhitelistRequest[], user: WhitelistRequest[] }>({ operator: [], user: [] });
-
+  const [searchOperator, setSearchOperator] = useState<string>('');
+  const [isLoadingNodes, setIsLoadingNodes] = useState(true);
+  
   const { address, isConnected, error, connect, disconnect } = useWallet();
+
+  const addressTofilter = address || searchOperator // Prioritize connected wallet
   
   // Initialize RuneBondEngine and load Nodes
   useEffect(() => {
     const initializeEngine = async () => {
-      const engine = RuneBondEngine.getInstance();
-      await engine.initialize();
+      try {
+        setIsLoadingNodes(true);
+        const engine = RuneBondEngine.getInstance();
+        await engine.initialize();
 
-      const nodes = await engine.getAllNodes()
-      const listedNodes = engine.getListedNodes()
+        const nodes = await engine.getAllNodes()
+        const listedNodes = engine.getListedNodes()
 
-      setAllNodes(nodes)
-      setListedNodes(listedNodes)
+        setAllNodes(nodes)
+        setListedNodes(listedNodes)
 
-      if (address) {
-        const requests = await engine.getWhitelistRequests(address as string)
-        setWhitelistRequests(requests);
-      } 
+        if (address) {
+          const requests = await engine.getWhitelistRequests(address as string)
+          setWhitelistRequests(requests);
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Error loading nodes';
+        toast.error(errorMessage);
+      } finally {
+        setIsLoadingNodes(false);
+      }
     };
 
     initializeEngine();
@@ -148,6 +160,7 @@ const AppContent: React.FC = () => {
               <NodesPage
                 nodes={listedNodes}
                 isAuthenticated={isConnected}
+                isLoading={isLoadingNodes}
               />
             }
           />
@@ -155,13 +168,15 @@ const AppContent: React.FC = () => {
             path="/operator-dashboard"
             element={
               <OperatorDashboardPage
-                nodes={listedNodes.filter(op => op.operatorAddress === address)}
-                availableNodes={allNodes.filter(node => import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR ? node.node_operator_address === import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR : node.node_operator_address === address)}
+                nodes={listedNodes.filter(op => op.operatorAddress === addressTofilter)}
+                availableNodes={allNodes.filter(node => import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR ? node.node_operator_address === import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR : node.node_operator_address === addressTofilter)}
                 requests={witheListsRequests.operator}
                 onCreateListing={handleCreateListing}
                 onDeleteListing={handleDeleteListing}
                 onApproveRequest={handleApproveRequest}
-                onRejectRequest={handleRejectRequest}
+                onRejectRequest={handleRejectRequest} 
+                onSearchOperator={setSearchOperator}
+                isLoading={isLoadingNodes}      
               />
             }
           />

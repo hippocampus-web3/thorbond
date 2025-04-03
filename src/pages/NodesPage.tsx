@@ -9,11 +9,13 @@ import { toast } from 'react-toastify';
 interface NodesPageProps {
   nodes: Node[];
   isAuthenticated: boolean;
+  isLoading: boolean;
 }
 
 const NodesPage: React.FC<NodesPageProps> = ({
   nodes,
   isAuthenticated,
+  isLoading,
 }) => {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const { address } = useWallet();
@@ -80,6 +82,7 @@ const NodesPage: React.FC<NodesPageProps> = ({
           <NodesList
             nodes={nodes}
             onRequestWhitelist={handleRequestWhitelist}
+            isLoading={isLoading}
           />
         </div>
       )}

@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Node } from '../../types';
 import Button from '../ui/Button';
 import { formatRune, shortenAddress, getTimeAgo, formatDuration } from '../../lib/utils';
 import { useWallet } from '../../contexts/WalletContext';
 import { baseAmount } from "@xchainjs/xchain-util";
+import { Copy, Check } from 'lucide-react';
 
 interface NodeCardProps {
   node: Node;
@@ -16,6 +17,18 @@ const NodeCard: React.FC<NodeCardProps> = ({
 }) => {
   const { isConnected, address } = useWallet();
   const isOperator = address === node.operatorAddress;
+  const [copiedNode, setCopiedNode] = useState(false);
+  const [copiedOperator, setCopiedOperator] = useState(false);
+
+  const handleCopy = async (text: string, setCopied: (value: boolean) => void) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy address:', err);
+    }
+  };
 
   return (
     <div className="bg-white shadow rounded-lg p-4">
@@ -30,13 +43,36 @@ const NodeCard: React.FC<NodeCardProps> = ({
         <span className="text-sm text-gray-600">
           {shortenAddress(node.nodeAddress)}
         </span>
+        <button
+          onClick={() => handleCopy(node.nodeAddress, setCopiedNode)}
+          className="ml-2 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+          title="Copy node address"
+        >
+          {copiedNode ? (
+            <Check className="h-4 w-4 text-green-500" />
+          ) : (
+            <Copy className="h-4 w-4" />
+          )}
+        </button>
       </div>
 
       <div className="space-y-3">
-
-        <div className="flex justify-between">
+        <div className="flex justify-between items-center">
           <span className="text-gray-600">Node operator:</span>
-          <span className="font-medium">{shortenAddress(node.operatorAddress)}</span>
+          <div className="flex items-center">
+            <span className="font-medium">{shortenAddress(node.operatorAddress)}</span>
+            <button
+              onClick={() => handleCopy(node.operatorAddress, setCopiedOperator)}
+              className="ml-2 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+              title="Copy operator address"
+            >
+              {copiedOperator ? (
+                <Check className="h-4 w-4 text-green-500" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
+            </button>
+          </div>
         </div>
 
         <div className="flex justify-between">
