@@ -38,8 +38,8 @@ const AppContent: React.FC = () => {
         setAllNodes(nodes)
         setListedNodes(listedNodes)
 
-        if (address) {
-          const requests = await engine.getWhitelistRequests(address as string)
+        if (addressTofilter) {
+          const requests = await engine.getWhitelistRequests(addressTofilter as string)
           setWhitelistRequests(requests);
         }
       } catch (error) {
@@ -51,7 +51,7 @@ const AppContent: React.FC = () => {
     };
 
     initializeEngine();
-  }, [address]);
+  }, [addressTofilter]);
 
   // Display wallet errors
   useEffect(() => {

@@ -1,4 +1,4 @@
-import React, { useEffect} from "react";
+import React, { useEffect } from "react";
 import { Users, DollarSign, Percent } from "lucide-react";
 import { Card, CardHeader, CardContent } from "../ui/Card";
 import Tabs from "../ui/Tabs";
@@ -26,7 +26,7 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
   onApproveRequest,
   onRejectRequest,
   onEditListing,
-  onDeleteListing,  
+  onDeleteListing,
 }) => {
   const { address } = useWallet();
   const [selectedNodeValue, setSelectedNodeValue] = React.useState<string>(
@@ -171,19 +171,23 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
                 content: (
                   <RequestList
                     requests={pendingRequests}
-                    actionList={[
-                      {
-                        title: "Approve",
-                        type: "primary",
-                        action: onApproveRequest,
-                      },
-                      {
-                        title: "Reject",
-                        isDisabled: () => true,
-                        type: "danger",
-                        action: onRejectRequest,
-                      },
-                    ]}
+                    actionList={
+                      address === selectedNode?.operatorAddress
+                        ? [
+                            {
+                              title: "Approve",
+                              type: "primary",
+                              action: onApproveRequest,
+                            },
+                            {
+                              title: "Reject",
+                              isDisabled: () => true,
+                              type: "danger",
+                              action: onRejectRequest,
+                            },
+                          ]
+                        : []
+                    }
                   />
                 ),
               },
@@ -203,14 +207,18 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
                 content: (
                   <RequestList
                     requests={bondedRequests}
-                    actionList={[
-                      {
-                        title: "Revoke",
-                        isDisabled: () => true,
-                        action: () => console.log("Pending implement"),
-                        type: "danger",
-                      },
-                    ]}
+                    actionList={
+                      address === selectedNode?.operatorAddress
+                        ? [
+                            {
+                              title: "Revoke",
+                              isDisabled: () => true,
+                              action: () => console.log("Pending implement"),
+                              type: "danger",
+                            },
+                          ]
+                        : []
+                    }
                   />
                 ),
               },

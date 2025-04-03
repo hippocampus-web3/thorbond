@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
+import { Copy, Check } from 'lucide-react';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
 import { WhitelistRequest } from '../../types';
@@ -15,6 +16,22 @@ const RequestList: React.FC<RequestListProps> = ({
   requests,
   actionList = [],
 }) => {
+  const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
+
+  const handleCopy = async (address: string) => {
+    try {
+      await navigator.clipboard.writeText(address);
+      setCopiedAddress(address);
+      setTimeout(() => setCopiedAddress(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy address:', err);
+    }
+  };
+
+  const handleOpenInExplorer = (address: string) => {
+    window.open(`https://thorchain.net/address/${address}`, '_blank');
+  };
+
   if (requests.length === 0) {
     return (
       <div className="text-center py-12 bg-white rounded-lg shadow-sm">
@@ -35,6 +52,29 @@ const RequestList: React.FC<RequestListProps> = ({
         return <Badge variant="warning">Pending</Badge>;
     }
   };
+
+  const renderAddress = (address: string) => (
+    <div className="flex items-center space-x-2">
+      <button
+        onClick={() => handleOpenInExplorer(address)}
+        className="text-sm text-blue-600 hover:text-blue-800 hover:underline focus:outline-none"
+        title="View in explorer"
+      >
+        {shortenAddress(address)}
+      </button>
+      <button
+        onClick={() => handleCopy(address)}
+        className="p-1 hover:bg-gray-100 rounded"
+        title="Copy address"
+      >
+        {copiedAddress === address ? (
+          <Check className="h-4 w-4 text-green-500" />
+        ) : (
+          <Copy className="h-4 w-4 text-gray-400" />
+        )}
+      </button>
+    </div>
+  );
 
   return (
     <div className="overflow-x-auto">
@@ -69,21 +109,11 @@ const RequestList: React.FC<RequestListProps> = ({
         <tbody className="bg-white divide-y divide-gray-200">
           {requests.map((request, index) => (
             <tr key={index}>
-              {/* <td className="px-6 py-4 whitespace-nowrap">
-                <div className="flex flex-col">
-                  <div className="text-sm font-medium text-gray-900">
-                    {request.discordUsername}
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {request.xUsername} / {request.telegramUsername}
-                  </div>
-                </div>
-              </td> */}
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {shortenAddress(request.userAddress)}
+              <td className="px-6 py-4 whitespace-nowrap">
+                {renderAddress(request.userAddress)}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {shortenAddress(request.node.nodeAddress)}
+              <td className="px-6 py-4 whitespace-nowrap">
+                {renderAddress(request.node.nodeAddress)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {formatRune(baseAmount(request.intendedBondAmount))} RUNE
