@@ -28,8 +28,9 @@ const RequestList: React.FC<RequestListProps> = ({
     }
   };
 
-  const handleOpenInExplorer = (address: string) => {
-    window.open(`https://thorchain.net/address/${address}`, '_blank');
+  const handleOpenInExplorer = (address: string, isNode: boolean = false) => {
+    const baseUrl = isNode ? 'https://thorchain.net/node' : 'https://thorchain.net/address';
+    window.open(`${baseUrl}/${address}`, '_blank');
   };
 
   if (requests.length === 0) {
@@ -53,10 +54,10 @@ const RequestList: React.FC<RequestListProps> = ({
     }
   };
 
-  const renderAddress = (address: string) => (
+  const renderAddress = (address: string, isNode: boolean = false) => (
     <div className="flex items-center space-x-2">
       <button
-        onClick={() => handleOpenInExplorer(address)}
+        onClick={() => handleOpenInExplorer(address, isNode)}
         className="text-sm text-blue-600 hover:text-blue-800 hover:underline focus:outline-none"
         title="View in explorer"
       >
@@ -113,7 +114,7 @@ const RequestList: React.FC<RequestListProps> = ({
                 {renderAddress(request.userAddress)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                {renderAddress(request.node.nodeAddress)}
+                {renderAddress(request.node.nodeAddress, true)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {formatRune(baseAmount(request.intendedBondAmount))} RUNE

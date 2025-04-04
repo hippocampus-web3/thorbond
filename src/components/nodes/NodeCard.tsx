@@ -30,6 +30,10 @@ const NodeCard: React.FC<NodeCardProps> = ({
     }
   };
 
+  const handleOpenInExplorer = (address: string) => {
+    window.open(`https://thorchain.net/node/${address}`, '_blank');
+  };
+
   return (
     <div className="bg-white shadow rounded-lg p-4">
       <div className="flex justify-between items-start mb-4">
@@ -40,9 +44,13 @@ const NodeCard: React.FC<NodeCardProps> = ({
       </div>
 
       <div className="flex items-center mb-4">
-        <span className="text-sm text-gray-600">
+        <button
+          onClick={() => handleOpenInExplorer(node.nodeAddress)}
+          className="text-sm text-blue-600 hover:text-blue-800 hover:underline focus:outline-none"
+          title="View in explorer"
+        >
           {shortenAddress(node.nodeAddress)}
-        </span>
+        </button>
         <button
           onClick={() => handleCopy(node.nodeAddress, setCopiedNode)}
           className="ml-2 p-1 text-gray-400 hover:text-gray-600 transition-colors"
