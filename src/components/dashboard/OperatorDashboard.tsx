@@ -75,11 +75,6 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
   if (!selectedNode && address) {
     return (
       <div className="text-center py-12">
-        <img
-          src="/runebond-logo.png"
-          alt="RuneBond Logo"
-          className="w-32 h-32 mx-auto mb-8"
-        />
         <h2 className="text-2xl font-bold text-gray-900 mb-4">
           Welcome Node Operator
         </h2>

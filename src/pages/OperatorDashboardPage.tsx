@@ -48,6 +48,9 @@ const OperatorDashboardPage: React.FC<OperatorDashboardPageProps> = ({
     if (operatorFromUrl) {
       onSearchOperator(operatorFromUrl);
     }
+    return () => {
+      onSearchOperator('')
+    }
   }, []);
 
   const handleSearch = (address: string) => {
@@ -100,11 +103,6 @@ const OperatorDashboardPage: React.FC<OperatorDashboardPageProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="space-y-8">
           <div className="text-center">
-            <img 
-              src="/runebond-logo.png" 
-              alt="RuneBond Logo" 
-              className="w-32 h-32 mx-auto mb-8"
-            />
             <h2 className="text-2xl font-bold text-gray-900 mb-4">You are not a Node Operator</h2>
             <Button onClick={() => window.open('https://docs.thorchain.org/thornodes/overview', '_blank')}>
               Learn about becoming a Node Operator

@@ -14,15 +14,15 @@ import RuneBondEngine from './lib/runebondEngine/runebondEngine';
 
 const AppContent: React.FC = () => {
   const [listedNodes, setListedNodes] = useState<Node[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [allNodes, setAllNodes] = useState<any[]>([]); // TODO: Fix types
+  const [allNodes, setAllNodes] = useState<any[]>([]);
   const [witheListsRequests, setWhitelistRequests] = useState<{ operator: WhitelistRequest[], user: WhitelistRequest[] }>({ operator: [], user: [] });
   const [searchOperator, setSearchOperator] = useState<string>('');
+  const [searchUser, setSearchUser] = useState<string>('');
   const [isLoadingNodes, setIsLoadingNodes] = useState(true);
   
   const { address, isConnected, error, connect, disconnect } = useWallet();
 
-  const addressTofilter = address || searchOperator // Prioritize connected wallet
+  const addressTofilter =  searchOperator || searchUser || import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR || address;
   
   // Initialize RuneBondEngine and load Nodes
   useEffect(() => {
@@ -41,6 +41,8 @@ const AppContent: React.FC = () => {
         if (addressTofilter) {
           const requests = await engine.getWhitelistRequests(addressTofilter as string)
           setWhitelistRequests(requests);
+        } else {
+          setWhitelistRequests({ user: [], operator: [] });
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Error loading nodes';
@@ -182,7 +184,15 @@ const AppContent: React.FC = () => {
           />
           <Route
             path="/user-requests"
-            element={<UserRequestsPage requests={witheListsRequests.user} />}
+            element={
+              <UserRequestsPage 
+                requests={witheListsRequests.user} 
+                onSearchUser={setSearchUser}
+                searchValue={searchUser}
+                isConnected={isConnected}
+                isLoading={isLoadingNodes}
+              />
+            }
           />
         </Routes>
       </Layout>

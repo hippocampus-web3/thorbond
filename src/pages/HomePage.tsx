@@ -12,7 +12,7 @@ const HomePage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div>
               <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-                THORChain Node Bonding Platform
+                RUNEBond
               </h1>
               <p className="mt-6 text-xl text-blue-100">
                 Connect nodes with users for seamless RUNE token bonding opportunities.
@@ -37,7 +37,7 @@ const HomePage: React.FC = () => {
                 <div className="relative bg-white p-8 rounded-lg shadow-xl">
                   <div className="flex justify-center">
                     <img 
-                      src="https://assets.coingecko.com/coins/images/6595/small/RUNE.png" 
+                      src="runebond-isologo.svg" 
                       alt="RUNE" 
                       className="h-24 w-24"
                     />
