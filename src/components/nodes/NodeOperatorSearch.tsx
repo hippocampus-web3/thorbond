@@ -8,12 +8,14 @@ interface NodeOperatorSearchProps {
   onClear?: () => void;
   isLoading?: boolean;
   value?: string;
+  placeholder?: string;
 }
 
 const NodeOperatorSearch: React.FC<NodeOperatorSearchProps> = ({
   onSearch,
   onClear,
   value = '',
+  placeholder = 'thor1...',
 }) => {
   const [address, setAddress] = useState(value);
 
@@ -41,7 +43,7 @@ const NodeOperatorSearch: React.FC<NodeOperatorSearchProps> = ({
               type="text"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              placeholder="thor1..."
+              placeholder={placeholder}
               label="Address"
               required
               fullWidth
@@ -70,7 +72,7 @@ const NodeOperatorSearch: React.FC<NodeOperatorSearchProps> = ({
             className="bg-blue-600 hover:bg-blue-700 text-white"
             disabled={!address.trim()}
           >
-            Search Operator
+            Search
           </Button>
         </div>
       </form>
@@ -79,10 +81,10 @@ const NodeOperatorSearch: React.FC<NodeOperatorSearchProps> = ({
 
   return (
     <div className="bg-white shadow rounded-lg p-6">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">Search Node Operator</h2>
+      <h2 className="text-2xl font-bold text-gray-900 mb-6">Search</h2>
       
       <div className="bg-gray-50 rounded-lg p-4 mb-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Operator Details</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Search Details</h3>
         {renderContent()}
       </div>
     </div>

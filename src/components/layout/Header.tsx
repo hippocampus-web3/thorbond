@@ -34,11 +34,10 @@ const Header: React.FC<HeaderProps> = ({
             <div className="flex-shrink-0 flex items-center">
               <Link to="/" className="flex items-center">
                 <img 
-                  src="runebond-logo.png" 
+                  src="runebond-isologo.svg" 
                   alt="RUNE" 
-                  className="h-8 w-8"
+                  className="h-12 w-12"
                 />
-                <span className="ml-2 text-xl font-bold text-gray-900">RUNEBond</span>
               </Link>
             </div>
 
@@ -55,14 +54,12 @@ const Header: React.FC<HeaderProps> = ({
               >
                 Operator Dashboard
               </Link>
-              {isAuthenticated && (
-                <Link
-                  to="/user-requests"
-                  className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                >
-                  My Requests
-                </Link>
-              )}
+              <Link
+                to="/user-requests"
+                className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+              >
+                My Requests
+              </Link>
             </nav>
           </div>
           <div className="hidden sm:ml-6 sm:flex sm:items-center">
@@ -124,14 +121,12 @@ const Header: React.FC<HeaderProps> = ({
               Operator Dashboard
             </Link>
           )}
-          {isAuthenticated && (
-            <Link
-              to="/user-requests"
-              className="block pl-3 pr-4 py-2 border-l-4 text-base font-medium border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"
-            >
-              My Requests
-            </Link>
-          )}
+          <Link
+            to="/user-requests"
+            className="block pl-3 pr-4 py-2 border-l-4 text-base font-medium border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"
+          >
+            My Requests
+          </Link>
           <div className="pl-3 pr-4 py-2">
             {isAuthenticated ? (
               <div className="space-y-2">

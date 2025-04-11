@@ -10,21 +10,19 @@ const Footer: React.FC = () => {
           <div>
             <div className="flex items-center">
               <img 
-                src="/runebond-logo.png" 
+                src="/runebond-logo-negative.png" 
                 alt="RuneBond" 
-                className="h-8 w-8"
               />
-              <span className="ml-2 text-xl font-bold">RuneBond</span>
             </div>
             <p className="mt-2 text-sm text-gray-300">
               The comprehensive platform for THORChain node operators and users to connect for bonding opportunities.
             </p>
             <div className="mt-4 flex space-x-6">
-              <a href="https://twitter.com/thorchain" className="text-gray-400 hover:text-white">
+              <a href="https://x.com/RuneBondApp" className="text-gray-400 hover:text-white">
                 <span className="sr-only">Twitter</span>
                 <Twitter className="h-6 w-6" />
               </a>
-              <a href="https://github.com/thorchain" className="text-gray-400 hover:text-white">
+              <a href="https://github.com/hippocampus-web3/thorbond" className="text-gray-400 hover:text-white">
                 <span className="sr-only">GitHub</span>
                 <Github className="h-6 w-6" />
               </a>
@@ -34,7 +32,7 @@ const Footer: React.FC = () => {
             <h3 className="text-sm font-semibold text-gray-400 tracking-wider uppercase">Resources</h3>
             <ul className="mt-4 space-y-4">
               <li>
-                <a href="https://docs.thorchain.org/" className="text-base text-gray-300 hover:text-white">
+                <a href="https://thorbond.gitbook.io/runebond" className="text-base text-gray-300 hover:text-white">
                   Documentation
                 </a>
               </li>
@@ -69,7 +67,7 @@ const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/my-requests" className="text-base text-gray-300 hover:text-white">
+                <Link to="/user-requests" className="text-base text-gray-300 hover:text-white">
                   My Requests
                 </Link>
               </li>
