@@ -8,7 +8,8 @@ import HomePage from './pages/HomePage';
 import NodesPage from './pages/NodesPage';
 import OperatorDashboardPage from './pages/OperatorDashboardPage';
 import UserRequestsPage from './pages/UserRequestsPage';
-import { Node, NodeOperatorFormData, WhitelistRequest } from './types';
+import NodeDetailsPage from './pages/NodeDetailsPage';
+import { Node, NodeOperatorFormData, WhitelistRequest, WhitelistRequestFormData } from './types';
 import { WalletProvider, useWallet } from './contexts/WalletContext';
 import RuneBondEngine from './lib/runebondEngine/runebondEngine';
 
@@ -19,6 +20,7 @@ const AppContent: React.FC = () => {
   const [searchOperator, setSearchOperator] = useState<string>('');
   const [searchUser, setSearchUser] = useState<string>('');
   const [isLoadingNodes, setIsLoadingNodes] = useState(true);
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   
   const { address, isConnected, error, connect, disconnect } = useWallet();
 
@@ -146,6 +148,41 @@ const AppContent: React.FC = () => {
     // TODO: Implement logic
   };
 
+  const handleRequestWhitelist = (node: Node) => {
+    if (!isConnected) {
+      toast.error('Please connect your wallet to request whitelisting.');
+      return;
+    }
+    
+    const selectedNode = listedNodes.find(n => n.nodeAddress === node.nodeAddress);
+    if (selectedNode) {
+      setSelectedNode(selectedNode);
+    }
+  };
+
+  const handleSubmitRequest = async (formData: WhitelistRequestFormData) => {
+    if (!selectedNode || !address) return;
+
+    try {
+      const engine = RuneBondEngine.getInstance();
+      await engine.sendWhitelistRequest({
+        nodeAddress: selectedNode.nodeAddress,
+        userAddress: formData.walletAddress,
+        amount: Number(formData.intendedBondAmount)
+      });
+
+      toast.success('Whitelist request submitted successfully!');
+      setSelectedNode(null);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error submitting whitelist request';
+      toast.error(errorMessage);
+    }
+  };
+
+  const handleCancelRequest = () => {
+    setSelectedNode(null);
+  };
+
   return (
     <Router>
       <Layout
@@ -161,8 +198,23 @@ const AppContent: React.FC = () => {
             element={
               <NodesPage
                 nodes={listedNodes}
-                isAuthenticated={isConnected}
                 isLoading={isLoadingNodes}
+                selectedNode={selectedNode}
+                onRequestWhitelist={handleRequestWhitelist}
+                onSubmitRequest={handleSubmitRequest}
+                onCancelRequest={handleCancelRequest}
+              />
+            }
+          />
+          <Route
+            path="/nodes/:nodeAddress"
+            element={
+              <NodeDetailsPage
+                nodes={listedNodes}
+                onRequestWhitelist={handleRequestWhitelist}
+                selectedNode={selectedNode}
+                onSubmitRequest={handleSubmitRequest}
+                onCancelRequest={handleCancelRequest}
               />
             }
           />

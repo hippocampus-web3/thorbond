@@ -38,3 +38,7 @@ export const getTimeAgo = (timestamp: string): string => {
   if (diffInDays === 1) return 'yesterday';
   return `${diffInDays} days ago`;
 };
+
+export const getNodeExplorerUrl = (nodeAddress: string): string => {
+  return `https://thorchain.net/node/${nodeAddress}`;
+};
