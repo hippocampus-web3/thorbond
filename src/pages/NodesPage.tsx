@@ -1,74 +1,46 @@
-import React, { useState } from 'react';
+import React, {useEffect} from 'react';
 import NodesList from '../components/nodes/NodesList';
 import WhitelistRequestForm from '../components/nodes/WhitelistRequestForm';
 import { Node, WhitelistRequestFormData } from '../types';
-import RuneBondEngine from '../lib/runebondEngine/runebondEngine';
-import { useWallet } from '../contexts/WalletContext';
-import { toast } from 'react-toastify';
+import { ArrowLeft } from 'lucide-react';
 
 interface NodesPageProps {
   nodes: Node[];
-  isAuthenticated: boolean;
   isLoading: boolean;
+  selectedNode: Node | null;
+  onRequestWhitelist: (node: Node) => void;
+  onSubmitRequest: (formData: WhitelistRequestFormData) => Promise<void>;
+  onCancelRequest: () => void;
 }
 
 const NodesPage: React.FC<NodesPageProps> = ({
   nodes,
-  isAuthenticated,
   isLoading,
+  selectedNode,
+  onRequestWhitelist,
+  onSubmitRequest,
+  onCancelRequest,
 }) => {
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
-  const { address } = useWallet();
-  const engine = RuneBondEngine.getInstance();
 
-  const handleRequestWhitelist = (node: Node) => {
-    if (!isAuthenticated) {
-      toast.error('Please connect your wallet to request whitelisting.');
-      return;
-    }
-    
-    const selectedNode = nodes.find(n => n.nodeAddress === node.nodeAddress);
-    if (selectedNode) {
-      setSelectedNode(selectedNode);
-    }
-  };
-
-  const handleSubmitRequest = async (formData: WhitelistRequestFormData) => {
-    if (!selectedNode || !address) return;
-
-    try {
-      await engine.sendWhitelistRequest({
-        nodeAddress: selectedNode.nodeAddress,
-        userAddress: formData.walletAddress,
-        amount: Number(formData.intendedBondAmount)
-      });
-
-      toast.success('Whitelist request submitted successfully!');
-      setSelectedNode(null);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error submitting whitelist request';
-      toast.error(errorMessage);
-    }
-  };
-
-  const handleCancelRequest = () => {
-    setSelectedNode(null);
-  };
+  useEffect(() => {
+    onCancelRequest()
+  }, [])
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {selectedNode ? (
         <div>
           <button
-            onClick={handleCancelRequest}
+            onClick={onCancelRequest}
             className="mb-6 text-blue-600 hover:text-blue-800 flex items-center"
           >
-            ← Back to Node Operators
+            <ArrowLeft className="h-5 w-5 mr-2" />
+            Back to Nodes
           </button>
           <WhitelistRequestForm
             node={selectedNode}
-            onSubmit={handleSubmitRequest}
-            onCancel={handleCancelRequest}
+            onSubmit={onSubmitRequest}
+            onCancel={onCancelRequest}
           />
         </div>
       ) : (
@@ -81,7 +53,7 @@ const NodesPage: React.FC<NodesPageProps> = ({
           </div>
           <NodesList
             nodes={nodes}
-            onRequestWhitelist={handleRequestWhitelist}
+            onRequestWhitelist={onRequestWhitelist}
             isLoading={isLoading}
           />
         </div>

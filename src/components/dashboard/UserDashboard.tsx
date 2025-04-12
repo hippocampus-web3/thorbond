@@ -146,30 +146,34 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ requests, searchValue = '
               <h2 className="text-lg font-medium text-gray-900">Request History</h2>
             </CardHeader>
             <CardContent>
-              <Tabs
-                tabs={[
-                  {
-                    id: 'pending',
-                    label: `Pending (${pendingRequests.length})`,
-                    content: <RequestList requests={pendingRequests} />,
-                  },
-                  {
-                    id: 'approved',
-                    label: `Approved (${approvedRequests.length})`,
-                    content: <RequestList requests={approvedRequests} actionList={[{ title: 'Bond', type: 'primary', action: (request) => handleBondRequest(request) }]} />,
-                  },
-                  {
-                    id: 'rejected',
-                    label: `Rejected (${rejectedRequests.length})`,
-                    content: <RequestList requests={rejectedRequests} />,
-                  },
-                  {
-                    id: 'bonded',
-                    label: `Bonded (${bondedRequests.length})`,
-                    content: <RequestList requests={bondedRequests} actionList={[{ title: 'Unbound', isDisabled: (request) => request.node.status === 'Active' || request.node.status === 'Ready', type: 'outline', action: (request) => handleUnbondRequest(request) }]} />,
-                  },
-                ]}
-              />
+              <div className="overflow-x-auto">
+                <div className="min-w-max">
+                  <Tabs
+                    tabs={[
+                      {
+                        id: 'pending',
+                        label: `Pending (${pendingRequests.length})`,
+                        content: <RequestList requests={pendingRequests} />,
+                      },
+                      {
+                        id: 'approved',
+                        label: `Approved (${approvedRequests.length})`,
+                        content: <RequestList requests={approvedRequests} actionList={[{ title: 'Bond', type: 'primary', action: (request) => handleBondRequest(request) }]} />,
+                      },
+                      {
+                        id: 'rejected',
+                        label: `Rejected (${rejectedRequests.length})`,
+                        content: <RequestList requests={rejectedRequests} />,
+                      },
+                      {
+                        id: 'bonded',
+                        label: `Bonded (${bondedRequests.length})`,
+                        content: <RequestList requests={bondedRequests} actionList={[{ title: 'Unbound', isDisabled: (request) => request.node.status === 'Active' || request.node.status === 'Ready', type: 'outline', action: (request) => handleUnbondRequest(request) }]} />,
+                      },
+                    ]}
+                  />
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

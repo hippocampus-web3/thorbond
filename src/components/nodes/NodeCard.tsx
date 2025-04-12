@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Node } from '../../types';
 import Button from '../ui/Button';
-import { formatRune, shortenAddress, getTimeAgo, formatDuration } from '../../lib/utils';
+import { formatRune, shortenAddress, getTimeAgo, formatDuration, getNodeExplorerUrl } from '../../lib/utils';
 import { useWallet } from '../../contexts/WalletContext';
 import { baseAmount } from "@xchainjs/xchain-util";
 import { Copy, Check } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface NodeCardProps {
   node: Node;
@@ -19,6 +20,7 @@ const NodeCard: React.FC<NodeCardProps> = ({
   const isOperator = address === node.operatorAddress;
   const [copiedNode, setCopiedNode] = useState(false);
   const [copiedOperator, setCopiedOperator] = useState(false);
+  const navigate = useNavigate();
 
   const handleCopy = async (text: string, setCopied: (value: boolean) => void) => {
     try {
@@ -31,11 +33,22 @@ const NodeCard: React.FC<NodeCardProps> = ({
   };
 
   const handleOpenInExplorer = (address: string) => {
-    window.open(`https://thorchain.net/node/${address}`, '_blank');
+    window.open(getNodeExplorerUrl(address), '_blank');
+  };
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Prevent navigation if clicking on buttons or interactive elements
+    if ((e.target as HTMLElement).closest('button')) {
+      return;
+    }
+    navigate(`/nodes/${node.nodeAddress}`);
   };
 
   return (
-    <div className="bg-white shadow rounded-lg p-4">
+    <div 
+      className="bg-white shadow rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow"
+      onClick={handleCardClick}
+    >
       <div className="flex justify-between items-start mb-4">
         <h3 className="text-lg font-medium text-gray-900">Node</h3>
         <span className="px-2 py-1 text-sm rounded-full bg-blue-100 text-blue-800">
@@ -45,14 +58,20 @@ const NodeCard: React.FC<NodeCardProps> = ({
 
       <div className="flex items-center mb-4">
         <button
-          onClick={() => handleOpenInExplorer(node.nodeAddress)}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleOpenInExplorer(node.nodeAddress);
+          }}
           className="text-sm text-blue-600 hover:text-blue-800 hover:underline focus:outline-none"
           title="View in explorer"
         >
           {shortenAddress(node.nodeAddress)}
         </button>
         <button
-          onClick={() => handleCopy(node.nodeAddress, setCopiedNode)}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleCopy(node.nodeAddress, setCopiedNode);
+          }}
           className="ml-2 p-1 text-gray-400 hover:text-gray-600 transition-colors"
           title="Copy node address"
         >
@@ -70,7 +89,10 @@ const NodeCard: React.FC<NodeCardProps> = ({
           <div className="flex items-center">
             <span className="font-medium">{shortenAddress(node.operatorAddress)}</span>
             <button
-              onClick={() => handleCopy(node.operatorAddress, setCopiedOperator)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCopy(node.operatorAddress, setCopiedOperator);
+              }}
               className="ml-2 p-1 text-gray-400 hover:text-gray-600 transition-colors"
               title="Copy operator address"
             >
@@ -139,7 +161,10 @@ const NodeCard: React.FC<NodeCardProps> = ({
         </Button>
       ) : (
         <Button
-          onClick={() => onRequestWhitelist(node)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onRequestWhitelist(node);
+          }}
           className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white"
           disabled={!isConnected}
         >

@@ -6,10 +6,11 @@ import StatCard from "./StatCard";
 import RequestList from "../requests/RequestList";
 import Button from "../ui/Button";
 import { Node, WhitelistRequest } from "../../types";
-import { formatRune } from "../../lib/utils";
+import { formatRune, shortenAddress } from "../../lib/utils";
 import Dropdown from "../ui/Dropdown";
 import { baseAmount } from "@xchainjs/xchain-util";
 import { useWallet } from "../../contexts/WalletContext";
+import { useWindowSize } from "../../hooks/useWindowSize";
 
 interface OperatorDashboardProps {
   nodes: Node[];
@@ -29,6 +30,7 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
   onDeleteListing,
 }) => {
   const { address } = useWallet();
+  const { width } = useWindowSize();
   const [selectedNodeValue, setSelectedNodeValue] = React.useState<string>(
     nodes[0]?.nodeAddress
   );
@@ -39,7 +41,7 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
 
   const options = nodes.map((node) => ({
     value: node.nodeAddress,
-    label: node.nodeAddress,
+    label: width < 768 ? shortenAddress(node.nodeAddress) : node.nodeAddress,
   }));
   const selectedNode = nodes.find((n) => n.nodeAddress === selectedNodeValue);
 
@@ -97,31 +99,33 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-        <div>
+        <div className="w-full md:w-auto">
           <h1 className="text-2xl font-bold text-gray-900">
             Node Operator Dashboard
           </h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-gray-500 truncate">
             {selectedNode?.operatorAddress}
           </p>
         </div>
-        <div className="mt-4 md:mt-0 flex space-x-4">
-          <Dropdown
-            label="Select one of your nodes"
-            options={options}
-            value={selectedNodeValue}
-            onChange={(value) => setSelectedNodeValue(value)}
-            placeholder="Choose a node"
-          />
+        <div className="mt-4 md:mt-0 flex flex-col md:flex-row gap-4">
+          <div className="w-full md:w-auto">
+            <Dropdown
+              label="Select one of your nodes"
+              options={options}
+              value={selectedNodeValue}
+              onChange={(value) => setSelectedNodeValue(value)}
+              placeholder="Choose a node"
+            />
+          </div>
           {address === selectedNode?.operatorAddress && (
-            <>
+            <div className="flex flex-col md:flex-row gap-4">
               <Button variant="outline" onClick={onEditListing}>
                 New Listing
               </Button>
               <Button variant="danger" onClick={onDeleteListing} disabled>
                 Delete Listing
               </Button>
-            </>
+            </div>
           )}
         </div>
       </div>
@@ -140,7 +144,7 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
         />
         <StatCard
           title="Fee Percentage"
-          value={`${selectedNode?.feePercentage / 100}%`}
+          value={`${selectedNode?.feePercentage ? selectedNode.feePercentage / 100 : 0}%`}
           icon={Percent}
         />
         <StatCard
@@ -158,67 +162,71 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
           </h2>
         </CardHeader>
         <CardContent>
-          <Tabs
-            tabs={[
-              {
-                id: "pending",
-                label: `Pending (${pendingRequests.length})`,
-                content: (
-                  <RequestList
-                    requests={pendingRequests}
-                    actionList={
-                      address === selectedNode?.operatorAddress
-                        ? [
-                            {
-                              title: "Approve",
-                              type: "primary",
-                              action: onApproveRequest,
-                            },
-                            {
-                              title: "Reject",
-                              isDisabled: () => true,
-                              type: "danger",
-                              action: onRejectRequest,
-                            },
-                          ]
-                        : []
-                    }
-                  />
-                ),
-              },
-              {
-                id: "approved",
-                label: `Approved (${approvedRequests.length})`,
-                content: <RequestList requests={approvedRequests} />,
-              },
-              {
-                id: "rejected",
-                label: `Rejected (${rejectedRequests.length})`,
-                content: <RequestList requests={rejectedRequests} />,
-              },
-              {
-                id: "bonded",
-                label: `Bonded (${bondedRequests.length})`,
-                content: (
-                  <RequestList
-                    requests={bondedRequests}
-                    actionList={
-                      address === selectedNode?.operatorAddress
-                        ? [
-                            {
-                              title: "Revoke",
-                              isDisabled: () => true,
-                              action: () => console.log("Pending implement"),
-                              type: "danger",
-                            },
-                          ]
-                        : []
-                    }
-                  />
-                ),
-              },
-            ]}
-          />
+          <div className="overflow-x-auto">
+            <div className="min-w-max">
+              <Tabs
+                tabs={[
+                  {
+                    id: "pending",
+                    label: `Pending (${pendingRequests.length})`,
+                    content: (
+                      <RequestList
+                        requests={pendingRequests}
+                        actionList={
+                          address === selectedNode?.operatorAddress
+                            ? [
+                                {
+                                  title: "Approve",
+                                  type: "primary",
+                                  action: onApproveRequest,
+                                },
+                                {
+                                  title: "Reject",
+                                  isDisabled: () => true,
+                                  type: "danger",
+                                  action: onRejectRequest,
+                                },
+                              ]
+                            : []
+                        }
+                      />
+                    ),
+                  },
+                  {
+                    id: "approved",
+                    label: `Approved (${approvedRequests.length})`,
+                    content: <RequestList requests={approvedRequests} />,
+                  },
+                  {
+                    id: "rejected",
+                    label: `Rejected (${rejectedRequests.length})`,
+                    content: <RequestList requests={rejectedRequests} />,
+                  },
+                  {
+                    id: "bonded",
+                    label: `Bonded (${bondedRequests.length})`,
+                    content: (
+                      <RequestList
+                        requests={bondedRequests}
+                        actionList={
+                          address === selectedNode?.operatorAddress
+                            ? [
+                                {
+                                  title: "Revoke",
+                                  isDisabled: () => true,
+                                  action: () => console.log("Pending implement"),
+                                  type: "danger",
+                                },
+                              ]
+                            : []
+                        }
+                      />
+                    ),
+                  },
+                ]}
+              />
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

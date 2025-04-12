@@ -113,14 +113,12 @@ const Header: React.FC<HeaderProps> = ({
           >
             Nodes
           </Link>
-          {isAuthenticated && (
-            <Link
-              to="/operator-dashboard"
-              className="block pl-3 pr-4 py-2 border-l-4 text-base font-medium border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"
-            >
-              Operator Dashboard
-            </Link>
-          )}
+          <Link
+            to="/operator-dashboard"
+            className="block pl-3 pr-4 py-2 border-l-4 text-base font-medium border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"
+          >
+            Operator Dashboard
+          </Link>
           <Link
             to="/user-requests"
             className="block pl-3 pr-4 py-2 border-l-4 text-base font-medium border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"

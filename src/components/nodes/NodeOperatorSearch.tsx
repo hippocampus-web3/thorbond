@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
-import { X } from 'lucide-react';
+import { useWindowSize } from '../../hooks/useWindowSize';
 
 interface NodeOperatorSearchProps {
   onSearch: (address: string) => void;
@@ -18,6 +18,8 @@ const NodeOperatorSearch: React.FC<NodeOperatorSearchProps> = ({
   placeholder = 'thor1...',
 }) => {
   const [address, setAddress] = useState(value);
+  const { width } = useWindowSize();
+  const isMobile = width < 768;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,30 +37,20 @@ const NodeOperatorSearch: React.FC<NodeOperatorSearchProps> = ({
 
   const renderContent = () => {
     return (
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-3">
-          <div className="relative">
-            <Input
-              id="operator-address"
-              type="text"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder={placeholder}
-              label="Address"
-              required
-              fullWidth
-            />
-            <button
-              type="button"
-              onClick={handleClear}
-              className="absolute right-2 top-8 p-1 text-gray-400 hover:text-gray-600 focus:outline-none"
-              aria-label="Clear search"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
+      <form onSubmit={handleSubmit} className={`space-y-${isMobile ? '2' : '4'}`}>
+        <div className={`space-y-${isMobile ? '2' : '3'}`}>
+          <Input
+            id="operator-address"
+            type="text"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            placeholder={placeholder}
+            label="Address"
+            required
+            fullWidth
+          />
         </div>
-        <div className="flex justify-end space-x-3">
+        <div className={`flex justify-end space-x-${isMobile ? '2' : '3'}`}>
           <Button
             type="button"
             variant="secondary"
@@ -80,11 +72,11 @@ const NodeOperatorSearch: React.FC<NodeOperatorSearchProps> = ({
   };
 
   return (
-    <div className="bg-white shadow rounded-lg p-6">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">Search</h2>
+    <div className={`bg-white shadow rounded-lg p-${isMobile ? '4' : '6'}`}>
+      <h2 className={`text-${isMobile ? 'xl' : '2xl'} font-bold text-gray-900 mb-${isMobile ? '4' : '6'}`}>Search</h2>
       
-      <div className="bg-gray-50 rounded-lg p-4 mb-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Search Details</h3>
+      <div className={`bg-gray-50 rounded-lg p-${isMobile ? '3' : '4'} mb-${isMobile ? '4' : '6'}`}>
+        <h3 className={`text-${isMobile ? 'base' : 'lg'} font-medium text-gray-900 mb-${isMobile ? '3' : '4'}`}>Search Details</h3>
         {renderContent()}
       </div>
     </div>
