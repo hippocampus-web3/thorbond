@@ -3,6 +3,7 @@ import { Search, SlidersHorizontal, Info } from 'lucide-react';
 import NodeCard from './NodeCard';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
+import Tooltip from '../ui/Tooltip';
 import { Node } from '../../types';
 
 interface NodeListProps {
@@ -148,11 +149,8 @@ const NodesList: React.FC<NodeListProps> = ({
               onChange={setSortBy}
             />
 
-            <div className="relative group">
-              <span className="text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer">
-                Want to list your node?
-              </span>
-              <div className="absolute right-0 mt-2 w-96 bg-white shadow-lg rounded-lg p-4 hidden group-hover:block z-10">
+            <Tooltip
+              content={
                 <div className="flex items-start gap-2">
                   <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
                   <div>
@@ -177,8 +175,17 @@ const NodesList: React.FC<NodeListProps> = ({
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              }
+            >
+              <a 
+                href="https://thorbond.gitbook.io/runebond/sections/markdown/list-your-node#list-your-node-manually"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+              >
+                Want to list your node?
+              </a>
+            </Tooltip>
           </div>
         </div>
       </div>

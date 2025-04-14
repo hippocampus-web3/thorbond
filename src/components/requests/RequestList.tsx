@@ -3,13 +3,20 @@ import { format } from 'date-fns';
 import { Copy, Check } from 'lucide-react';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
+import Tooltip from '../ui/Tooltip';
 import { WhitelistRequest } from '../../types';
-import { formatRune, shortenAddress } from '../../lib/utils';
+import { formatRune, shortenAddress, getNodeExplorerUrl } from '../../lib/utils';
 import { baseAmount } from '@xchainjs/xchain-util';
 
 interface RequestListProps {
   requests: WhitelistRequest[];
-  actionList?: { title: string, type: 'primary' | 'danger' | 'outline', isDisabled?: (request: WhitelistRequest) => boolean, action: (request: WhitelistRequest) => void }[];
+  actionList?: { 
+    title: string, 
+    type: 'primary' | 'danger' | 'outline', 
+    isDisabled?: (request: WhitelistRequest) => boolean,
+    tooltip?: (request: WhitelistRequest) => string | undefined,
+    action: (request: WhitelistRequest) => void 
+  }[];
 }
 
 const RequestList: React.FC<RequestListProps> = ({
@@ -29,8 +36,11 @@ const RequestList: React.FC<RequestListProps> = ({
   };
 
   const handleOpenInExplorer = (address: string, isNode: boolean = false) => {
-    const baseUrl = isNode ? 'https://thorchain.net/node' : 'https://thorchain.net/address';
-    window.open(`${baseUrl}/${address}`, '_blank');
+    if (isNode) {
+      window.open(getNodeExplorerUrl(address), '_blank');
+    } else {
+      window.open(`https://thorchain.net/address/${address}`, '_blank');
+    }
   };
 
   if (requests.length === 0) {
@@ -135,20 +145,40 @@ const RequestList: React.FC<RequestListProps> = ({
               </td>
               {actionList.length ? (
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  {
-                    actionList.map((action) =>
-                      <Button
-                        key={`${action.title}-${action.type}`}
-                        variant={action.type}
-                        disabled={action.isDisabled ? action.isDisabled(request) : false}
-                        size="sm"
-                        onClick={() => action.action(request)}
-                        className='ml-2'
-                      >
-                        {action.title}
-                      </Button>
-                    )
-                  }
+                  {actionList.map((action) => {
+                    const isDisabled = action.isDisabled ? action.isDisabled(request) : false;
+                    const tooltip = action.tooltip ? action.tooltip(request) : undefined;
+                    
+                    return (
+                      <div key={`${action.title}-${action.type}`} className="inline-block">
+                        {isDisabled && tooltip ? (
+                          <div className="relative">
+                            <Tooltip content={tooltip}>
+                              <Button
+                                variant={action.type}
+                                disabled={isDisabled}
+                                size="sm"
+                                onClick={() => action.action(request)}
+                                className='ml-2'
+                              >
+                                {action.title}
+                              </Button>
+                            </Tooltip>
+                          </div>
+                        ) : (
+                          <Button
+                            variant={action.type}
+                            disabled={isDisabled}
+                            size="sm"
+                            onClick={() => action.action(request)}
+                            className='ml-2'
+                          >
+                            {action.title}
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </td>
               ) : null}
             </tr>

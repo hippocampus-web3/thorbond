@@ -27,11 +27,11 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ requests, searchValue = '
   const rejectedRequests = filteredRequests.filter(req => req.status === 'rejected');
   const bondedRequests = filteredRequests.filter(req => req.status === 'bonded');
   const engine = RuneBondEngine.getInstance();
-  const { address, error } = useWallet();
+  const { address, error, isConnected } = useWallet();
   
   const handleBondRequest = async (request: WhitelistRequest) => {
     try {
-      await engine.sendBondRequest(request);
+      await engine.sendBondRequest(request, isConnected as 'xdefi' | 'vultisig');
 
       toast.success('Bond request submitted successfully!');
     } catch (error) {
@@ -42,7 +42,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ requests, searchValue = '
 
   const handleUnbondRequest = async (request: WhitelistRequest) => {
     try {
-      await engine.sendUnbondRequest(request);
+      await engine.sendUnbondRequest(request, isConnected as 'xdefi' | 'vultisig');
 
       toast.success('Unbond request submitted successfully!');
     } catch (error) {
@@ -168,7 +168,18 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ requests, searchValue = '
                       {
                         id: 'bonded',
                         label: `Bonded (${bondedRequests.length})`,
-                        content: <RequestList requests={bondedRequests} actionList={[{ title: 'Unbound', isDisabled: (request) => request.node.status === 'Active' || request.node.status === 'Ready', type: 'outline', action: (request) => handleUnbondRequest(request) }]} />,
+                        content: <RequestList 
+                          requests={bondedRequests} 
+                          actionList={[{
+                            title: 'Unbond', 
+                            type: 'outline', 
+                            isDisabled: (request) => request.node.status === 'Active' || request.node.status === 'Ready',
+                            tooltip: (request) => request.node.status === 'Active' || request.node.status === 'Ready' 
+                              ? 'Unbond is not available while the node is Active or Ready. The node operator must request a status change first.'
+                              : undefined,
+                            action: (request) => handleUnbondRequest(request) 
+                          }]} 
+                        />,
                       },
                     ]}
                   />

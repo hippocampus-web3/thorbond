@@ -16,6 +16,7 @@ import {
   createUnbondMemo,
   createWhitelistRequestMemo,
 } from "./memoBuilder";
+import { sendTransaction } from "./transactionSender";
 
 class RuneBondEngine {
   private static instance: RuneBondEngine;
@@ -72,215 +73,122 @@ class RuneBondEngine {
     await this.initialize();
   }
 
-  public async sendListingTransaction(params: ListingParams): Promise<string> {
+  public async sendListingTransaction(params: ListingParams, walletType: 'xdefi' | 'vultisig'): Promise<string> {
     const memo = createListing(params);
 
-    return new Promise((resolve, reject) => {
-      if (!window.xfi?.thorchain) {
-        reject(
-          new Error("XDEFI wallet not found. Please install XDEFI extension.")
-        );
-        return;
-      }
-
-      window.xfi.thorchain.request(
-        {
-          method: "transfer",
-          params: [
-            {
-              asset: {
-                chain: "THOR",
-                symbol: "RUNE",
-                ticker: "RUNE",
-              },
-              from: params.operatorAddress,
-              recipient: this.RUNEBOND_ADDRESS,
-              amount: {
-                amount: this.RUNE_DUST, // 0.01 RUNE (8 decimals)
-                decimals: 8,
-              },
-              memo,
-            },
-          ],
+    return sendTransaction(
+      {
+        asset: {
+          chain: "THOR",
+          symbol: "RUNE",
+          ticker: "RUNE",
         },
-        (error, result) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(result);
-          }
-        }
-      );
-    });
+        from: params.operatorAddress,
+        recipient: this.RUNEBOND_ADDRESS,
+        amount: {
+          amount: this.RUNE_DUST,
+          decimals: 8,
+        },
+        memo,
+      },
+      'transfer',
+      walletType
+    );
   }
 
   public async sendWhitelistRequest(
-    params: WhitelistRequestParams
+    params: WhitelistRequestParams,
+    walletType: 'xdefi' | 'vultisig'
   ): Promise<string> {
     const memo = createWhitelistRequestMemo(params);
 
-    return new Promise((resolve, reject) => {
-      if (!window.xfi?.thorchain) {
-        reject(
-          new Error("XDEFI wallet not found. Please install XDEFI extension.")
-        );
-        return;
-      }
-
-      window.xfi.thorchain.request(
-        {
-          method: "transfer",
-          params: [
-            {
-              asset: {
-                chain: "THOR",
-                symbol: "RUNE",
-                ticker: "RUNE",
-              },
-              from: params.userAddress,
-              recipient: this.RUNEBOND_ADDRESS,
-              amount: {
-                amount: this.RUNE_DUST, // 0.01 RUNE (8 decimals)
-                decimals: 8,
-              },
-              memo,
-            },
-          ],
+    return sendTransaction(
+      {
+        asset: {
+          chain: "THOR",
+          symbol: "RUNE",
+          ticker: "RUNE",
         },
-        (error, result) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(result);
-          }
-        }
-      );
-    });
+        from: params.userAddress,
+        recipient: this.RUNEBOND_ADDRESS,
+        amount: {
+          amount: this.RUNE_DUST,
+          decimals: 8,
+        },
+        memo,
+      },
+      'transfer',
+      walletType
+    );
   }
 
-  public async sendBondRequest(params: WhitelistRequest): Promise<string> {
+  public async sendBondRequest(params: WhitelistRequest, walletType: 'xdefi' | 'vultisig'): Promise<string> {
     const memo = createBondMemo(params);
 
-    return new Promise((resolve, reject) => {
-      if (!window.xfi?.thorchain) {
-        reject(
-          new Error("XDEFI wallet not found. Please install XDEFI extension.")
-        );
-        return;
-      }
-
-      window.xfi.thorchain.request(
-        {
-          method: "deposit",
-          params: [
-            {
-              asset: {
-                chain: "THOR",
-                symbol: "RUNE",
-                ticker: "RUNE",
-              },
-              from: params.userAddress,
-              amount: {
-                amount: params.intendedBondAmount,
-                decimals: 8,
-              },
-              memo,
-            },
-          ],
+    return sendTransaction(
+      {
+        asset: {
+          chain: "THOR",
+          symbol: "RUNE",
+          ticker: "RUNE",
         },
-        (error, result) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(result);
-          }
-        }
-      );
-    });
+        from: params.userAddress,
+        amount: {
+          amount: params.intendedBondAmount,
+          decimals: 8,
+        },
+        memo,
+      },
+      'deposit',
+      walletType
+    );
   }
 
-  public async sendUnbondRequest(params: WhitelistRequest): Promise<string> {
+  public async sendUnbondRequest(params: WhitelistRequest, walletType: 'xdefi' | 'vultisig'): Promise<string> {
     const memo = createUnbondMemo(params);
 
-    return new Promise((resolve, reject) => {
-      if (!window.xfi?.thorchain) {
-        reject(
-          new Error("XDEFI wallet not found. Please install XDEFI extension.")
-        );
-        return;
-      }
-
-      window.xfi.thorchain.request(
-        {
-          method: "deposit",
-          params: [
-            {
-              asset: {
-                chain: "THOR",
-                symbol: "RUNE",
-                ticker: "RUNE",
-              },
-              from: params.userAddress,
-              amount: {
-                amount: 0,
-                decimals: 8,
-              },
-              memo,
-            },
-          ],
+    return sendTransaction(
+      {
+        asset: {
+          chain: "THOR",
+          symbol: "RUNE",
+          ticker: "RUNE",
         },
-        (error, result) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(result);
-          }
-        }
-      );
-    });
+        from: params.userAddress,
+        amount: {
+          amount: 0,
+          decimals: 8,
+        },
+        memo,
+      },
+      'deposit',
+      walletType
+    );
   }
 
   public async sendEnableBondRequest(
-    params: WhitelistRequest
+    params: WhitelistRequest,
+    walletType: 'xdefi' | 'vultisig'
   ): Promise<string> {
     const memo = createEnableBondMemo(params);
 
-    return new Promise((resolve, reject) => {
-      if (!window.xfi?.thorchain) {
-        reject(
-          new Error("XDEFI wallet not found. Please install XDEFI extension.")
-        );
-        return;
-      }
-
-      window.xfi.thorchain.request(
-        {
-          method: "deposit",
-          params: [
-            {
-              asset: {
-                chain: "THOR",
-                symbol: "RUNE",
-                ticker: "RUNE",
-              },
-              from: params.node.nodeAddress,
-              amount: {
-                amount: assetToBase(assetAmount(1, 8)).amount().toNumber(),
-                decimals: 8,
-              },
-              memo,
-            },
-          ],
+    return sendTransaction(
+      {
+        asset: {
+          chain: "THOR",
+          symbol: "RUNE",
+          ticker: "RUNE",
         },
-        (error, result) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(result);
-          }
-        }
-      );
-    });
+        from: params.node.nodeAddress,
+        amount: {
+          amount: assetToBase(assetAmount(1, 8)).amount().toNumber(),
+          decimals: 8,
+        },
+        memo,
+      },
+      'deposit',
+      walletType
+    );
   }
 
   public async getWhitelistRequests(
