@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, SlidersHorizontal } from 'lucide-react';
+import { Search, SlidersHorizontal, Info } from 'lucide-react';
 import NodeCard from './NodeCard';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
@@ -147,6 +147,38 @@ const NodesList: React.FC<NodeListProps> = ({
               value={sortBy}
               onChange={setSortBy}
             />
+
+            <div className="relative group">
+              <span className="text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer">
+                Want to list your node?
+              </span>
+              <div className="absolute right-0 mt-2 w-96 bg-white shadow-lg rounded-lg p-4 hidden group-hover:block z-10">
+                <div className="flex items-start gap-2">
+                  <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h3 className="font-medium text-gray-900 mb-2">How to list your node</h3>
+                    <p className="text-sm text-gray-600 mb-3">
+                      To list your node, you can connect your wallet or send a transaction to the THORChain network with the following MEMO:
+                    </p>
+                    <div className="bg-gray-50 p-3 rounded-md">
+                      <code className="text-sm font-mono text-gray-800 break-all">
+                        TB:LIST:&lt;node_address&gt;:&lt;operator_address&gt;:&lt;min_rune&gt;:&lt;max_rune&gt;:&lt;fee_percentage&gt;
+                      </code>
+                    </div>
+                    <div className="mt-3 text-sm text-gray-600 mb-3">
+                      <p className="font-medium mb-1">Parameters:</p>
+                      <ul className="list-disc list-inside space-y-1">
+                        <li><code className="bg-gray-100 px-1 rounded">node_address</code>: Your node's address (must start with thor1)</li>
+                        <li><code className="bg-gray-100 px-1 rounded">operator_address</code>: Your operator address (must start with thor1)</li>
+                        <li><code className="bg-gray-100 px-1 rounded">min_rune</code>: Minimum bond amount. Must be in base amount. For example: 1 RUNE = 100000000 (must be greater than 0)</li>
+                        <li><code className="bg-gray-100 px-1 rounded">max_rune</code>: Maximum bond amount. Must be in base amount. For example: 1 RUNE = 100000000 (must be greater than min_rune)</li>
+                        <li><code className="bg-gray-100 px-1 rounded">fee_percentage</code>: Fee percentage (0-100, e.g., 100 for 1%)</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -32,17 +32,70 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
   if (!node) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Node not found</h1>
-          <p className="mt-4 text-gray-600">The requested node could not be found.</p>
-          <Button
+        <div className="mb-8">
+          <button
             onClick={() => {
               navigate('/nodes')
             }}
-            className="mt-6"
+            className="flex items-center text-blue-600 hover:text-blue-800"
           >
+            <ArrowLeft className="h-5 w-5 mr-2" />
             Back to Nodes
-          </Button>
+          </button>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          {/* Loading Skeleton for Node Details */}
+          <div className="lg:col-span-3">
+            <div className="bg-white shadow rounded-lg p-6">
+              <div className="flex justify-between items-start mb-6">
+                <div className="space-y-2">
+                  <div className="h-8 w-48 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="h-6 w-32 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+                <div className="h-6 w-20 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[...Array(6)].map((_, index) => (
+                    <div key={index}>
+                      <div className="h-4 w-24 bg-gray-200 rounded animate-pulse mb-2"></div>
+                      <div className="h-6 w-32 bg-gray-200 rounded animate-pulse"></div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="h-20 w-full bg-gray-200 rounded animate-pulse"></div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="h-20 w-full bg-gray-200 rounded animate-pulse"></div>
+                </div>
+
+                <div className="pt-4">
+                  <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Loading Skeleton for Action Section */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-white shadow rounded-lg p-6">
+              <div className="h-12 w-full bg-gray-200 rounded animate-pulse"></div>
+            </div>
+
+            <div className="bg-white shadow rounded-lg p-6">
+              <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-4"></div>
+              <div className="h-[500px] bg-gray-50 rounded-lg p-4">
+                <div className="h-full w-full bg-gray-200 rounded animate-pulse"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
