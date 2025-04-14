@@ -4,7 +4,7 @@ import Button from '../ui/Button';
 import { formatRune, shortenAddress, getTimeAgo, formatDuration, getNodeExplorerUrl } from '../../lib/utils';
 import { useWallet } from '../../contexts/WalletContext';
 import { baseAmount } from "@xchainjs/xchain-util";
-import { Copy, Check } from 'lucide-react';
+import { Copy, Check, Share2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface NodeCardProps {
@@ -20,6 +20,7 @@ const NodeCard: React.FC<NodeCardProps> = ({
   const isOperator = address === node.operatorAddress;
   const [copiedNode, setCopiedNode] = useState(false);
   const [copiedOperator, setCopiedOperator] = useState(false);
+  const [copiedShare, setCopiedShare] = useState(false);
   const navigate = useNavigate();
 
   const handleCopy = async (text: string, setCopied: (value: boolean) => void) => {
@@ -30,6 +31,12 @@ const NodeCard: React.FC<NodeCardProps> = ({
     } catch (err) {
       console.error('Failed to copy address:', err);
     }
+  };
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const nodeUrl = `${window.location.origin}/nodes/${node.nodeAddress}`;
+    await handleCopy(nodeUrl, setCopiedShare);
   };
 
   const handleOpenInExplorer = (address: string) => {
@@ -51,9 +58,22 @@ const NodeCard: React.FC<NodeCardProps> = ({
     >
       <div className="flex justify-between items-start mb-4">
         <h3 className="text-lg font-medium text-gray-900">Node</h3>
-        <span className="px-2 py-1 text-sm rounded-full bg-blue-100 text-blue-800">
-          {node.status}
-        </span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleShare}
+            className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+            title="Share node"
+          >
+            {copiedShare ? (
+              <Check className="h-4 w-4 text-green-500" />
+            ) : (
+              <Share2 className="h-4 w-4" />
+            )}
+          </button>
+          <span className="px-2 py-1 text-sm rounded-full bg-blue-100 text-blue-800">
+            {node.status}
+          </span>
+        </div>
       </div>
 
       <div className="flex items-center mb-4">
