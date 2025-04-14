@@ -1,10 +1,10 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 
 interface WalletContextType {
   address: string | null;
-  isConnected: boolean;
+  isConnected: null | 'xdefi' | 'vultisig';
   error: string | null;
-  connect: () => Promise<void>;
+  connect: (walletType?: string) => Promise<void>;
   disconnect: () => Promise<void>;
 }
 
@@ -12,70 +12,70 @@ const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [address, setAddress] = useState<string | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
+  const [isConnected, setIsConnected] = useState<null | 'xdefi' | 'vultisig'>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const connect = async () => {
+  const connect = useCallback(async (walletType: string = 'vultisig') => {
     try {
-      if (!window.xfi?.thorchain) {
-        throw new Error('XDEFI wallet not found');
-      }
-
-      const thorchain = window.xfi.thorchain;
-      return new Promise<void>((resolve, reject) => {
-        thorchain.request(
-          { method: 'request_accounts', params: [] },
-          (error, accounts) => {
-            if (error) {
-              setError(error.message);
-              reject(error);
-              return;
-            }
-
-            if (accounts && Array.isArray(accounts) && accounts.length > 0) {
-              setAddress(accounts[0] as string);
-              setIsConnected(true);
-              setError(null);
-              resolve();
-            } else {
-              const error = new Error('No accounts found');
-              setError(error.message);
-              reject(error);
-            }
-          }
-        );
-      });
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error connecting wallet';
-      setError(errorMessage);
-      setAddress(null);
-      setIsConnected(false);
-      throw err;
-    }
-  };
-
-  const disconnect = async () => {
-    try {
-      setAddress(null);
-      setIsConnected(false);
       setError(null);
+      
+      switch (walletType) {
+        case 'vultisig': 
+          let accounts = [];
+          const vultisigEthProvider = window.vultisig?.thorchain
+          const requestedAccounts = await vultisigEthProvider.request({
+            method: "get_accounts",
+          });
+          if (requestedAccounts && requestedAccounts.length > 0) {
+            accounts = requestedAccounts.filter(
+              (account: string | null) => account !== null,
+            );
+          }
+          if (!accounts || accounts.length <= 0) {
+            const connectedAcount = await vultisigEthProvider.request({
+              method: "request_accounts",
+            });
+            accounts.push(connectedAcount[0]);
+          }
+          setAddress(accounts[0]);
+          break;
+
+        case 'xdefi':
+          if (!window.xfi?.thorchain) {
+            throw new Error('Please install XDEFI extension');
+          }
+          
+          window.xfi.thorchain.request(
+            { method: 'request_accounts', params: [] },
+            (error, result) => {
+              if (error) {
+                throw error;
+              }
+              setAddress(result[0]);
+            }
+          );
+          break;
+
+        default:
+          throw new Error(`Unsupported wallet type: ${walletType}`);
+      }
+      
+      setIsConnected(walletType);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error disconnecting wallet';
-      setError(errorMessage);
-      throw err;
+      setError(err instanceof Error ? err.message : 'Failed to connect wallet');
+      setIsConnected(null);
+      setAddress(null);
     }
-  };
+  }, []);
+
+  const disconnect = useCallback(async () => {
+    setAddress(null);
+    setIsConnected(null);
+    setError(null);
+  }, []);
 
   return (
-    <WalletContext.Provider
-      value={{
-        address,
-        isConnected,
-        error,
-        connect,
-        disconnect
-      }}
-    >
+    <WalletContext.Provider value={{ address, isConnected, error, connect, disconnect }}>
       {children}
     </WalletContext.Provider>
   );

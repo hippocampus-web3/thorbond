@@ -12,6 +12,7 @@ import NodeDetailsPage from './pages/NodeDetailsPage';
 import { Node, NodeOperatorFormData, WhitelistRequest, WhitelistRequestFormData } from './types';
 import { WalletProvider, useWallet } from './contexts/WalletContext';
 import RuneBondEngine from './lib/runebondEngine/runebondEngine';
+import WalletConnectPopup from './components/wallet/WalletConnectPopup';
 
 const AppContent: React.FC = () => {
   const [listedNodes, setListedNodes] = useState<Node[]>([]);
@@ -21,6 +22,7 @@ const AppContent: React.FC = () => {
   const [searchUser, setSearchUser] = useState<string>('');
   const [isLoadingNodes, setIsLoadingNodes] = useState(true);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [isWalletPopupOpen, setIsWalletPopupOpen] = useState(false);
   
   const { address, isConnected, error, connect, disconnect } = useWallet();
 
@@ -34,10 +36,12 @@ const AppContent: React.FC = () => {
         const engine = RuneBondEngine.getInstance();
         await engine.initialize();
 
-        const nodes = await engine.getAllNodes()
+        if (isConnected) {
+          const nodes = await engine.getAllNodes()
+          setAllNodes(nodes)
+        }
         const listedNodes = engine.getListedNodes()
 
-        setAllNodes(nodes)
         setListedNodes(listedNodes)
 
         if (addressTofilter) {
@@ -72,16 +76,26 @@ const AppContent: React.FC = () => {
   }, [error]);
 
   const handleConnect = async () => {
-    await connect();
-    if (address) {
-      toast.success('Wallet connected successfully', {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+    setIsWalletPopupOpen(true);
+  };
+
+  const handleSelectWallet = async (walletType: string) => {
+    try {
+      setIsWalletPopupOpen(false);
+      await connect(walletType);
+      if (address) {
+        toast.success('Wallet connected successfully', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error connecting wallet';
+      toast.error(errorMessage);
     }
   };
 
@@ -119,7 +133,7 @@ const AppContent: React.FC = () => {
         minRune: Number(formData.minimumBond),
         maxRune: Number(formData.bondingCapacity),
         feePercentage: Number(formData.feePercentage)
-      });
+      }, isConnected as 'xdefi' | 'vultisig');
       
       toast.success('Listing created successfully!');
     } catch (error) {
@@ -135,7 +149,7 @@ const AppContent: React.FC = () => {
   const handleApproveRequest = async (request: WhitelistRequest) => {
     try {
       const engine = RuneBondEngine.getInstance();
-      await engine.sendEnableBondRequest(request);
+      await engine.sendEnableBondRequest(request, isConnected as 'xdefi' | 'vultisig');
 
       toast.success('Enable bond request submitted successfully!');
     } catch (error) {
@@ -169,7 +183,7 @@ const AppContent: React.FC = () => {
         nodeAddress: selectedNode.nodeAddress,
         userAddress: formData.walletAddress,
         amount: Number(formData.intendedBondAmount)
-      });
+      }, isConnected as 'xdefi' | 'vultisig');
 
       toast.success('Whitelist request submitted successfully!');
       setSelectedNode(null);
@@ -186,7 +200,7 @@ const AppContent: React.FC = () => {
   return (
     <Router>
       <Layout
-        isAuthenticated={isConnected}
+        isAuthenticated={isConnected !== null}
         onConnect={handleConnect}
         onDisconnect={handleDisconnect}
         walletAddress={address}
@@ -241,13 +255,18 @@ const AppContent: React.FC = () => {
                 requests={witheListsRequests.user} 
                 onSearchUser={setSearchUser}
                 searchValue={searchUser}
-                isConnected={isConnected}
+                isConnected={isConnected !== null}
                 isLoading={isLoadingNodes}
               />
             }
           />
         </Routes>
       </Layout>
+      <WalletConnectPopup
+        isOpen={isWalletPopupOpen}
+        onClose={() => setIsWalletPopupOpen(false)}
+        onSelectWallet={handleSelectWallet}
+      />
       <ToastContainer
         position="top-right"
         autoClose={5000}
