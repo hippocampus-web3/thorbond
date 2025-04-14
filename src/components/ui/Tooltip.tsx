@@ -25,7 +25,7 @@ const Tooltip: React.FC<TooltipProps> = ({
       const rect = triggerRef.current.getBoundingClientRect();
       setCoords({
         top: rect.bottom + window.scrollY + 8,
-        left: rect.right + window.scrollX - 384, // 384px es el ancho de w-96 (96 * 4)
+        left: rect.right + window.scrollX - 384,
       });
     }
   }, [isVisible]);
