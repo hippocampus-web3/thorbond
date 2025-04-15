@@ -6,10 +6,12 @@ import NodeOperatorSearch from '../components/nodes/NodeOperatorSearch';
 
 interface UserRequestsPageProps {
   requests: WhitelistRequest[];
-  onSearchUser: (address: string) => void;
+  onSearchUser: (value: string) => void;
   searchValue: string;
   isConnected: boolean;
   isLoading: boolean;
+  onBondRequest: (request: WhitelistRequest) => Promise<void>;
+  onUnbondRequest: (request: WhitelistRequest) => Promise<void>;
 }
 
 const UserRequestsPage: React.FC<UserRequestsPageProps> = ({
@@ -18,6 +20,8 @@ const UserRequestsPage: React.FC<UserRequestsPageProps> = ({
   searchValue,
   isConnected,
   isLoading,
+  onBondRequest,
+  onUnbondRequest
 }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [localSearchValue, setLocalSearchValue] = React.useState(searchParams.get('user') || '');
@@ -102,7 +106,12 @@ const UserRequestsPage: React.FC<UserRequestsPageProps> = ({
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {!isConnected && renderSearch()}
-      <UserDashboard requests={requests} searchValue={searchValue} />
+      <UserDashboard
+        requests={requests}
+        searchValue={searchValue}
+        onBondRequest={onBondRequest}
+        onUnbondRequest={onUnbondRequest}
+      />
     </div>
   );
 };

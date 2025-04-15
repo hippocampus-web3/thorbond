@@ -1,16 +1,20 @@
-import { ThorchainTransferParams } from '../../types/wallets';
+import { WalletProvider, WalletType } from '../../contexts/WalletContext';
+import { ThorchainProvider, ThorchainTransferParams, VultisigThorchainProvider } from '../../types/wallets';
+import { Client as ThorChainClient } from "@xchainjs/xchain-thorchain";
+import { baseAmount } from "@xchainjs/xchain-util";
 
 export const sendTransaction = async (
     params: ThorchainTransferParams,
     method: 'transfer' | 'deposit',
-    walletType: 'xdefi' | 'vultisig'
+    walletType: WalletType,
+    walletProvider: WalletProvider
 ): Promise<string> => {
 
     if (walletType === 'xdefi') {
         return new Promise((resolve, reject) => {
             // Try XDEFI first
-            if (window.xfi?.thorchain) {
-                window.xfi.thorchain.request(
+            if (walletProvider) {
+                (walletProvider as ThorchainProvider).request(
                     {
                         method,
                         params: [params],
@@ -32,10 +36,10 @@ export const sendTransaction = async (
     }
 
     if (walletType === 'vultisig') {
-        if (window.vultisig?.thorchain) {
+        if (walletProvider) {
 
             if (method === 'transfer') {
-                const result = await window.vultisig.thorchain.request({
+                const result = await (walletProvider as VultisigThorchainProvider).request({
                     method: "send_transaction",
                     params: [
                         {
@@ -50,12 +54,17 @@ export const sendTransaction = async (
             }
 
             if (method === 'deposit') {
-                const result = await window.vultisig.thorchain.request({
+                const result = await (walletProvider as VultisigThorchainProvider).request({
                     method: "deposit_transaction",
                     params: [{
                         from: params.from,
-                        value: params.amount.amount.toString(),
+                        amount: params.amount,
                         data: params.memo,
+                        asset: {
+                            ticker: 'RUNE',
+                            chain: 'RUNE',
+                            symbol: 'RUNE',
+                        }
                     }],
                 });
                 if (Object.keys(result).length === 0 && result.constructor === Object) {
@@ -65,6 +74,33 @@ export const sendTransaction = async (
             }
         }
     }
+
+    if (walletType === 'keystore') {
+        if (walletProvider) {
+            if (method === 'transfer') {
+
+                if (!params.recipient) {
+                    throw new Error("Recipient is required for transfer");
+                }
+    
+                const result = await (walletProvider as ThorChainClient).transfer({
+                    recipient: params.recipient,
+                    amount: baseAmount(params.amount.amount, params.amount.decimals),
+                    memo: params.memo,
+                });
+                return result;
+            }
+
+            if (method === 'deposit') {
+                const result = await (walletProvider as ThorChainClient).deposit({
+                    amount: baseAmount(params.amount.amount, params.amount.decimals),
+                    memo: params.memo,
+                });
+                return result;
+            }
+        }
+    }
+
 
     throw new Error("No compatible wallet found. Please install XDEFI or Vultisig extension.");
 }; 

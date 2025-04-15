@@ -24,15 +24,31 @@ export interface ThorchainRequest {
   params: [ThorchainTransferParams] | [];
 }
 
+export interface VultisigThorchainRequest {
+  method: 'send_transaction' | 'deposit_transaction' | 'get_accounts' | 'request_accounts' | 'bond' | 'unbond';
+  params?: [{
+    from?: string;
+    to?: string;
+    data?: string;
+    value?: string;
+    asset?: ThorchainAsset;
+    amount?: ThorchainAmount;
+  }];
+}
+
+export interface VultisigThorchainProvider {
+  request: (request: VultisigThorchainRequest) => Promise<any>;
+}
+
 // Wallet provider interfaces
 export interface VultisigProvider {
-  thorchain: any;
+  thorchain: VultisigThorchainProvider;
 }
 
 export interface ThorchainProvider {
   request: (
     request: ThorchainRequest,
-    callback: (error: Error | null, result: string) => void
+    callback: (error: Error | null, result: any) => void
   ) => void;
 }
 

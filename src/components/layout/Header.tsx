@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import Button from '../ui/Button';
 import { shortenAddress } from '../../lib/utils';
+import { Copy, Check } from 'lucide-react';
+
 
 interface HeaderProps {
   isAuthenticated: boolean;
@@ -17,6 +19,12 @@ const Header: React.FC<HeaderProps> = ({
   walletAddress
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
+  const location = useLocation();
+
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
 
   const handleConnect = async () => {
     await onConnect();
@@ -24,6 +32,16 @@ const Header: React.FC<HeaderProps> = ({
 
   const handleDisconnect = async () => {
     await onDisconnect();
+  };
+
+  const handleCopy = async (address: string) => {
+    try {
+      await navigator.clipboard.writeText(address);
+      setCopiedAddress(address);
+      setTimeout(() => setCopiedAddress(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy address:', err);
+    }
   };
 
   return (
@@ -44,19 +62,31 @@ const Header: React.FC<HeaderProps> = ({
             <nav className="hidden sm:ml-6 sm:flex sm:space-x-8">
               <Link
                 to="/nodes"
-                className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                className={`${
+                  isActive('/nodes')
+                    ? 'border-blue-500 text-gray-900'
+                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
               >
                 Nodes
               </Link>
               <Link
                 to="/operator-dashboard"
-                className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                className={`${
+                  isActive('/operator-dashboard')
+                    ? 'border-blue-500 text-gray-900'
+                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
               >
                 Operator Dashboard
               </Link>
               <Link
                 to="/user-requests"
-                className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                className={`${
+                  isActive('/user-requests')
+                    ? 'border-blue-500 text-gray-900'
+                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
               >
                 My Requests
               </Link>
@@ -65,9 +95,22 @@ const Header: React.FC<HeaderProps> = ({
           <div className="hidden sm:ml-6 sm:flex sm:items-center">
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-500">
-                  {walletAddress && shortenAddress(walletAddress)}
-                </span>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-500">
+                    {walletAddress && shortenAddress(walletAddress)}
+                  </span>
+                  <button
+                    onClick={() => handleCopy(walletAddress!)}
+                    className="p-1 hover:bg-gray-100 rounded"
+                    title="Copy address"
+                  >
+                    {copiedAddress === walletAddress ? (
+                      <Check className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Copy className="h-4 w-4 text-gray-400" />
+                    )}
+                  </button>
+                </div>
                 <Button
                   variant="secondary"
                   onClick={handleDisconnect}
@@ -109,27 +152,52 @@ const Header: React.FC<HeaderProps> = ({
         <div className="pt-2 pb-3 space-y-1">
           <Link
             to="/nodes"
-            className="block pl-3 pr-4 py-2 border-l-4 text-base font-medium border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"
+            className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
+              isActive('/nodes')
+                ? 'border-blue-500 text-gray-900'
+                : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'
+            }`}
           >
             Nodes
           </Link>
           <Link
             to="/operator-dashboard"
-            className="block pl-3 pr-4 py-2 border-l-4 text-base font-medium border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"
+            className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
+              isActive('/operator-dashboard')
+                ? 'border-blue-500 text-gray-900'
+                : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'
+            }`}
           >
             Operator Dashboard
           </Link>
           <Link
             to="/user-requests"
-            className="block pl-3 pr-4 py-2 border-l-4 text-base font-medium border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"
+            className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
+              isActive('/user-requests')
+                ? 'border-blue-500 text-gray-900'
+                : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'
+            }`}
           >
             My Requests
           </Link>
           <div className="pl-3 pr-4 py-2">
             {isAuthenticated ? (
               <div className="space-y-2">
-                <div className="text-sm text-gray-500">
-                  {walletAddress && shortenAddress(walletAddress)}
+                <div className="flex items-center space-x-2">
+                  <div className="text-sm text-gray-500">
+                    {walletAddress && shortenAddress(walletAddress)}
+                  </div>
+                  <button
+                    onClick={() => handleCopy(walletAddress!)}
+                    className="p-1 hover:bg-gray-100 rounded"
+                    title="Copy address"
+                  >
+                    {copiedAddress === walletAddress ? (
+                      <Check className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Copy className="h-4 w-4 text-gray-400" />
+                    )}
+                  </button>
                 </div>
                 <Button
                   variant="secondary"
