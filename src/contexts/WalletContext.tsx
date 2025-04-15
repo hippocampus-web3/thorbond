@@ -48,10 +48,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               const connectedAcount = await vultisigEthProvider.request({
                 method: "request_accounts",
               });
-              accounts.push(connectedAcount[0]);
+              if (Array.isArray(connectedAcount)) {
+                accounts.push(connectedAcount[0]);
+              }
             }
 
-            if (!Array.isArray(accounts) && accounts.length <= 0 || !accounts[0]) {
+            if (!accounts[0]) {
               throw new Error('No account connected');
             }
 
