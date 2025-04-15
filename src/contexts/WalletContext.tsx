@@ -51,7 +51,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               accounts.push(connectedAcount[0]);
             }
 
-            if (!accounts[0]) {
+            if (!Array.isArray(accounts) && accounts.length <= 0 || !accounts[0]) {
               throw new Error('No account connected');
             }
 
