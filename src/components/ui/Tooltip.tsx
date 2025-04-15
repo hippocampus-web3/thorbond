@@ -19,13 +19,26 @@ const Tooltip: React.FC<TooltipProps> = ({
   const [isVisible, setIsVisible] = useState(false);
   const [coords, setCoords] = useState({ top: 0, left: 0 });
   const triggerRef = useRef<HTMLDivElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isVisible && triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
+      const tooltipWidth = 384; // w-96 = 24rem = 384px
+      
+      // Calculate position relative to viewport
+      let left = rect.right - tooltipWidth;
+      let top = rect.bottom + 8;
+
+      // Ensure tooltip stays within viewport
+      if (left < 0) left = 0;
+      if (left + tooltipWidth > window.innerWidth) {
+        left = window.innerWidth - tooltipWidth;
+      }
+
       setCoords({
-        top: rect.bottom + window.scrollY + 8,
-        left: rect.right + window.scrollX - 384,
+        top,
+        left,
       });
     }
   }, [isVisible]);
@@ -40,8 +53,10 @@ const Tooltip: React.FC<TooltipProps> = ({
       {children}
       {isVisible && createPortal(
         <div 
-          className={`fixed ${width} bg-white shadow-lg rounded-lg p-4 z-[9999]`}
+          ref={tooltipRef}
+          className={`absolute ${width} bg-white shadow-lg rounded-lg p-4 z-[9999]`}
           style={{
+            position: 'fixed',
             top: coords.top,
             left: coords.left,
           }}

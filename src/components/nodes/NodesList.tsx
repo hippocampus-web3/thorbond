@@ -156,7 +156,7 @@ const NodesList: React.FC<NodeListProps> = ({
                   <div>
                     <h3 className="font-medium text-gray-900 mb-2">How to list your node</h3>
                     <p className="text-sm text-gray-600 mb-3">
-                      To list your node, you can connect your wallet or send a transaction to the THORChain network with the following MEMO:
+                      To list your node, you can connect your wallet or send a transaction to the THORChain network with amount 0.1 RUNE and the following MEMO:
                     </p>
                     <div className="bg-gray-50 p-3 rounded-md">
                       <code className="text-sm font-mono text-gray-800 break-all">

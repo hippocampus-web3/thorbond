@@ -4,18 +4,22 @@ import { Card, CardHeader, CardContent } from '../ui/Card';
 import Tabs from '../ui/Tabs';
 import RequestList from '../requests/RequestList';
 import { WhitelistRequest } from '../../types';
-import RuneBondEngine from '../../lib/runebondEngine/runebondEngine';
-import { toast } from 'react-toastify';
 import { useWallet } from '../../contexts/WalletContext';
-import Alert from '../ui/Alert';
 import { shortenAddress } from '../../lib/utils';
 
 interface UserDashboardProps {
   requests: WhitelistRequest[];
   searchValue?: string;
+  onBondRequest: (request: WhitelistRequest) => Promise<void>;
+  onUnbondRequest: (request: WhitelistRequest) => Promise<void>;
 }
 
-const UserDashboard: React.FC<UserDashboardProps> = ({ requests, searchValue = '' }) => {
+const UserDashboard: React.FC<UserDashboardProps> = ({ 
+  requests, 
+  searchValue = '',
+  onBondRequest,
+  onUnbondRequest
+}) => {
   const filteredRequests = searchValue
     ? requests.filter(request =>
       request.userAddress.toLowerCase().includes(searchValue.toLowerCase())
@@ -26,30 +30,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ requests, searchValue = '
   const approvedRequests = filteredRequests.filter(req => req.status === 'approved');
   const rejectedRequests = filteredRequests.filter(req => req.status === 'rejected');
   const bondedRequests = filteredRequests.filter(req => req.status === 'bonded');
-  const engine = RuneBondEngine.getInstance();
-  const { address, error, isConnected } = useWallet();
-  
-  const handleBondRequest = async (request: WhitelistRequest) => {
-    try {
-      await engine.sendBondRequest(request, isConnected as 'xdefi' | 'vultisig');
-
-      toast.success('Bond request submitted successfully!');
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error submitting bond request';
-      toast.error(errorMessage);
-    }
-  };
-
-  const handleUnbondRequest = async (request: WhitelistRequest) => {
-    try {
-      await engine.sendUnbondRequest(request, isConnected as 'xdefi' | 'vultisig');
-
-      toast.success('Unbond request submitted successfully!');
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error submitting unbond request';
-      toast.error(errorMessage);
-    }
-  };
+  const { address } = useWallet();
 
   if (requests.length === 0) {
     return (
@@ -81,11 +62,6 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ requests, searchValue = '
                   <span className="text-sm font-medium text-green-600">Connected</span>
                 </span>
               </div>
-              {error && (
-                <Alert variant="error" title="Wallet Error">
-                  {error}
-                </Alert>
-              )}
             </div>
           </div>
         )}
@@ -158,7 +134,14 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ requests, searchValue = '
                       {
                         id: 'approved',
                         label: `Approved (${approvedRequests.length})`,
-                        content: <RequestList requests={approvedRequests} actionList={[{ title: 'Bond', type: 'primary', action: (request) => handleBondRequest(request) }]} />,
+                        content: <RequestList 
+                          requests={approvedRequests} 
+                          actionList={[{
+                            title: 'Bond', 
+                            type: 'primary', 
+                            action: (request) => onBondRequest(request)
+                          }]} 
+                        />,
                       },
                       {
                         id: 'rejected',
@@ -177,7 +160,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ requests, searchValue = '
                             tooltip: (request) => request.node.status === 'Active' || request.node.status === 'Ready' 
                               ? 'Unbond is not available while the node is Active or Ready. The node operator must request a status change first.'
                               : undefined,
-                            action: (request) => handleUnbondRequest(request) 
+                            action: (request) => onUnbondRequest(request)
                           }]} 
                         />,
                       },

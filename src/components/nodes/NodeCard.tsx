@@ -4,8 +4,9 @@ import Button from '../ui/Button';
 import { formatRune, shortenAddress, getTimeAgo, formatDuration, getNodeExplorerUrl } from '../../lib/utils';
 import { useWallet } from '../../contexts/WalletContext';
 import { baseAmount } from "@xchainjs/xchain-util";
-import { Copy, Check, Share2 } from 'lucide-react';
+import { Copy, Check, Share2, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import Tooltip from '../ui/Tooltip';
 
 interface NodeCardProps {
   node: Node;
@@ -179,17 +180,53 @@ const NodeCard: React.FC<NodeCardProps> = ({
         >
           Your Node
         </Button>
-      ) : (
+      ) : isConnected ? (
         <Button
           onClick={(e) => {
             e.stopPropagation();
             onRequestWhitelist(node);
           }}
           className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white"
-          disabled={!isConnected}
         >
-          {isConnected ? 'Request for Whitelist' : 'Connect Wallet to Request'}
+          Request for Whitelist
         </Button>
+      ) : (
+        <Tooltip
+          content={
+            <div className="flex items-start gap-2">
+              <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-medium text-gray-900 mb-2">How to request whitelist manually</h3>
+                <p className="text-sm text-gray-600 mb-3">
+                  You can request whitelist by sending a transaction to the THORChain network with amount 0.1 RUNE and the following MEMO:
+                </p>
+                <div className="bg-gray-50 p-3 rounded-md">
+                  <code className="text-sm font-mono text-gray-800 break-all">
+                    TB:WHT:{node.nodeAddress}:&lt;your_address&gt;:&lt;amount&gt;
+                  </code>
+                </div>
+                <div className="mt-3 text-sm text-gray-600">
+                  <p className="font-medium mb-1">Parameters:</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    <li><code className="bg-gray-100 px-1 rounded">your_address</code>: Your THORChain address (must start with thor1)</li>
+                    <li><code className="bg-gray-100 px-1 rounded">amount</code>: Amount you want to delegate. For example: 1 RUNE = 100000000</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          }
+        >
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              onRequestWhitelist(node);
+            }}
+            className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white"
+            disabled={!isConnected}
+          >
+            Connect Wallet to Request
+          </Button>
+        </Tooltip>
       )}
     </div>
   );

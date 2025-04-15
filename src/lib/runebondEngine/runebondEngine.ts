@@ -17,6 +17,8 @@ import {
   createWhitelistRequestMemo,
 } from "./memoBuilder";
 import { sendTransaction } from "./transactionSender";
+import { WalletProvider, WalletType } from "../../contexts/WalletContext";
+import { ThorchainTransferParams } from "../../types/wallets";
 
 class RuneBondEngine {
   private static instance: RuneBondEngine;
@@ -27,8 +29,6 @@ class RuneBondEngine {
   private listedNodes: Node[] = [];
   private isInitialized: boolean = false;
   private RUNE_DUST = 10000000;
-
-  private constructor() {}
 
   public static getInstance(): RuneBondEngine {
     if (!RuneBondEngine.instance) {
@@ -73,121 +73,190 @@ class RuneBondEngine {
     await this.initialize();
   }
 
-  public async sendListingTransaction(params: ListingParams, walletType: 'xdefi' | 'vultisig'): Promise<string> {
+  public async sendListingTransaction(
+    params: ListingParams, 
+    walletType?: WalletType, 
+    walletProvider?: WalletProvider,
+    emulate?: boolean
+  ): Promise<string | ThorchainTransferParams> {
     const memo = createListing(params);
+    const transaction: ThorchainTransferParams = {
+      asset: {
+        chain: "THOR",
+        symbol: "RUNE",
+        ticker: "RUNE",
+      },
+      from: params.operatorAddress,
+      recipient: this.RUNEBOND_ADDRESS,
+      amount: {
+        amount: this.RUNE_DUST,
+        decimals: 8,
+      },
+      memo,
+    };
+
+    if (emulate) {
+      return transaction;
+    }
+
+    if (!walletType || !walletProvider) {
+      throw new Error('Wallet type and provider are required when not emulating');
+    }
 
     return sendTransaction(
-      {
-        asset: {
-          chain: "THOR",
-          symbol: "RUNE",
-          ticker: "RUNE",
-        },
-        from: params.operatorAddress,
-        recipient: this.RUNEBOND_ADDRESS,
-        amount: {
-          amount: this.RUNE_DUST,
-          decimals: 8,
-        },
-        memo,
-      },
+      transaction,
       'transfer',
-      walletType
+      walletType,
+      walletProvider
     );
   }
 
   public async sendWhitelistRequest(
     params: WhitelistRequestParams,
-    walletType: 'xdefi' | 'vultisig'
-  ): Promise<string> {
+    walletType?: WalletType,
+    walletProvider?: WalletProvider,
+    emulate?: boolean
+  ): Promise<string | ThorchainTransferParams> {
     const memo = createWhitelistRequestMemo(params);
+    const transaction: ThorchainTransferParams = {
+      asset: {
+        chain: "THOR",
+        symbol: "RUNE",
+        ticker: "RUNE",
+      },
+      from: params.userAddress,
+      recipient: this.RUNEBOND_ADDRESS,
+      amount: {
+        amount: this.RUNE_DUST,
+        decimals: 8,
+      },
+      memo,
+    };
+
+    if (emulate) {
+      return transaction;
+    }
+
+    if (!walletType || !walletProvider) {
+      throw new Error('Wallet type and provider are required when not emulating');
+    }
 
     return sendTransaction(
-      {
-        asset: {
-          chain: "THOR",
-          symbol: "RUNE",
-          ticker: "RUNE",
-        },
-        from: params.userAddress,
-        recipient: this.RUNEBOND_ADDRESS,
-        amount: {
-          amount: this.RUNE_DUST,
-          decimals: 8,
-        },
-        memo,
-      },
+      transaction,
       'transfer',
-      walletType
+      walletType,
+      walletProvider
     );
   }
 
-  public async sendBondRequest(params: WhitelistRequest, walletType: 'xdefi' | 'vultisig'): Promise<string> {
+  public async sendBondRequest(
+    params: WhitelistRequest, 
+    walletType?: WalletType, 
+    walletProvider?: WalletProvider,
+    emulate?: boolean
+  ): Promise<string | ThorchainTransferParams> {
     const memo = createBondMemo(params);
+    const transaction: ThorchainTransferParams = {
+      asset: {
+        chain: "THOR",
+        symbol: "RUNE",
+        ticker: "RUNE",
+      },
+      from: params.userAddress,
+      amount: {
+        amount: params.intendedBondAmount,
+        decimals: 8,
+      },
+      memo,
+    };
+
+    if (emulate) {
+      return transaction;
+    }
+
+    if (!walletType || !walletProvider) {
+      throw new Error('Wallet type and provider are required when not emulating');
+    }
 
     return sendTransaction(
-      {
-        asset: {
-          chain: "THOR",
-          symbol: "RUNE",
-          ticker: "RUNE",
-        },
-        from: params.userAddress,
-        amount: {
-          amount: params.intendedBondAmount,
-          decimals: 8,
-        },
-        memo,
-      },
+      transaction,
       'deposit',
-      walletType
+      walletType,
+      walletProvider
     );
   }
 
-  public async sendUnbondRequest(params: WhitelistRequest, walletType: 'xdefi' | 'vultisig'): Promise<string> {
+  public async sendUnbondRequest(
+    params: WhitelistRequest, 
+    walletType?: WalletType, 
+    walletProvider?: WalletProvider,
+    emulate?: boolean
+  ): Promise<string | ThorchainTransferParams> {
     const memo = createUnbondMemo(params);
+    const transaction: ThorchainTransferParams = {
+      asset: {
+        chain: "THOR",
+        symbol: "RUNE",
+        ticker: "RUNE",
+      },
+      from: params.userAddress,
+      amount: {
+        amount: 0,
+        decimals: 8,
+      },
+      memo,
+    };
+
+    if (emulate) {
+      return transaction;
+    }
+
+    if (!walletType || !walletProvider) {
+      throw new Error('Wallet type and provider are required when not emulating');
+    }
 
     return sendTransaction(
-      {
-        asset: {
-          chain: "THOR",
-          symbol: "RUNE",
-          ticker: "RUNE",
-        },
-        from: params.userAddress,
-        amount: {
-          amount: 0,
-          decimals: 8,
-        },
-        memo,
-      },
+      transaction,
       'deposit',
-      walletType
+      walletType,
+      walletProvider
     );
   }
 
   public async sendEnableBondRequest(
     params: WhitelistRequest,
-    walletType: 'xdefi' | 'vultisig'
-  ): Promise<string> {
+    walletType?: WalletType,
+    walletProvider?: WalletProvider,
+    emulate?: boolean
+  ): Promise<string | ThorchainTransferParams> {
     const memo = createEnableBondMemo(params);
+    const transaction: ThorchainTransferParams = {
+      asset: {
+        chain: "THOR",
+        symbol: "RUNE",
+        ticker: "RUNE",
+      },
+      from: params.node.nodeAddress,
+      amount: {
+        amount: assetToBase(assetAmount(1, 8)).amount().toNumber(),
+        decimals: 8,
+      },
+      memo,
+    };
+
+    if (emulate) {
+      return transaction;
+    }
+
+    if (!walletType || !walletProvider) {
+      throw new Error('Wallet type and provider are required when not emulating');
+    }
 
     return sendTransaction(
-      {
-        asset: {
-          chain: "THOR",
-          symbol: "RUNE",
-          ticker: "RUNE",
-        },
-        from: params.node.nodeAddress,
-        amount: {
-          amount: assetToBase(assetAmount(1, 8)).amount().toNumber(),
-          decimals: 8,
-        },
-        memo,
-      },
+      transaction,
       'deposit',
-      walletType
+      walletType,
+      walletProvider
     );
   }
 

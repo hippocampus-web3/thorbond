@@ -46,6 +46,14 @@ const Footer: React.FC = () => {
                   Network Stats
                 </a>
               </li>
+              <li>
+                <a href="https://runebondapp.canny.io/" 
+                   target="_blank" 
+                   rel="noopener noreferrer" 
+                   className="text-base text-gray-300 hover:text-white">
+                  Feedback & Suggestions
+                </a>
+              </li>
             </ul>
           </div>
           <div>
