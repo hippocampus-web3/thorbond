@@ -19,6 +19,8 @@ interface OperatorDashboardProps {
   onRejectRequest: (request: WhitelistRequest) => void;
   onEditListing: () => void;
   onDeleteListing: () => void;
+  selectedNode?: string;
+  onNodeChange: (nodeAddress: string) => void;
 }
 
 const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
@@ -28,16 +30,27 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
   onRejectRequest,
   onEditListing,
   onDeleteListing,
+  selectedNode: initialSelectedNode,
+  onNodeChange,
 }) => {
   const { address } = useWallet();
   const { width } = useWindowSize();
   const [selectedNodeValue, setSelectedNodeValue] = React.useState<string>(
-    nodes[0]?.nodeAddress
+    initialSelectedNode || nodes[0]?.nodeAddress
   );
 
   useEffect(() => {
-    setSelectedNodeValue(nodes[0]?.nodeAddress);
-  }, [nodes]);
+    if (initialSelectedNode) {
+      setSelectedNodeValue(initialSelectedNode);
+    } else if (nodes[0]?.nodeAddress) {
+      setSelectedNodeValue(nodes[0].nodeAddress);
+    }
+  }, [initialSelectedNode, nodes]);
+
+  const handleNodeChange = (value: string) => {
+    setSelectedNodeValue(value);
+    onNodeChange(value);
+  };
 
   const options = nodes.map((node) => ({
     value: node.nodeAddress,
@@ -113,7 +126,7 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
               label="Select one of your nodes"
               options={options}
               value={selectedNodeValue}
-              onChange={(value) => setSelectedNodeValue(value)}
+              onChange={handleNodeChange}
               placeholder="Choose a node"
             />
           </div>

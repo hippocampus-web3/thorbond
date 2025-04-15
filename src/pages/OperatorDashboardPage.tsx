@@ -34,22 +34,26 @@ const OperatorDashboardPage: React.FC<OperatorDashboardPageProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchValue, setSearchValue] = useState(searchParams.get('operator') || '');
+  const [selectedNode, setSelectedNode] = useState(searchParams.get('node') || '');
 
   useEffect(() => {
-    if (searchValue) {
-      setSearchParams({ operator: searchValue });
-    } else {
-      setSearchParams({});
-    }
-  }, [searchValue, setSearchParams]);
+    const params: Record<string, string> = {};
+    if (searchValue) params.operator = searchValue;
+    if (selectedNode) params.node = selectedNode;
+    setSearchParams(params);
+  }, [searchValue, selectedNode, setSearchParams]);
 
   useEffect(() => {
     const operatorFromUrl = searchParams.get('operator');
+    const nodeFromUrl = searchParams.get('node');
     if (operatorFromUrl) {
       onSearchOperator(operatorFromUrl);
     }
+    if (nodeFromUrl) {
+      setSelectedNode(nodeFromUrl);
+    }
     return () => {
-      onSearchOperator('')
+      onSearchOperator('');
     }
   }, []);
 
@@ -60,7 +64,12 @@ const OperatorDashboardPage: React.FC<OperatorDashboardPageProps> = ({
 
   const handleClearSearch = () => {
     setSearchValue('');
+    setSelectedNode('');
     onSearchOperator('');
+  };
+
+  const handleNodeChange = (nodeAddress: string) => {
+    setSelectedNode(nodeAddress);
   };
 
   const renderSearch = () => (
@@ -160,6 +169,8 @@ const OperatorDashboardPage: React.FC<OperatorDashboardPageProps> = ({
         onRejectRequest={onRejectRequest}
         onEditListing={() => setIsEditing(true)}
         onDeleteListing={onDeleteListing}
+        selectedNode={selectedNode}
+        onNodeChange={handleNodeChange}
       />
     </div>
   );
