@@ -5,6 +5,7 @@ import Input from '../ui/Input';
 import Select from '../ui/Select';
 import Tooltip from '../ui/Tooltip';
 import { Node } from '../../types';
+import { baseAmount, baseToAsset } from '@xchainjs/xchain-util';
 
 interface NodeListProps {
   nodes: Node[];
@@ -41,7 +42,7 @@ const NodesList: React.FC<NodeListProps> = ({
     .filter((node) => {
       // Filter by minimum bond
       if (filterMinBond) {
-        return node.minRune <= parseInt(filterMinBond);
+        return baseToAsset(baseAmount(node.minRune, 8)).amount().toNumber() <= parseInt(filterMinBond);
       }
       return true;
     })
