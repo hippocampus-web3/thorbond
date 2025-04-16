@@ -72,7 +72,7 @@ const NodeCard: React.FC<NodeCardProps> = ({
         </div>
         <div className="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
           <h4 className="text-sm font-medium text-yellow-800 mb-2">What are hidden nodes?</h4>
-          <p className="text-sm text-yellow-700">
+          <p className="text-sm text-yellow-700 mb-2">
             These are nodes flagged as potentially risky due to unusual behavior or missing information.
             They're hidden by default to protect users, but you can choose to view and delegate to them at your own risk.
           </p>
@@ -99,7 +99,11 @@ const NodeCard: React.FC<NodeCardProps> = ({
                     <Info className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
                     <div>
                       <h3 className="font-medium text-gray-900 mb-2">Hidden Node</h3>
-                      <p className="text-sm text-gray-600">{node.isHidden.reason}</p>
+                      {node.isHidden.reasons && node.isHidden.reasons.map((reason, index) => (
+                        <p key={index} className="text-sm text-gray-600 mb-2">
+                          • {reason}
+                        </p>
+                      ))}
                     </div>
                   </div>
                 }
