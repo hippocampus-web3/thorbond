@@ -26,7 +26,7 @@ export interface Node {
   },
   isHidden: {
       hide: boolean,
-      reason: null | string
+      reasons: null | string[]
   }
 }
 
