@@ -4,9 +4,10 @@ import Button from '../ui/Button';
 import { formatRune, shortenAddress, getTimeAgo, formatDuration, getNodeExplorerUrl } from '../../lib/utils';
 import { useWallet } from '../../contexts/WalletContext';
 import { baseAmount } from "@xchainjs/xchain-util";
-import { Copy, Check, Share2, Info } from 'lucide-react';
+import { Copy, Check, Share2, Info, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Tooltip from '../ui/Tooltip';
+import Alert from '../ui/Alert';
 
 interface NodeCardProps {
   node: Node;
@@ -22,6 +23,7 @@ const NodeCard: React.FC<NodeCardProps> = ({
   const [copiedNode, setCopiedNode] = useState(false);
   const [copiedOperator, setCopiedOperator] = useState(false);
   const [copiedShare, setCopiedShare] = useState(false);
+  const [isVisible, setIsVisible] = useState(!node.isHidden.hide);
   const navigate = useNavigate();
 
   const handleCopy = async (text: string, setCopied: (value: boolean) => void) => {
@@ -52,13 +54,61 @@ const NodeCard: React.FC<NodeCardProps> = ({
     navigate(`/nodes/${node.nodeAddress}`);
   };
 
+  if (node.isHidden.hide && !isVisible) {
+    return (
+      <div className="bg-white shadow rounded-lg p-4 hover:cursor-pointer" onClick={handleCardClick}>
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center space-x-2">
+            <EyeOff className="h-5 w-5 text-gray-400" />
+            <span className="text-gray-500">Hidden Node</span>
+          </div>
+          <Button
+            onClick={() => setIsVisible(true)}
+            className="text-sm"
+            variant="outline"
+          >
+            Show Node
+          </Button>
+        </div>
+        <div className="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+          <h4 className="text-sm font-medium text-yellow-800 mb-2">What are hidden nodes?</h4>
+          <p className="text-sm text-yellow-700">
+            These are nodes flagged as potentially risky due to unusual behavior or missing information.
+            They're hidden by default to protect users, but you can choose to view and delegate to them at your own risk.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div 
-      className="bg-white shadow rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow"
+      className={`bg-white shadow rounded-lg p-4 hover:cursor-pointer ${node.isHidden.hide ? 'border-2 border-yellow-400 bg-yellow-50' : ''}`}
       onClick={handleCardClick}
     >
-      <div className="flex justify-between items-start mb-4">
-        <h3 className="text-lg font-medium text-gray-900">Node</h3>
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center space-x-2">
+          <h3 className="text-lg font-medium text-gray-900">Node</h3>
+          {node.isHidden.hide && (
+            <div className="flex items-center space-x-1">
+              <Eye className="h-4 w-4 text-yellow-600" />
+              <span className="text-sm font-medium text-yellow-600">Why hidden?</span>
+              <Tooltip
+                content={
+                  <div className="flex items-start gap-2">
+                    <Info className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="font-medium text-gray-900 mb-2">Hidden Node</h3>
+                      <p className="text-sm text-gray-600">{node.isHidden.reason}</p>
+                    </div>
+                  </div>
+                }
+              >
+                <Info className="h-4 w-4 text-yellow-600 cursor-help" />
+              </Tooltip>
+            </div>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <button
             onClick={handleShare}

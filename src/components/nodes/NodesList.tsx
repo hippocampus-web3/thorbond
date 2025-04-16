@@ -47,7 +47,10 @@ const NodesList: React.FC<NodeListProps> = ({
       return true;
     })
     .sort((a, b) => {
-      // Sort by selected criteria
+      if (a.isHidden.hide !== b.isHidden.hide) {
+        return a.isHidden.hide ? 1 : -1;
+      }
+      
       switch (sortBy) {
         case 'bondingCapacity':
           return b.maxRune - a.maxRune;

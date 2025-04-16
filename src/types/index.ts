@@ -21,6 +21,13 @@ export interface Node {
   bondProvidersCount: number;
   description?: string;
   contactInfo?: string;
+  officialInfo: {
+    currentFee: number
+  },
+  isHidden: {
+      hide: boolean,
+      reason: null | string
+  }
 }
 
 export interface WhitelistRequest {

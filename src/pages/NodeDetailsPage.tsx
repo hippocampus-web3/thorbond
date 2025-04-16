@@ -2,11 +2,12 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Node, WhitelistRequestFormData } from '../types';
 import Button from '../components/ui/Button';
-import { formatRune, shortenAddress, getTimeAgo, formatDuration, getNodeExplorerUrl } from '../lib/utils';
+import { formatRune, shortenAddress, getTimeAgo, getNodeExplorerUrl } from '../lib/utils';
 import { useWallet } from '../contexts/WalletContext';
 import { baseAmount } from "@xchainjs/xchain-util";
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Eye, Info } from 'lucide-react';
 import WhitelistRequestForm from '../components/nodes/WhitelistRequestForm';
+import Tooltip from '../components/ui/Tooltip';
 
 interface NodeDetailsPageProps {
   nodes: Node[];
@@ -127,10 +128,29 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           {/* Node Details Section */}
           <div className="lg:col-span-3">
-            <div className="bg-white shadow rounded-lg p-6">
+            <div className={`bg-white shadow rounded-lg p-6 ${node.isHidden.hide ? 'border-2 border-yellow-400 bg-yellow-50' : ''}`}>
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">Node Details</h1>
+                  {node.isHidden.hide && (
+                    <div className="flex items-center space-x-1 mt-2">
+                      <Eye className="h-4 w-4 text-yellow-600" />
+                      <span className="text-sm font-medium text-yellow-600">Hidden Node</span>
+                      <Tooltip
+                        content={
+                          <div className="flex items-start gap-2">
+                            <Info className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <h3 className="font-medium text-gray-900 mb-2">Hidden Node</h3>
+                              <p className="text-sm text-gray-600">{node.isHidden.reason}</p>
+                            </div>
+                          </div>
+                        }
+                      >
+                        <Info className="h-4 w-4 text-yellow-600 cursor-help" />
+                      </Tooltip>
+                    </div>
+                  )}
                   <button
                     onClick={() => window.open(getNodeExplorerUrl(node.nodeAddress), '_blank')}
                     className="text-blue-600 hover:text-blue-800 hover:underline focus:outline-none"
@@ -142,6 +162,16 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
                   {node.status}
                 </span>
               </div>
+
+              {node.isHidden.hide && (
+                <div className="mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <h4 className="text-sm font-medium text-yellow-800 mb-2">What are hidden nodes?</h4>
+                  <p className="text-sm text-yellow-700">
+                    These are nodes flagged as potentially risky due to unusual behavior or missing information.
+                    They're hidden by default to protect users, but you can choose to view and delegate to them at your own risk.
+                  </p>
+                </div>
+              )}
 
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
