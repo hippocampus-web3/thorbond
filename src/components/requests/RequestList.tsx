@@ -118,8 +118,8 @@ const RequestList: React.FC<RequestListProps> = ({
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {requests.map((request, index) => (
-            <tr key={index}>
+          {requests.map((request) => (
+            <tr key={`${request.userAddress}-${request.node.nodeAddress}-${request.timestamp}`}>
               <td className="px-6 py-4 whitespace-nowrap">
                 {renderAddress(request.userAddress)}
               </td>
