@@ -37,7 +37,7 @@ const AppContent: React.FC = () => {
 
   const { address, isConnected, connect, disconnect, walletProvider } = useWallet();
 
-  const addressTofilter = searchOperator || searchUser || import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR || address;
+  const addressTofilter = address ||searchOperator || searchUser || import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR;
 
   // Initialize RuneBondEngine and load Nodes
   useEffect(() => {
@@ -71,6 +71,11 @@ const AppContent: React.FC = () => {
 
     initializeEngine();
   }, [addressTofilter]);
+
+  useEffect(() => {
+    setSearchUser('')
+    setSearchOperator('')
+  }, [isConnected]);
 
 
   const handleConnect = async () => {
