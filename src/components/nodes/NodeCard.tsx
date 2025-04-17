@@ -229,7 +229,7 @@ const NodeCard: React.FC<NodeCardProps> = ({
 
         <div className="flex justify-between">
           <span className="text-gray-600">Bonding Capacity:</span>
-          <span className="font-medium">{formatRune(baseAmount(node.c))} RUNE</span>
+          <span className="font-medium">{formatRune(baseAmount(node.maxRune))} RUNE</span>
         </div>
 
         <div className="flex justify-between">
