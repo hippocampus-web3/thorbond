@@ -4,7 +4,6 @@ import { ThorchainTransferParams } from '../../types/wallets';
 import { formatRune } from '../../lib/utils';
 import { baseAmount } from '@xchainjs/xchain-util';
 import Tooltip from '../ui/Tooltip';
-import { getNodeExplorerUrl } from '../../lib/utils';
 
 interface TransactionConfirmationPopupProps {
   isOpen: boolean;

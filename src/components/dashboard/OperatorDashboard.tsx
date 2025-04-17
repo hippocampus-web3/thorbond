@@ -80,12 +80,9 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
   );
 
   const totalBonded = bondedRequests.reduce(
-    (sum, req) => sum + req.realBond,
+    (sum, req) => sum + Number(req.realBond),
     0
   );
-  const remainingCapacity = selectedNode
-    ? selectedNode.maxRune - totalBonded
-    : 0;
 
   if (!selectedNode && address) {
     return (
@@ -146,7 +143,7 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Available Capacity"
-          value={`${formatRune(baseAmount(remainingCapacity))} RUNE`}
+          value={`${formatRune(baseAmount(selectedNode?.maxRune))} RUNE`}
           icon={DollarSign}
           description={`${formatRune(baseAmount(totalBonded))} RUNE bonded`}
         />

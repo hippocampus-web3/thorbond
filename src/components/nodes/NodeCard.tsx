@@ -4,11 +4,9 @@ import Button from '../ui/Button';
 import { formatRune, shortenAddress, getTimeAgo, formatDuration, getNodeExplorerUrl } from '../../lib/utils';
 import { useWallet } from '../../contexts/WalletContext';
 import { baseAmount } from "@xchainjs/xchain-util";
-import { Copy, Check, Share2, Info, Eye, EyeOff } from 'lucide-react';
+import { Copy, Check, Share2, Info, Eye, EyeOff, Trophy, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Tooltip from '../ui/Tooltip';
-import Alert from '../ui/Alert';
-
 interface NodeCardProps {
   node: Node;
   onRequestWhitelist: (node: Node) => void;
@@ -18,12 +16,14 @@ const NodeCard: React.FC<NodeCardProps> = ({
   node,
   onRequestWhitelist,
 }) => {
+
   const { isConnected, address } = useWallet();
   const isOperator = address === node.operatorAddress;
   const [copiedNode, setCopiedNode] = useState(false);
   const [copiedOperator, setCopiedOperator] = useState(false);
   const [copiedShare, setCopiedShare] = useState(false);
-  const [isVisible, setIsVisible] = useState(!node.isHidden.hide);
+  const isFull = node.maxRune < 0 || node.maxRune < node.minRune;
+  const [isVisible, setIsVisible] = useState(!node.isHidden.hide && !isFull);
   const navigate = useNavigate();
 
   const handleCopy = async (text: string, setCopied: (value: boolean) => void) => {
@@ -54,27 +54,52 @@ const NodeCard: React.FC<NodeCardProps> = ({
     navigate(`/nodes/${node.nodeAddress}`);
   };
 
-  if (node.isHidden.hide && !isVisible) {
+  if ((node.isHidden.hide || isFull) && !isVisible) {
     return (
-      <div className="bg-white shadow rounded-lg p-4 hover:cursor-pointer" onClick={handleCardClick}>
+      <div className={`shadow rounded-lg p-4 hover:cursor-pointer min-h-[500px] flex flex-col ${
+        node.isHidden.hide ? 'bg-yellow-50 border-2 border-yellow-400' : 
+        isFull ? 'bg-emerald-50 border-2 border-emerald-400' : 'bg-white'
+      }`} onClick={handleCardClick}>
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center space-x-2">
-            <EyeOff className="h-5 w-5 text-gray-400" />
-            <span className="text-gray-500">Hidden Node</span>
+            {isFull ? (
+              <div className="flex items-center space-x-2">
+                <Trophy className="h-5 w-5 text-emerald-600" />
+                <Sparkles className="h-4 w-4 text-emerald-500" />
+              </div>
+            ) : (
+              <EyeOff className="h-5 w-5 text-yellow-600" />
+            )}
+            <span className={`${
+              node.isHidden.hide ? 'text-yellow-800' : 'text-emerald-800 font-medium'
+            }`}>
+              {isFull ? "Full Capacity Node 🎉" : "Hidden Node"}
+            </span>
           </div>
           <Button
             onClick={() => setIsVisible(true)}
-            className="text-sm"
-            variant="outline"
+            className={`text-sm ${
+              isFull ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''
+            }`}
+            variant={isFull ? "primary" : "outline"}
           >
             Show Node
           </Button>
         </div>
-        <div className="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-          <h4 className="text-sm font-medium text-yellow-800 mb-2">What are hidden nodes?</h4>
-          <p className="text-sm text-yellow-700 mb-2">
-            These are nodes flagged as potentially risky due to unusual behavior or missing information.
-            They're hidden by default to protect users, but you can choose to view and delegate to them at your own risk.
+        <div className={`p-4 rounded-lg border ${
+          node.isHidden.hide ? 'bg-yellow-50 border-yellow-200' : 'bg-emerald-50 border-emerald-200'
+        }`}>
+          <h4 className={`text-sm font-medium ${
+            node.isHidden.hide ? 'text-yellow-800' : 'text-emerald-800'
+          } mb-2`}>
+            {isFull ? "🎉 Congratulations! This Node is at Full Capacity" : "What are hidden nodes?"}
+          </h4>
+          <p className={`text-sm ${
+            node.isHidden.hide ? 'text-yellow-700' : 'text-emerald-700'
+          }`}>
+            {isFull 
+              ? "This node has achieved an incredible milestone by reaching its maximum bonding capacity! This is a testament to its reliability and the trust it has earned from the community. While it's not currently accepting more liquidity, you can still request whitelist - the node operator may review your request and potentially make space for your delegation. Being part of a full capacity node is a prestigious achievement in the THORChain ecosystem! 🚀"
+              : "These are nodes flagged as potentially risky due to unusual behavior or missing information. They're hidden by default to protect users, but you can choose to view and delegate to them at your own risk."}
           </p>
         </div>
       </div>
@@ -83,7 +108,10 @@ const NodeCard: React.FC<NodeCardProps> = ({
 
   return (
     <div 
-      className={`bg-white shadow rounded-lg p-4 hover:cursor-pointer ${node.isHidden.hide ? 'border-2 border-yellow-400 bg-yellow-50' : ''}`}
+      className={`shadow rounded-lg p-4 hover:cursor-pointer min-h-[500px] flex flex-col ${
+        node.isHidden.hide ? 'bg-yellow-50 border-2 border-yellow-400' : 
+        isFull ? 'bg-emerald-50 border-2 border-emerald-400' : 'bg-white'
+      }`}
       onClick={handleCardClick}
     >
       <div className="flex justify-between items-center mb-4">
@@ -109,6 +137,25 @@ const NodeCard: React.FC<NodeCardProps> = ({
                 }
               >
                 <Info className="h-4 w-4 text-yellow-600 cursor-help" />
+              </Tooltip>
+            </div>
+          )}
+          {isFull && (
+            <div className="flex items-center space-x-1">
+              <span className="text-sm font-medium text-emerald-600">Full Capacity</span>
+              <Tooltip
+                content={
+                  <div className="flex items-start gap-2">
+                    <div>
+                      <h3 className="font-medium text-gray-900 mb-2">Full Capacity Node</h3>
+                      <p className="text-sm text-gray-600">
+                        This node has reached its maximum bonding capacity. It's a sign of high demand and trust from the community.
+                      </p>
+                    </div>
+                  </div>
+                }
+              >
+                <Info className="h-4 w-4 text-emerald-600 cursor-help" />
               </Tooltip>
             </div>
           )}
@@ -203,6 +250,11 @@ const NodeCard: React.FC<NodeCardProps> = ({
         <div className="flex justify-between">
           <span className="text-gray-600">Fee Percentage:</span>
           <span className="font-medium">{node.feePercentage / 100}%</span>
+        </div>
+
+        <div className="flex justify-between">
+          <span className="text-gray-600">Total bond:</span>
+          <span className="font-medium">{formatRune(baseAmount(node.officialInfo.totalBond))}</span>
         </div>
 
         <div className="flex justify-between">

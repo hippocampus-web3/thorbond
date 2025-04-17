@@ -70,11 +70,13 @@ const AppContent: React.FC = () => {
     };
 
     initializeEngine();
-  }, [addressTofilter]);
+  }, [addressTofilter, isConnected]);
 
   useEffect(() => {
-    setSearchUser('')
-    setSearchOperator('')
+    if (isConnected) {
+      setSearchUser('')
+      setSearchOperator('')
+    }
   }, [isConnected]);
 
 

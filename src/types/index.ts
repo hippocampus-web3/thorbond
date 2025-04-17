@@ -22,7 +22,8 @@ export interface Node {
   description?: string;
   contactInfo?: string;
   officialInfo: {
-    currentFee: number
+    currentFee: number;
+    totalBond: number;
   },
   isHidden: {
       hide: boolean,
