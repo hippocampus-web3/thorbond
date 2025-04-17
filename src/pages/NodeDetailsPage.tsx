@@ -129,9 +129,9 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           {/* Node Details Section */}
           <div className="lg:col-span-3">
-            <div className={`bg-white shadow rounded-lg p-6 ${
-              node.isHidden.hide ? 'border-2 border-yellow-400 bg-yellow-50' : 
-              isFull ? 'border-2 border-emerald-400 bg-emerald-50' : ''
+            <div className={`shadow rounded-lg p-6 ${
+              node.isHidden.hide ? 'bg-yellow-50 border-2 border-yellow-400' : 
+              isFull ? 'bg-emerald-50 border-2 border-emerald-400' : 'bg-white'
             }`}>
               <div className="flex justify-between items-start mb-6">
                 <div>
