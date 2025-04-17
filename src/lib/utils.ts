@@ -1,9 +1,53 @@
 import { BaseAmount, baseToAsset } from "@xchainjs/xchain-util";
 
 export function formatRune(baseAmount: BaseAmount): string {
-  return new Intl.NumberFormat('en-US', {
-    maximumFractionDigits: 2,
-  }).format(baseToAsset(baseAmount).amount().toNumber());
+  const amount = baseToAsset(baseAmount).amount().toNumber();
+  
+  if (amount === 0) {
+    return '0';
+  }
+
+  const absAmount = Math.abs(amount);
+  
+  if (absAmount < 0.000001 || absAmount > 1000000000000) {
+    return amount.toExponential(2);
+  }
+  
+  if (absAmount >= 1000000000000) {
+    const value = amount / 1000000000000;
+    const decimal = value % 1;
+    return `${decimal === 0 ? value : value.toFixed(3)}T`;
+  }
+  
+  if (absAmount >= 1000000000) {
+    const value = amount / 1000000000;
+    const decimal = value % 1;
+    return `${decimal === 0 ? value : value.toFixed(1)}B`;
+  }
+  
+  if (absAmount >= 1000000) {
+    const value = amount / 1000000;
+    const decimal = value % 1;
+    if (amount % 10000 === 0) {
+      return `${decimal === 0 ? value : value.toFixed(2)}M`;
+    }
+    return `${decimal === 0 ? value : value.toFixed(1)}M`;
+  }
+  
+  if (absAmount >= 1000) {
+    const value = amount / 1000;
+    const decimal = value % 1;
+    if (amount % 10 === 0 && amount >= 10000) {
+      return `${decimal === 0 ? value : value.toFixed(2)}K`;
+    }
+    if (amount % 100 === 0) {
+      return `${decimal === 0 ? value : value.toFixed(1)}K`;
+    }
+    return `${decimal === 0 ? value : value.toFixed(1)}K`;
+  }
+  
+  const decimal = amount % 1;
+  return `${decimal === 0 ? amount : amount.toFixed(2)}`;
 }
 
 export function formatDuration(seconds: number): string {

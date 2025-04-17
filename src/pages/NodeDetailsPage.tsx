@@ -5,7 +5,7 @@ import Button from '../components/ui/Button';
 import { formatRune, shortenAddress, getTimeAgo, getNodeExplorerUrl } from '../lib/utils';
 import { useWallet } from '../contexts/WalletContext';
 import { baseAmount } from "@xchainjs/xchain-util";
-import { ArrowLeft, Eye, Info } from 'lucide-react';
+import { ArrowLeft, Eye, Info, Trophy, Sparkles } from 'lucide-react';
 import WhitelistRequestForm from '../components/nodes/WhitelistRequestForm';
 import Tooltip from '../components/ui/Tooltip';
 
@@ -103,6 +103,7 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
   }
 
   const isOperator = address === node.operatorAddress;
+  const isFull = node.maxRune < 0 || node.maxRune < node.minRune;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -128,30 +129,57 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           {/* Node Details Section */}
           <div className="lg:col-span-3">
-            <div className={`bg-white shadow rounded-lg p-6 ${node.isHidden.hide ? 'border-2 border-yellow-400 bg-yellow-50' : ''}`}>
+            <div className={`bg-white shadow rounded-lg p-6 ${
+              node.isHidden.hide ? 'border-2 border-yellow-400 bg-yellow-50' : 
+              isFull ? 'border-2 border-emerald-400 bg-emerald-50' : ''
+            }`}>
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">Node Details</h1>
-                  {node.isHidden.hide && (
+                  {(node.isHidden.hide || isFull) && (
                     <div className="flex items-center space-x-1 mt-2">
-                      <Eye className="h-4 w-4 text-yellow-600" />
-                      <span className="text-sm font-medium text-yellow-600">Hidden Node</span>
+                      {isFull ? (
+                        <>
+                          <Trophy className="h-4 w-4 text-emerald-600" />
+                          <Sparkles className="h-3 w-3 text-emerald-500" />
+                          <span className="text-sm font-medium text-emerald-600">Full Capacity Node 🎉</span>
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="h-4 w-4 text-yellow-600" />
+                          <span className="text-sm font-medium text-yellow-600">Hidden Node</span>
+                        </>
+                      )}
                       <Tooltip
                         content={
                           <div className="flex items-start gap-2">
-                            <Info className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                            <Info className={`h-5 w-5 ${
+                              isFull ? 'text-emerald-600' : 'text-yellow-600'
+                            } flex-shrink-0 mt-0.5`} />
                             <div>
-                              <h3 className="font-medium text-gray-900 mb-2">Hidden Node</h3>
-                              {node.isHidden.reasons && node.isHidden.reasons.map((reason, index) => (
-                                <p key={index} className="text-sm text-gray-600 mb-2">
-                                  • {reason}
+                              <h3 className="font-medium text-gray-900 mb-2">
+                                {isFull ? "Full Capacity Node" : "Hidden Node"}
+                              </h3>
+                              {isFull ? (
+                                <p className="text-sm text-gray-600">
+                                  This node has achieved an incredible milestone by reaching its maximum bonding capacity! This is a testament to its reliability and the trust it has earned from the community. While it's not currently accepting more liquidity, you can still request whitelist - the node operator may review your request and potentially make space for your delegation. Being part of a full capacity node is a prestigious achievement in the THORChain ecosystem! 🚀
                                 </p>
-                              ))}
+                              ) : (
+                                <>
+                                  {node.isHidden.reasons && node.isHidden.reasons.map((reason, index) => (
+                                    <p key={index} className="text-sm text-gray-600 mb-2">
+                                      • {reason}
+                                    </p>
+                                  ))}
+                                </>
+                              )}
                             </div>
                           </div>
                         }
                       >
-                        <Info className="h-4 w-4 text-yellow-600 cursor-help" />
+                        <Info className={`h-4 w-4 ${
+                          isFull ? 'text-emerald-600' : 'text-yellow-600'
+                        } cursor-help`} />
                       </Tooltip>
                     </div>
                   )}
@@ -167,23 +195,22 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
                 </span>
               </div>
 
-              {node.isHidden.hide && (
-                <div className="mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                  <h4 className="text-sm font-medium text-yellow-800 mb-2">What are hidden nodes?</h4>
-                  <p className="text-sm text-yellow-700 mb-2">
-                    These are nodes flagged as potentially risky due to unusual behavior or missing information.
-                    They're hidden by default to protect users, but you can choose to view and delegate to them at your own risk.
+              {(node.isHidden.hide || isFull) && (
+                <div className={`mb-6 p-4 rounded-lg border ${
+                  isFull ? 'bg-emerald-50 border-emerald-200' : 'bg-yellow-50 border-yellow-200'
+                }`}>
+                  <h4 className={`text-sm font-medium ${
+                    isFull ? 'text-emerald-800' : 'text-yellow-800'
+                  } mb-2`}>
+                    {isFull ? "🎉 Congratulations! This Node is at Full Capacity" : "What are hidden nodes?"}
+                  </h4>
+                  <p className={`text-sm ${
+                    isFull ? 'text-emerald-700' : 'text-yellow-700'
+                  }`}>
+                    {isFull 
+                      ? "This node has achieved an incredible milestone by reaching its maximum bonding capacity! This is a testament to its reliability and the trust it has earned from the community. While it's not currently accepting more liquidity, you can still request whitelist - the node operator may review your request and potentially make space for your delegation. Being part of a full capacity node is a prestigious achievement in the THORChain ecosystem! 🚀"
+                      : "These are nodes flagged as potentially risky due to unusual behavior or missing information. They're hidden by default to protect users, but you can choose to view and delegate to them at your own risk."}
                   </p>
-                  {node.isHidden.reasons && (
-                    <div className="mt-2">
-                      <h5 className="text-sm font-medium text-yellow-800 mb-1">Reasons for being hidden:</h5>
-                      <ul className="text-sm text-yellow-700 list-disc list-inside">
-                        {node.isHidden.reasons.map((reason, index) => (
-                          <li key={index}>{reason}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
                 </div>
               )}
 
@@ -212,6 +239,10 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Slash Points</h3>
                     <p className="mt-1 text-gray-900">{node.slashPoints}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">Total bond</h3>
+                    <p className="mt-1 text-gray-900">{formatRune(baseAmount(node.officialInfo.totalBond))}</p>
                   </div>
                 </div>
 
