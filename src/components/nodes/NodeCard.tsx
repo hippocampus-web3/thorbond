@@ -325,11 +325,15 @@ const NodeCard: React.FC<NodeCardProps> = ({
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleCopy(RUNEBOND_ADDRESS, setCopiedOperator);
+                            handleCopy(RUNEBOND_ADDRESS, setCopiedAddress);
                           }}
                           className="p-1 hover:bg-gray-100 rounded"
                         >
-                          <Copy className="h-4 w-4 text-gray-400" />
+                          {copiedAddress ? (
+                            <Check className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <Copy className="h-4 w-4 text-gray-400" />
+                          )}
                         </button>
                       </div>
                     </div>

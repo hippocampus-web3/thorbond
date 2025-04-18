@@ -46,7 +46,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 }) => {
   const [message, setMessage] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isCopied, setIsCopied] = useState(false);
+  const [isMemoCopied, setIsMemoCopied] = useState(false);
+  const [isAddressCopied, setIsAddressCopied] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -81,13 +82,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     return base64.length;
   };
 
-  const handleCopy = async (text: string) => {
+  const handleCopy = async (text: string, setCopied: (value: boolean) => void) => {
     try {
       await navigator.clipboard.writeText(text);
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy memo:', err);
+      console.error('Failed to copy:', err);
     }
   };
 
@@ -115,11 +116,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   <div className="bg-gray-100 p-2 rounded flex items-center justify-between gap-2 group">
                     <code className="text-sm break-all text-gray-600">{memo}</code>
                     <button
-                      onClick={() => handleCopy(memo)}
+                      onClick={() => handleCopy(memo, setIsMemoCopied)}
                       className="p-1 hover:bg-gray-200 rounded flex-shrink-0"
                       title="Copy memo"
                     >
-                      {isCopied ? (
+                      {isMemoCopied ? (
                         <Check className="h-4 w-4 text-green-500" />
                       ) : (
                         <Copy className="h-4 w-4 text-gray-400" />
@@ -148,11 +149,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                         <div className="bg-gray-100 p-2 rounded flex items-center justify-between gap-2">
                           <code className="text-sm break-all text-gray-600">{RUNEBOND_ADDRESS}</code>
                           <button
-                            onClick={() => handleCopy(RUNEBOND_ADDRESS)}
+                            onClick={() => handleCopy(RUNEBOND_ADDRESS, setIsAddressCopied)}
                             className="p-1 hover:bg-gray-200 rounded flex-shrink-0"
                             title="Copy address"
                           >
-                            <Copy className="h-4 w-4 text-gray-400" />
+                            {isAddressCopied ? (
+                              <Check className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <Copy className="h-4 w-4 text-gray-400" />
+                            )}
                           </button>
                         </div>
                       </div>
