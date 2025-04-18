@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Node, WhitelistRequestFormData } from '../types';
+import { Node, WhitelistRequestFormData, Message } from '../types';
 import Button from '../components/ui/Button';
 import { formatRune, shortenAddress, getTimeAgo, getNodeExplorerUrl } from '../lib/utils';
 import { useWallet } from '../contexts/WalletContext';
@@ -8,6 +8,8 @@ import { baseAmount } from "@xchainjs/xchain-util";
 import { ArrowLeft, Eye, Info, Trophy, Sparkles } from 'lucide-react';
 import WhitelistRequestForm from '../components/nodes/WhitelistRequestForm';
 import Tooltip from '../components/ui/Tooltip';
+import ChatInterface from '../components/nodes/ChatInterface';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
 
 interface NodeDetailsPageProps {
   nodes: Node[];
@@ -15,6 +17,9 @@ interface NodeDetailsPageProps {
   selectedNode: Node | null;
   onSubmitRequest: (formData: WhitelistRequestFormData) => Promise<void>;
   onCancelRequest: () => void;
+  messages: Message[];
+  onSendMessage: (nodeAddress: string, message: string) => Promise<void>;
+  isLoadingMessages?: boolean;
 }
 
 const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
@@ -23,6 +28,9 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
   selectedNode,
   onSubmitRequest,
   onCancelRequest,
+  messages,
+  onSendMessage,
+  isLoadingMessages = false,
 }) => {
   const { nodeAddress } = useParams<{ nodeAddress: string }>();
   const navigate = useNavigate();
@@ -104,6 +112,12 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
 
   const isOperator = address === node.operatorAddress;
   const isFull = node.maxRune < 0 || node.maxRune < node.minRune;
+
+  const handleSendMessageForNode = (message: string) => {
+    if (node?.nodeAddress) {
+      onSendMessage(node.nodeAddress, message);
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -291,36 +305,19 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
               )}
             </div>
 
-            {/* Disabled Chat Interface */}
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Chat with Operator</h2>
-              <div className="space-y-4">
-                <div className="h-[500px] bg-gray-50 rounded-lg p-4 flex flex-col">
-                  <div className="flex-1 overflow-y-auto space-y-4">
-                    <div className="text-center text-gray-500 py-8">
-                      <div className="text-xl font-medium mb-2">Chat functionality coming soon</div>
-                      <p className="text-sm">This feature will allow you to communicate directly with the node operator</p>
-                    </div>
-                  </div>
-                  <div className="mt-4 border-t border-gray-200 pt-4">
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <input
-                        type="text"
-                        disabled
-                        placeholder="Type a message..."
-                        className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-500 bg-gray-100"
-                      />
-                      <button
-                        disabled
-                        className="w-full sm:w-auto px-6 py-3 bg-gray-200 text-gray-500 rounded-lg font-medium whitespace-nowrap"
-                      >
-                        Send
-                      </button>
-                    </div>
-                  </div>
-                </div>
+            {/* Chat Interface */}
+            {isLoadingMessages ? (
+              <div className="bg-white shadow rounded-lg p-6 flex items-center justify-center h-[600px]">
+                <LoadingSpinner />
               </div>
-            </div>
+            ) : (
+              <ChatInterface 
+                messages={messages} 
+                onSendMessage={handleSendMessageForNode} 
+                isDisabled={!isConnected}
+                nodeAddress={node.nodeAddress}
+              />
+            )}
           </div>
         </div>
       )}

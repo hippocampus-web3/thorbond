@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Search, SlidersHorizontal, Info } from 'lucide-react';
+import { Search, SlidersHorizontal, Info, Copy, Check } from 'lucide-react';
 import NodeCard from './NodeCard';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
 import Tooltip from '../ui/Tooltip';
 import { Node } from '../../types';
 import { baseAmount, baseToAsset } from '@xchainjs/xchain-util';
+
+const RUNEBOND_ADDRESS = import.meta.env.VITE_RUNEBOND_ADDRESS || "thor1xazgmh7sv0p393t9ntj6q9p52ahycc8jjlaap9";
 
 interface NodeListProps {
   nodes: Node[];
@@ -21,9 +23,24 @@ const NodesList: React.FC<NodeListProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('bondingCapacity');
   const [filterMinBond, setFilterMinBond] = useState('');
+  const [copiedAddress, setCopiedAddress] = useState(false);
+  const [copiedMemo, setCopiedMemo] = useState(false);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
+  };
+
+  const handleCopyAddress = () => {
+    navigator.clipboard.writeText(RUNEBOND_ADDRESS);
+    setCopiedAddress(true);
+    setTimeout(() => setCopiedAddress(false), 2000);
+  };
+
+  const handleCopyMemo = () => {
+    const memo = "TB:LIST:<node_address>:<operator_address>:<min_rune>:<max_rune>:<fee_percentage>";
+    navigator.clipboard.writeText(memo);
+    setCopiedMemo(true);
+    setTimeout(() => setCopiedMemo(false), 2000);
   };
 
   const filteredNodes = nodes
@@ -163,9 +180,21 @@ const NodesList: React.FC<NodeListProps> = ({
                       To list your node, you can connect your wallet or send a transaction to the THORChain network with amount 0.1 RUNE and the following MEMO:
                     </p>
                     <div className="bg-gray-50 p-3 rounded-md">
-                      <code className="text-sm font-mono text-gray-800 break-all">
-                        TB:LIST:&lt;node_address&gt;:&lt;operator_address&gt;:&lt;min_rune&gt;:&lt;max_rune&gt;:&lt;fee_percentage&gt;
-                      </code>
+                      <div className="flex items-center justify-between">
+                        <code className="text-sm font-mono text-gray-800 break-all">
+                          TB:LIST:&lt;node_address&gt;:&lt;operator_address&gt;:&lt;min_rune&gt;:&lt;max_rune&gt;:&lt;fee_percentage&gt;
+                        </code>
+                        <button
+                          onClick={handleCopyMemo}
+                          className="p-1 hover:bg-gray-100 rounded"
+                        >
+                          {copiedMemo ? (
+                            <Check className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <Copy className="h-4 w-4 text-gray-400" />
+                          )}
+                        </button>
+                      </div>
                     </div>
                     <div className="mt-3 text-sm text-gray-600 mb-3">
                       <p className="font-medium mb-1">Parameters:</p>
@@ -176,6 +205,22 @@ const NodesList: React.FC<NodeListProps> = ({
                         <li><code className="bg-gray-100 px-1 rounded">max_rune</code>: Maximum bond amount. Must be in base amount. For example: 1 RUNE = 100000000 (must be greater than min_rune)</li>
                         <li><code className="bg-gray-100 px-1 rounded">fee_percentage</code>: Fee percentage (0-100, e.g., 100 for 1%)</li>
                       </ul>
+                    </div>
+                    <div className="mt-3">
+                      <p className="text-sm font-medium text-gray-900 mb-2">Send to address:</p>
+                      <div className="bg-gray-50 p-2 rounded-md flex items-center justify-between">
+                        <code className="text-sm font-mono text-gray-800 break-all">{RUNEBOND_ADDRESS}</code>
+                        <button
+                          onClick={handleCopyAddress}
+                          className="p-1 hover:bg-gray-100 rounded"
+                        >
+                          {copiedAddress ? (
+                            <Check className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <Copy className="h-4 w-4 text-gray-400" />
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>

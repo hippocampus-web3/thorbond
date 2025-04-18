@@ -86,3 +86,7 @@ export const getTimeAgo = (timestamp: string): string => {
 export const getNodeExplorerUrl = (nodeAddress: string): string => {
   return `https://thorchain.net/node/${nodeAddress}`;
 };
+
+export const getAddressExplorerUrl = (address: string): string => {
+  return `https://thorchain.net/address/${address}`;
+};

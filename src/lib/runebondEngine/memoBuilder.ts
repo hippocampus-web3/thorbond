@@ -70,3 +70,24 @@ export function createListing(params: ListingParams): string {
 
   return `TB:LIST:${params.nodeAddress}:${params.operatorAddress}:${assetToBase(assetAmount(params.minRune)).amount().toString()}:${assetToBase(assetAmount(params.maxRune)).amount().toString()}:${params.feePercentage * 100}`;
 }
+
+export function createMessageMemo(params: {
+  nodeAddress: string;
+  message: string;
+}): string {
+  if (!params.nodeAddress.startsWith("thor1")) {
+    throw new Error("Invalid node address format");
+  }
+  if (params.message.length === 0) {
+    throw new Error("Message cannot be empty");
+  }
+
+  const base64Message = Buffer.from(params.message).toString('base64');
+
+  if (base64Message.length > 200) {
+    throw new Error("Message cannot exceed 200 characters");
+  }
+
+
+  return `TB:MSG:${params.nodeAddress}:${base64Message}`;
+}

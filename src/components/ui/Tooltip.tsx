@@ -12,7 +12,6 @@ interface TooltipProps {
 const Tooltip: React.FC<TooltipProps> = ({
   children,
   content,
-  position = 'bottom',
   className = '',
   width = 'w-96',
 }) => {
@@ -20,17 +19,29 @@ const Tooltip: React.FC<TooltipProps> = ({
   const [coords, setCoords] = useState({ top: 0, left: 0 });
   const triggerRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<NodeJS.Timeout>();
+
+  const showTooltip = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    setIsVisible(true);
+  };
+
+  const hideTooltip = () => {
+    timeoutRef.current = setTimeout(() => {
+      setIsVisible(false);
+    }, 100);
+  };
 
   useEffect(() => {
     if (isVisible && triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
-      const tooltipWidth = 384; // w-96 = 24rem = 384px
+      const tooltipWidth = 384;
       
-      // Calculate position relative to viewport
       let left = rect.right - tooltipWidth;
       let top = rect.bottom + 8;
 
-      // Ensure tooltip stays within viewport
       if (left < 0) left = 0;
       if (left + tooltipWidth > window.innerWidth) {
         left = window.innerWidth - tooltipWidth;
@@ -43,12 +54,20 @@ const Tooltip: React.FC<TooltipProps> = ({
     }
   }, [isVisible]);
 
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div 
       ref={triggerRef}
       className={`relative ${className}`}
-      onMouseEnter={() => setIsVisible(true)}
-      onMouseLeave={() => setIsVisible(false)}
+      onMouseEnter={showTooltip}
+      onMouseLeave={hideTooltip}
     >
       {children}
       {isVisible && createPortal(
@@ -60,6 +79,8 @@ const Tooltip: React.FC<TooltipProps> = ({
             top: coords.top,
             left: coords.left,
           }}
+          onMouseEnter={showTooltip}
+          onMouseLeave={hideTooltip}
         >
           {content}
         </div>,
