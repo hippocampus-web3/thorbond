@@ -4,6 +4,8 @@ import {
   Node,
   WhitelistRequest,
   WhitelistRequestParams,
+  SendMessageParams,
+  Message,
 } from "../../types";
 import {
   assetToBase,
@@ -13,6 +15,7 @@ import {
   createBondMemo,
   createEnableBondMemo,
   createListing,
+  createMessageMemo,
   createUnbondMemo,
   createWhitelistRequestMemo,
 } from "./memoBuilder";
@@ -27,6 +30,7 @@ class RuneBondEngine {
     import.meta.env.VITE_RUNEBOND_ADDRESS ||
     "thor1xazgmh7sv0p393t9ntj6q9p52ahycc8jjlaap9";
   private listedNodes: Node[] = [];
+  private thornodeNodes: any[] = [];
   private isInitialized: boolean = false;
   private RUNE_DUST = 10000000;
 
@@ -37,17 +41,15 @@ class RuneBondEngine {
     return RuneBondEngine.instance;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public async getAllNodes(): Promise<any[]> {
-    const THORNODE_API_URL = "https://thornode.ninerealms.com/thorchain/nodes";
+  public getIsInitialized(): boolean {
+    return this.isInitialized;
+  }
 
-    try {
-      const response = await axios.get(THORNODE_API_URL);
-      return response.data;
-    } catch (error) {
-      console.error("Failed to fetch all nodes:", error);
-      throw new Error("Failed to retrieve all nodes");
+  public getAllNodes(): any[] {
+    if (!this.isInitialized) {
+      throw new Error("RuneBondEngine not initialized");
     }
+    return this.thornodeNodes;
   }
 
   public getListedNodes(): Node[] {
@@ -60,12 +62,22 @@ class RuneBondEngine {
   public async initialize(): Promise<void> {
     if (this.isInitialized) return;
 
-    // TODO: Implement support for pagination
-    const responseNodes = await axios.get(`${this.RUNEBOND_API_URL}/nodes`, {
-      params: {},
-    });
-    this.listedNodes = responseNodes.data.data || [];
-    this.isInitialized = true;
+    try {
+      // Obtener nodos de thornode
+      const THORNODE_API_URL = "https://thornode.ninerealms.com/thorchain/nodes";
+      const thornodeResponse = await axios.get(THORNODE_API_URL);
+      this.thornodeNodes = thornodeResponse.data;
+
+      // Obtener nodos listados
+      const responseNodes = await axios.get(`${this.RUNEBOND_API_URL}/nodes`, {
+        params: {},
+      });
+      this.listedNodes = responseNodes.data.data || [];
+      this.isInitialized = true;
+    } catch (error) {
+      console.error("Failed to initialize RuneBondEngine:", error);
+      throw new Error("Failed to initialize RuneBondEngine");
+    }
   }
 
   public async refreshActions(): Promise<void> {
@@ -258,6 +270,64 @@ class RuneBondEngine {
       walletType,
       walletProvider
     );
+  }
+
+  public async sendMessageTransaction(
+    params: SendMessageParams,
+    walletType?: WalletType,
+    walletProvider?: WalletProvider,
+    emulate?: boolean
+  ): Promise<string | ThorchainTransferParams> {
+    const memo = createMessageMemo(params);
+    
+    // Determinar el monto basado en el rol del usuario
+    const amount = params.role === 'USER' 
+      ? 100000000 // 3 RUNE para usuarios normales
+      : 10000000; // 0.1 RUNE para BP y NO
+
+    const transaction: ThorchainTransferParams = {
+      asset: {
+        chain: "THOR",
+        symbol: "RUNE",
+        ticker: "RUNE",
+      },
+      from: params.senderAddress,
+      recipient: this.RUNEBOND_ADDRESS,
+      amount: {
+        amount,
+        decimals: 8,
+      },
+      memo,
+    };
+
+    if (emulate) {
+      return transaction;
+    }
+
+    if (!walletType || !walletProvider) {
+      throw new Error('Wallet type and provider are required when not emulating');
+    }
+
+    return sendTransaction(
+      transaction,
+      'transfer',
+      walletType,
+      walletProvider
+    );
+  }
+
+  public async getChatMessages(nodeAddress: string): Promise<Message[]> {
+    if (!nodeAddress.startsWith("thor1")) {
+      throw new Error("Invalid node address format for fetching messages");
+    }
+
+    try {
+      const response = await axios.get(`${this.RUNEBOND_API_URL}/chat/${nodeAddress}`);
+      return response.data.data || [];
+    } catch (error) {
+      console.error(`Failed to fetch chat messages for ${nodeAddress}:`, error);
+      return []; 
+    }
   }
 
   public async getWhitelistRequests(

@@ -7,6 +7,9 @@ import { baseAmount } from "@xchainjs/xchain-util";
 import { Copy, Check, Share2, Info, Eye, EyeOff, Trophy, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Tooltip from '../ui/Tooltip';
+
+const RUNEBOND_ADDRESS = import.meta.env.VITE_RUNEBOND_ADDRESS || "thor1xazgmh7sv0p393t9ntj6q9p52ahycc8jjlaap9";
+
 interface NodeCardProps {
   node: Node;
   onRequestWhitelist: (node: Node) => void;
@@ -22,6 +25,8 @@ const NodeCard: React.FC<NodeCardProps> = ({
   const [copiedNode, setCopiedNode] = useState(false);
   const [copiedOperator, setCopiedOperator] = useState(false);
   const [copiedShare, setCopiedShare] = useState(false);
+  const [copiedAddress, setCopiedAddress] = useState(false);
+  const [copiedWhitelistMemo, setCopiedWhitelistMemo] = useState(false);
   const isFull = node.maxRune < 0 || node.maxRune < node.minRune;
   const [isVisible, setIsVisible] = useState(!node.isHidden.hide && !isFull);
   const navigate = useNavigate();
@@ -34,6 +39,13 @@ const NodeCard: React.FC<NodeCardProps> = ({
     } catch (err) {
       console.error('Failed to copy address:', err);
     }
+  };
+
+  const handleCopyWhitelistMemo = () => {
+    const memo = `TB:WHT:${node.nodeAddress}:<your_address>:<amount>`;
+    navigator.clipboard.writeText(memo);
+    setCopiedWhitelistMemo(true);
+    setTimeout(() => setCopiedWhitelistMemo(false), 2000);
   };
 
   const handleShare = async (e: React.MouseEvent) => {
@@ -303,13 +315,47 @@ const NodeCard: React.FC<NodeCardProps> = ({
               <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
               <div>
                 <h3 className="font-medium text-gray-900 mb-2">How to request whitelist manually</h3>
-                <p className="text-sm text-gray-600 mb-3">
-                  You can request whitelist by sending a transaction to the THORChain network with amount 0.1 RUNE and the following MEMO:
-                </p>
-                <div className="bg-gray-50 p-3 rounded-md">
-                  <code className="text-sm font-mono text-gray-800 break-all">
-                    TB:WHT:{node.nodeAddress}:&lt;your_address&gt;:&lt;amount&gt;
-                  </code>
+                <div className="mb-3">
+                  <p className="text-sm text-gray-600 mb-2">Send a transaction with:</p>
+                  <div className="space-y-2">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Send to address:</p>
+                      <div className="bg-gray-50 p-2 rounded-md flex items-center justify-between">
+                        <code className="text-sm font-mono text-gray-800 break-all">{RUNEBOND_ADDRESS}</code>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCopy(RUNEBOND_ADDRESS, setCopiedOperator);
+                          }}
+                          className="p-1 hover:bg-gray-100 rounded"
+                        >
+                          <Copy className="h-4 w-4 text-gray-400" />
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Amount:</p>
+                      <p className="text-sm text-gray-600">0.1 RUNE</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Memo:</p>
+                      <div className="bg-gray-50 p-2 rounded-md flex items-center justify-between">
+                        <code className="text-sm font-mono text-gray-800 break-all">
+                          TB:WHT:{node.nodeAddress}:&lt;your_address&gt;:&lt;amount&gt;
+                        </code>
+                        <button
+                          onClick={handleCopyWhitelistMemo}
+                          className="p-1 hover:bg-gray-100 rounded"
+                        >
+                          {copiedWhitelistMemo ? (
+                            <Check className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <Copy className="h-4 w-4 text-gray-400" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <div className="mt-3 text-sm text-gray-600">
                   <p className="font-medium mb-1">Parameters:</p>

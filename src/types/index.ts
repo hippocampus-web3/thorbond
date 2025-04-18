@@ -66,3 +66,19 @@ export interface ListingMemo {
   maxRune: number;
   feePercentage: number;
 }
+
+export interface SendMessageParams {
+  nodeAddress: string;
+  senderAddress: string;
+  message: string;
+  role: 'USER' | 'BP' | 'NO';
+}
+
+export interface Message {
+  message: string;
+  userAddress: string;
+  nodeAddress: string;
+  timestamp: Date;
+  role: 'BP' | 'NO' | 'USER';
+  txId: string;
+}

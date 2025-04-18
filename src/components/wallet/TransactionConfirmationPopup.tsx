@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, ExternalLink } from 'lucide-react';
 import { ThorchainTransferParams } from '../../types/wallets';
 import { formatRune } from '../../lib/utils';
@@ -10,6 +10,7 @@ interface TransactionConfirmationPopupProps {
   onClose: () => void;
   onConfirm: () => Promise<void>;
   transaction: ThorchainTransferParams;
+  transactionType: 'listing' | 'whitelist' | 'enableBond' | 'bond' | 'unbond' | 'message';
   isLoading?: boolean;
 }
 
@@ -18,13 +19,21 @@ const TransactionConfirmationPopup: React.FC<TransactionConfirmationPopupProps> 
   onClose,
   onConfirm,
   transaction,
+  transactionType,
   isLoading = false
 }) => {
-  const [checkboxes, setCheckboxes] = useState({
-    trust: false,
-    locked: false,
-    responsibility: false
-  });
+  const isMessageType = transactionType === 'message';
+  const initialCheckboxes = isMessageType 
+    ? { messagePermanent: false } 
+    : { trust: false, locked: false, responsibility: false };
+
+  const [checkboxes, setCheckboxes] = useState(initialCheckboxes);
+
+  useEffect(() => {
+    setCheckboxes(isMessageType 
+      ? { messagePermanent: false } 
+      : { trust: false, locked: false, responsibility: false });
+  }, [isOpen, transactionType, isMessageType]);
 
   const handleCheckboxChange = (key: keyof typeof checkboxes) => {
     setCheckboxes(prev => ({
@@ -105,44 +114,61 @@ const TransactionConfirmationPopup: React.FC<TransactionConfirmationPopupProps> 
           <div className="bg-gray-50 p-4 rounded-md">
             <h3 className="text-sm font-medium text-gray-700 mb-2">Important Disclaimers</h3>
             <div className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <input
-                  type="checkbox"
-                  id="trust"
-                  checked={checkboxes.trust}
-                  onChange={() => handleCheckboxChange('trust')}
-                  className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label htmlFor="trust" className="text-sm text-gray-700">
-                  By delegating, I am trusting a third party to act responsibly. If the operator misbehaves, I could lose part or all of my bonded RUNE.
-                </label>
-              </div>
+              {isMessageType ? (
+                <div className="flex items-start space-x-3">
+                  <input
+                    type="checkbox"
+                    id="messagePermanent"
+                    checked={checkboxes.messagePermanent}
+                    onChange={() => handleCheckboxChange('messagePermanent')}
+                    className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="messagePermanent" className="text-sm text-gray-700">
+                    I understand that this message will be permanently recorded on the THORChain blockchain and cannot be deleted or edited.
+                  </label>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-start space-x-3">
+                    <input
+                      type="checkbox"
+                      id="trust"
+                      checked={checkboxes.trust}
+                      onChange={() => handleCheckboxChange('trust')}
+                      className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="trust" className="text-sm text-gray-700">
+                      By delegating, I am trusting a third party to act responsibly. If the operator misbehaves, I could lose part or all of my bonded RUNE.
+                    </label>
+                  </div>
 
-              <div className="flex items-start space-x-3">
-                <input
-                  type="checkbox"
-                  id="locked"
-                  checked={checkboxes.locked}
-                  onChange={() => handleCheckboxChange('locked')}
-                  className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label htmlFor="locked" className="text-sm text-gray-700">
-                  My RUNE may remain locked until the node exits the network or is forcefully.
-                </label>
-              </div>
+                  <div className="flex items-start space-x-3">
+                    <input
+                      type="checkbox"
+                      id="locked"
+                      checked={checkboxes.locked}
+                      onChange={() => handleCheckboxChange('locked')}
+                      className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="locked" className="text-sm text-gray-700">
+                      My RUNE may remain locked until the node exits the network or is forcefully.
+                    </label>
+                  </div>
 
-              <div className="flex items-start space-x-3">
-                <input
-                  type="checkbox"
-                  id="responsibility"
-                  checked={checkboxes.responsibility}
-                  onChange={() => handleCheckboxChange('responsibility')}
-                  className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label htmlFor="responsibility" className="text-sm text-gray-700">
-                  RUNEBond provides tools to help, but I take full responsibility for my choice of node.
-                </label>
-              </div>
+                  <div className="flex items-start space-x-3">
+                    <input
+                      type="checkbox"
+                      id="responsibility"
+                      checked={checkboxes.responsibility}
+                      onChange={() => handleCheckboxChange('responsibility')}
+                      className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="responsibility" className="text-sm text-gray-700">
+                      RUNEBond provides tools to help, but I take full responsibility for my choice of node.
+                    </label>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 

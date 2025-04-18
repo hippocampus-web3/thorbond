@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -8,14 +8,16 @@ import HomePage from './pages/HomePage';
 import NodesPage from './pages/NodesPage';
 import OperatorDashboardPage from './pages/OperatorDashboardPage';
 import UserRequestsPage from './pages/UserRequestsPage';
-import NodeDetailsPage from './pages/NodeDetailsPage';
-import { Node, NodeOperatorFormData, WhitelistRequest, WhitelistRequestFormData } from './types';
+import NodeDetailsPageWrapper from './pages/NodeDetailsPageWrapper';
+import { Node, NodeOperatorFormData, WhitelistRequest, WhitelistRequestFormData, SendMessageParams } from './types';
 import { WalletProvider, WalletType, useWallet } from './contexts/WalletContext';
 import RuneBondEngine from './lib/runebondEngine/runebondEngine';
 import WalletConnectPopup from './components/wallet/WalletConnectPopup';
 import KeystoreUploadPopup from './components/wallet/KeystoreUploadPopup';
 import TransactionConfirmationPopup from './components/wallet/TransactionConfirmationPopup';
 import { Keystore } from '@xchainjs/xchain-crypto';
+import { Message } from './types';
+import LoadingSpinner from './components/ui/LoadingSpinner';
 
 const AppContent: React.FC = () => {
   const [listedNodes, setListedNodes] = useState<Node[]>([]);
@@ -24,35 +26,54 @@ const AppContent: React.FC = () => {
   const [searchOperator, setSearchOperator] = useState<string>('');
   const [searchUser, setSearchUser] = useState<string>('');
   const [isLoadingNodes, setIsLoadingNodes] = useState(true);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [isWalletPopupOpen, setIsWalletPopupOpen] = useState(false);
   const [isKeystorePopupOpen, setIsKeystorePopupOpen] = useState(false);
   const [showTransactionConfirmation, setShowTransactionConfirmation] = useState(false);
   const [isTransactionLoading, setIsTransactionLoading] = useState(false);
+  const [isEngineInitialized, setIsEngineInitialized] = useState(false);
   const [pendingTransaction, setPendingTransaction] = useState<{
-    type: 'listing' | 'whitelist' | 'enableBond' | 'bond' | 'unbond';
+    type: 'listing' | 'whitelist' | 'enableBond' | 'bond' | 'unbond' | 'message';
     data: any;
     callback: () => Promise<void>;
   } | null>(null);
 
   const { address, isConnected, connect, disconnect, walletProvider } = useWallet();
 
-  const addressTofilter = address ||searchOperator || searchUser || import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR;
+  const addressTofilter = address || searchOperator || searchUser || import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR;
 
-  // Initialize RuneBondEngine and load Nodes
+  // Initialize engine only once when app starts
   useEffect(() => {
     const initializeEngine = async () => {
       try {
-        setIsLoadingNodes(true);
         const engine = RuneBondEngine.getInstance();
         await engine.initialize();
+        setIsEngineInitialized(true);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Error initializing RuneBondEngine';
+        toast.error(errorMessage);
+      }
+    };
+
+    initializeEngine();
+  }, []);
+
+  // Load nodes and requests only after engine is initialized
+  useEffect(() => {
+    const loadData = async () => {
+      if (!isEngineInitialized) return;
+      
+      try {
+        setIsLoadingNodes(true);
+        const engine = RuneBondEngine.getInstance();
 
         if (isConnected) {
-          const nodes = await engine.getAllNodes()
+          const nodes = engine.getAllNodes()
           setAllNodes(nodes)
         }
         const listedNodes = engine.getListedNodes()
-
         setListedNodes(listedNodes)
 
         if (addressTofilter) {
@@ -69,8 +90,8 @@ const AppContent: React.FC = () => {
       }
     };
 
-    initializeEngine();
-  }, [addressTofilter, isConnected]);
+    loadData();
+  }, [addressTofilter, isConnected, isEngineInitialized]);
 
   useEffect(() => {
     if (isConnected) {
@@ -79,6 +100,21 @@ const AppContent: React.FC = () => {
     }
   }, [isConnected]);
 
+  const loadChatMessages = useCallback(async (nodeAddr: string) => {
+    if (!nodeAddr) return;
+    try {
+      setIsLoadingMessages(true);
+      const engine = RuneBondEngine.getInstance();
+      const messages = await engine.getChatMessages(nodeAddr);
+      setChatMessages(messages);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error loading chat messages';
+      toast.error(errorMessage);
+      setChatMessages([]);
+    } finally {
+      setIsLoadingMessages(false);
+    }
+  }, []);
 
   const handleConnect = async () => {
     setIsWalletPopupOpen(true);
@@ -166,7 +202,6 @@ const AppContent: React.FC = () => {
     }
   };
 
-  // Node functions
   const handleCreateListing = async (formData: NodeOperatorFormData) => {
     try {
       const engine = RuneBondEngine.getInstance();
@@ -189,11 +224,14 @@ const AppContent: React.FC = () => {
         type: 'listing',
         data: transaction,
         callback: async () => {
-          await engine.sendListingTransaction(
+          const hash = await engine.sendListingTransaction(
             listingParams,
             isConnected as WalletType,
             walletProvider as WalletProvider
           );
+          if (!hash) {
+            throw new Error('Transaction failed to send. Please try again or check your network and wallet settings.');
+          }
         }
       });
       setShowTransactionConfirmation(true);
@@ -221,11 +259,14 @@ const AppContent: React.FC = () => {
         type: 'enableBond',
         data: transaction,
         callback: async () => {
-          await engine.sendEnableBondRequest(
+          const hash = await engine.sendEnableBondRequest(
             request,
             isConnected as WalletType,
             walletProvider as WalletProvider
           );
+          if (!hash) {
+            throw new Error('Transaction failed to send. Please try again or check your network and wallet settings.');
+          }
         }
       });
       setShowTransactionConfirmation(true);
@@ -278,9 +319,8 @@ const AppContent: React.FC = () => {
             isConnected as WalletType,
             walletProvider as WalletProvider
           );
-
           if (!hash) {
-            throw new Error('User rejects action');
+            throw new Error('Transaction failed to send. Please try again or check your network and wallet settings.');
           }
         }
       });
@@ -326,11 +366,14 @@ const AppContent: React.FC = () => {
         type: 'bond',
         data: transaction,
         callback: async () => {
-          await engine.sendBondRequest(
+          const hash = await engine.sendBondRequest(
             request,
             isConnected as WalletType,
             walletProvider as WalletProvider
           );
+          if (!hash) {
+            throw new Error('Transaction failed to send. Please try again or check your network and wallet settings.');
+          }
         }
       });
       setShowTransactionConfirmation(true);
@@ -354,11 +397,14 @@ const AppContent: React.FC = () => {
         type: 'unbond',
         data: transaction,
         callback: async () => {
-          await engine.sendUnbondRequest(
+          const hash = await engine.sendUnbondRequest(
             request,
             isConnected as WalletType,
             walletProvider as WalletProvider
           );
+          if (!hash) {
+            throw new Error('Transaction failed to send. Please try again or check your network and wallet settings.');
+          }
         }
       });
       setShowTransactionConfirmation(true);
@@ -367,6 +413,82 @@ const AppContent: React.FC = () => {
       toast.error(errorMessage);
     }
   };
+
+  const handleSendMessage = async (nodeAddress: string, message: string) => {
+    if (!address) {
+      toast.error("Please connect your wallet to send a message.");
+      return;
+    }
+    if (!walletProvider || !isConnected) {
+      toast.error("Wallet provider or connection type missing.");
+      return;
+    }
+
+    try {
+      const engine = RuneBondEngine.getInstance();
+      
+      const nodeData = engine.getAllNodes();
+      const node = nodeData.find(n => n.node_address === nodeAddress);
+      if (!node) {
+        throw new Error("Node not found");
+      }
+
+      let role: 'USER' | 'BP' | 'NO' = 'USER';
+      
+      if (address === node.node_address) {
+        role = 'NO';
+      } else {
+        const isBondProvider = node.bond_providers?.providers?.some(
+          (provider: any) => provider.bond_address === address && provider.bond > 0
+        );
+        if (isBondProvider) {
+          role = 'BP';
+        }
+      }
+
+      const messageParams: SendMessageParams = {
+        nodeAddress,
+        message,
+        senderAddress: address,
+        role
+      };
+
+      const transaction = await engine.sendMessageTransaction(
+        messageParams,
+        undefined,
+        undefined,
+        true
+      );
+
+      setPendingTransaction({
+        type: 'message',
+        data: transaction,
+        callback: async () => {
+          const hash = await engine.sendMessageTransaction(
+            messageParams,
+            isConnected as WalletType,
+            walletProvider
+          );
+          if (!hash) {
+            throw new Error('Transaction failed or was rejected.');
+          }
+        }
+      });
+      setShowTransactionConfirmation(true);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error sending message';
+      toast.error(errorMessage);
+    }
+  };
+
+  const LoadingScreen = ({ message }: { message: string }) => (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <LoadingSpinner />
+        <p className="mt-4 text-gray-600">{message}</p>
+      </div>
+    </div>
+  );
 
   return (
     <Router>
@@ -381,56 +503,76 @@ const AppContent: React.FC = () => {
           <Route
             path="/nodes"
             element={
-              <NodesPage
-                nodes={listedNodes}
-                isLoading={isLoadingNodes}
-                selectedNode={selectedNode}
-                onRequestWhitelist={handleRequestWhitelist}
-                onSubmitRequest={handleSubmitRequest}
-                onCancelRequest={handleCancelRequest}
-              />
+              !isEngineInitialized ? (
+                <LoadingScreen message="Loading nodes..." />
+              ) : (
+                <NodesPage
+                  nodes={listedNodes}
+                  isLoading={isLoadingNodes}
+                  selectedNode={selectedNode}
+                  onRequestWhitelist={handleRequestWhitelist}
+                  onSubmitRequest={handleSubmitRequest}
+                  onCancelRequest={handleCancelRequest}
+                />
+              )
             }
           />
           <Route
             path="/nodes/:nodeAddress"
             element={
-              <NodeDetailsPage
-                nodes={listedNodes}
-                onRequestWhitelist={handleRequestWhitelist}
-                selectedNode={selectedNode}
-                onSubmitRequest={handleSubmitRequest}
-                onCancelRequest={handleCancelRequest}
-              />
+              !isEngineInitialized ? (
+                <LoadingScreen message="Loading node details..." />
+              ) : (
+                <NodeDetailsPageWrapper 
+                  listedNodes={listedNodes}
+                  selectedNodeState={selectedNode}
+                  onRequestWhitelist={handleRequestWhitelist}
+                  onSubmitRequest={handleSubmitRequest}
+                  onCancelRequest={handleCancelRequest}
+                  messages={chatMessages}
+                  onSendMessage={handleSendMessage}
+                  loadChatMessages={loadChatMessages}
+                  isLoadingMessages={isLoadingMessages}
+                />
+              )
             }
           />
           <Route
             path="/operator-dashboard"
             element={
-              <OperatorDashboardPage
-                nodes={listedNodes.filter(op => op.operatorAddress === addressTofilter)}
-                availableNodes={allNodes.filter(node => import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR ? node.node_operator_address === import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR : node.node_operator_address === addressTofilter)}
-                requests={witheListsRequests.operator}
-                onCreateListing={handleCreateListing}
-                onDeleteListing={handleDeleteListing}
-                onApproveRequest={handleApproveRequest}
-                onRejectRequest={handleRejectRequest}
-                onSearchOperator={setSearchOperator}
-                isLoading={isLoadingNodes}
-              />
+              !isEngineInitialized ? (
+                <LoadingScreen message="Loading operator dashboard..." />
+              ) : (
+                <OperatorDashboardPage
+                  nodes={listedNodes.filter(op => op.operatorAddress === addressTofilter)}
+                  availableNodes={allNodes.filter(node => import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR ? node.node_operator_address === import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR : node.node_operator_address === addressTofilter)}
+                  requests={witheListsRequests.operator}
+                  onCreateListing={handleCreateListing}
+                  onDeleteListing={handleDeleteListing}
+                  onApproveRequest={handleApproveRequest}
+                  onRejectRequest={handleRejectRequest}
+                  onSearchOperator={setSearchOperator}
+                  isLoading={isLoadingNodes}
+                />
+              )
             }
           />
           <Route
             path="/user-requests"
             element={
-              <UserRequestsPage
-                requests={witheListsRequests.user}
-                onSearchUser={setSearchUser}
-                searchValue={searchUser}
-                isConnected={isConnected !== null}
-                isLoading={isLoadingNodes}
-                onBondRequest={handleBondRequest}
-                onUnbondRequest={handleUnbondRequest}
-              />
+              !isEngineInitialized ? (
+                <LoadingScreen message="Loading user requests..." />
+              ) : (
+                <UserRequestsPage
+                  requests={witheListsRequests.user}
+                  onSearchUser={setSearchUser}
+                  searchValue={searchUser}
+                  isConnected={isConnected !== null}
+                  isLoading={isLoadingNodes}
+                  onBondRequest={handleBondRequest}
+                  onUnbondRequest={handleUnbondRequest}
+                />
+              )
             }
           />
         </Routes>
@@ -454,7 +596,7 @@ const AppContent: React.FC = () => {
           }}
           onConfirm={handleConfirmTransaction}
           transaction={pendingTransaction.data}
-          method={pendingTransaction.data.method}
+          transactionType={pendingTransaction.type}
           isLoading={isTransactionLoading}
         />
       )}
