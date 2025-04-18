@@ -37,7 +37,7 @@ const Tooltip: React.FC<TooltipProps> = ({
   useEffect(() => {
     if (isVisible && triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
-      const tooltipWidth = 384; // w-96 = 24rem = 384px
+      const tooltipWidth = 384;
       
       let left = rect.right - tooltipWidth;
       let top = rect.bottom + 8;

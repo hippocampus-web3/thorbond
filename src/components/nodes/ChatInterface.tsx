@@ -108,7 +108,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       return (
         <Tooltip
           content={
-            <div className="max-w-md p-2">
+            <div className="max-w-2xl p-2">
               <div className="flex items-start gap-2">
                 <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
                 <div>
@@ -171,6 +171,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             </div>
           }
           className="hover:cursor-help"
+          width="w-[42rem]"
         >
           {button}
         </Tooltip>
