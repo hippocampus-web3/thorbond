@@ -367,6 +367,23 @@ class RuneBondEngine {
       user: requestsUser,
     };
   }
+
+  public async getStats(): Promise<{
+    totalNodes: number;
+    completedWhitelists: number;
+    totalBondRune: string;
+    networkStats: {
+      bondingAPY: string;
+    };
+  }> {
+    try {
+      const response = await axios.get(`${this.RUNEBOND_API_URL}/stats`);
+      return response.data;
+    } catch (error) {
+      console.error("Failed to fetch stats:", error);
+      throw new Error("Failed to fetch stats");
+    }
+  }
 }
 
 export default RuneBondEngine;

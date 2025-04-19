@@ -17,6 +17,7 @@
     "@xchainjs/xchain-thorchain": "^2.0.14",
     "@xchainjs/xchain-util": "^1.0.8",
     "date-fns": "^4.1.0",
+    "framer-motion": "^12.7.4",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

@@ -18,6 +18,7 @@ import TransactionConfirmationPopup from './components/wallet/TransactionConfirm
 import { Keystore } from '@xchainjs/xchain-crypto';
 import { Message } from './types';
 import LoadingSpinner from './components/ui/LoadingSpinner';
+import ScrollToTop from './components/ScrollToTop';
 
 const AppContent: React.FC = () => {
   const [listedNodes, setListedNodes] = useState<Node[]>([]);
@@ -492,6 +493,7 @@ const AppContent: React.FC = () => {
 
   return (
     <Router>
+      <ScrollToTop />
       <Layout
         isAuthenticated={isConnected !== null}
         onConnect={handleConnect}
