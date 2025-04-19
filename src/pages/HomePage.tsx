@@ -96,7 +96,7 @@ const HomePage: React.FC = () => {
               transition={{ delay: 0.4, duration: 0.8 }}
               className="text-xl text-gray-600 mb-8"
             >
-              Start bonding in 3 simple steps
+              Let your RUNE work for you.
             </motion.p>
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
@@ -180,7 +180,7 @@ const HomePage: React.FC = () => {
                 Compare stats and choose the one you trust
               </p>
               <div className="flex items-center text-blue-600">
-                <Link to="/nodes" className="text-sm font-medium">Browse Nodes</Link>
+                <Link to="/nodes" className="text-sm font-medium">Compare node operators and choose one you trust</Link>
                 <ArrowRight className="h-4 w-4 ml-1" />
               </div>
             </motion.div>
@@ -195,7 +195,7 @@ const HomePage: React.FC = () => {
                 </Tooltip>
               </div>
               <p className="text-gray-600 mb-4">
-                Submit your address and amount you want to bond
+                Submit your address and intended bond amount you want to bond
               </p>
             </motion.div>
 
@@ -209,7 +209,7 @@ const HomePage: React.FC = () => {
                 </Tooltip>
               </div>
               <p className="text-gray-600 mb-4">
-                Sign the transaction to bond on THORChain
+                Sign the transaction to bond with your chosen Node Operator on THORChain
               </p>
             </motion.div>
           </motion.div>
