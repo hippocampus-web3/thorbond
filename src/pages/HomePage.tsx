@@ -1,149 +1,443 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Wallet, Zap } from 'lucide-react';
+import { ArrowRight, ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
+import { baseAmount } from "@xchainjs/xchain-util";
+import { motion } from "framer-motion";
 import Button from '../components/ui/Button';
+import Tooltip from '../components/ui/Tooltip';
+import { formatRune } from '../lib/utils';
+import RuneBondEngine from '../lib/runebondEngine/runebondEngine';
 
 const HomePage: React.FC = () => {
+  const [showFullProcess, setShowFullProcess] = useState(false);
+  const [stats, setStats] = useState({
+    totalNodes: 0,
+    totalBonded: formatRune(baseAmount(0)),
+    completedWhitelists: 0,
+    bondingAPY: '0'
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const engine = RuneBondEngine.getInstance();
+        const apiStats = await engine.getStats();
+        
+        setStats({
+          totalNodes: apiStats.totalNodes,
+          totalBonded: formatRune(baseAmount(apiStats.totalBondRune)),
+          completedWhitelists: apiStats.completedWhitelists,
+          bondingAPY: apiStats.networkStats.bondingAPY
+        });
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        duration: 0.5
+      }
+    }
+  };
+
+  const statsVariants = {
+    hidden: { scale: 0.8, opacity: 0 },
+    visible: {
+      scale: 1,
+      opacity: 1,
+      transition: {
+        duration: 0.5,
+        type: "spring",
+        stiffness: 100
+      }
+    }
+  };
+
   return (
-    <div>
+    <div className="min-h-screen bg-gradient-to-b from-white to-blue-50">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
+      <motion.section 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="relative overflow-hidden"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-                RUNEBond
-              </h1>
-              <p className="mt-6 text-xl text-blue-100">
-                Connect nodes with users for seamless RUNE token bonding opportunities.
-              </p>
-              <div className="mt-10 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                <Link to="/nodes">
-                  <Button variant="outline" size="lg" className="border-white text-white hover:bg-blue-700 hover:text-blue-700">
-                    Find Nodes
-                  </Button>
-                </Link>
-                <Link to="/operator-dashboard">
-                  <Button variant="outline" size="lg" className="border-white text-white hover:bg-blue-700 hover:text-blue-700">
-                    Node Operator Portal
-                  </Button>
-                </Link>
-              </div>
-            </div>
-            <div className="hidden md:block">
-              <div className="relative">
-                <div className="absolute -top-16 -right-16 w-80 h-80 bg-blue-500 rounded-full opacity-20"></div>
-                <div className="absolute -bottom-8 -left-8 w-64 h-64 bg-blue-500 rounded-full opacity-20"></div>
-                <div className="relative bg-white p-8 rounded-lg shadow-xl">
-                  <div className="flex justify-center">
-                    <img 
-                      src="runebond-isologo.svg" 
-                      alt="RUNE" 
-                      className="h-24 w-24"
-                    />
-                  </div>
-                  <div className="mt-6 space-y-4">
-                    <div className="flex items-center p-3 bg-blue-50 rounded-lg">
-                      <Users className="h-5 w-5 text-blue-600 mr-3" />
-                      <span className="text-gray-700">Connect with trusted nodes</span>
-                    </div>
-                    <div className="flex items-center p-3 bg-blue-50 rounded-lg">
-                      <Wallet className="h-5 w-5 text-blue-600 mr-3" />
-                      <span className="text-gray-700">Secure bonding process</span>
-                    </div>
-                    <div className="flex items-center p-3 bg-blue-50 rounded-lg">
-                      <Zap className="h-5 w-5 text-blue-600 mr-3" />
-                      <span className="text-gray-700">Real-time notifications</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900">How It Works</h2>
-            <p className="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">
-              Our platform simplifies the THORChain node bonding process for both operators and users.
-            </p>
-          </div>
-
-          <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-gray-50 p-6 rounded-lg">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <img 
-                  src="https://assets.coingecko.com/coins/images/6595/small/RUNE.png" 
-                  alt="RUNE" 
-                  className="h-6 w-6"
-                />
-              </div>
-              <h3 className="mt-4 text-xl font-medium text-gray-900">For Node Operators</h3>
-              <p className="mt-2 text-gray-600">
-                Publish your bonding opportunities, set your terms, and manage whitelist requests from a single dashboard.
-              </p>
-            </div>
-
-            <div className="bg-gray-50 p-6 rounded-lg">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <Users className="h-6 w-6 text-blue-600" />
-              </div>
-              <h3 className="mt-4 text-xl font-medium text-gray-900">For Users</h3>
-              <p className="mt-2 text-gray-600">
-                Browse available node operators, compare terms, and request whitelisting for RUNE token bonding.
-              </p>
-            </div>
-
-            <div className="bg-gray-50 p-6 rounded-lg">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <Zap className="h-6 w-6 text-blue-600" />
-              </div>
-              <h3 className="mt-4 text-xl font-medium text-gray-900">Secure & Transparent</h3>
-              <p className="mt-2 text-gray-600">
-                All interactions are secured with blockchain address validation and real-time notifications.
-              </p>
-            </div>
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.8 }}
+              className="text-4xl md:text-6xl font-bold text-gray-900 mb-6"
+            >
+              Earn yield with your RUNE — simple, transparent, real.
+            </motion.h1>
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.8 }}
+              className="text-xl text-gray-600 mb-8"
+            >
+              Start bonding in 3 simple steps
+            </motion.p>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6, duration: 0.8 }}
+              className="flex flex-col sm:flex-row gap-4 justify-center"
+            >
+              <Link to="/nodes">
+                <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white">
+                  Find a Node
+                </Button>
+              </Link>
+              <Button 
+                size="lg" 
+                variant="outline"
+                onClick={() => document.getElementById('bonding-steps')?.scrollIntoView({ behavior: 'smooth' })}
+              >
+                Learn how it works
+              </Button>
+            </motion.div>
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8, duration: 0.8 }}
+              className="mt-8 text-xl text-blue-600 font-medium"
+            >
+              Bond your RUNE and earn up to{' '}
+              <motion.span 
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 260,
+                  damping: 20,
+                  delay: 1
+                }}
+                className="inline-block text-2xl font-bold"
+              >
+                {(parseFloat(stats.bondingAPY) * 100).toFixed(2)}%
+              </motion.span>
+              {' '}APY
+            </motion.p>
           </div>
         </div>
-      </section>
+      </motion.section>
+
+      {/* Bond in 3 Steps Section */}
+      <motion.section 
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+        viewport={{ once: true }}
+        id="bonding-steps" 
+        className="py-16 bg-white"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-3xl font-bold text-center text-gray-900 mb-12"
+          >
+            Bond in 3 Simple Steps
+          </motion.h2>
+          
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid md:grid-cols-3 gap-8 mb-12"
+          >
+            {/* Step 1 */}
+            <motion.div variants={itemVariants} className="bg-blue-50 p-6 rounded-lg">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">1</div>
+                <h3 className="text-xl font-semibold text-gray-900">Find a Node</h3>
+              </div>
+              <p className="text-gray-600 mb-4">
+                Compare stats and choose the one you trust
+              </p>
+              <div className="flex items-center text-blue-600">
+                <Link to="/nodes" className="text-sm font-medium">Browse Nodes</Link>
+                <ArrowRight className="h-4 w-4 ml-1" />
+              </div>
+            </motion.div>
+
+            {/* Step 2 */}
+            <motion.div variants={itemVariants} className="bg-blue-50 p-6 rounded-lg">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">2</div>
+                <h3 className="text-xl font-semibold text-gray-900">Request to Whitelist</h3>
+                <Tooltip content="Whitelisting is a security measure where node operators approve specific addresses before they can bond.">
+                  <HelpCircle className="h-5 w-5 text-gray-400 cursor-help" />
+                </Tooltip>
+              </div>
+              <p className="text-gray-600 mb-4">
+                Submit your address and amount you want to bond
+              </p>
+            </motion.div>
+
+            {/* Step 3 */}
+            <motion.div variants={itemVariants} className="bg-blue-50 p-6 rounded-lg">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">3</div>
+                <h3 className="text-xl font-semibold text-gray-900">Bond your RUNE</h3>
+                <Tooltip content="Bonding means locking your RUNE tokens to support a node's operations and earn rewards.">
+                  <HelpCircle className="h-5 w-5 text-gray-400 cursor-help" />
+                </Tooltip>
+              </div>
+              <p className="text-gray-600 mb-4">
+                Sign the transaction to bond on THORChain
+              </p>
+            </motion.div>
+          </motion.div>
+
+          {/* Full Process Toggle */}
+          <div className="text-center">
+            <button
+              onClick={() => setShowFullProcess(!showFullProcess)}
+              className="text-blue-600 hover:text-blue-700 font-medium flex items-center justify-center gap-2"
+            >
+              {showFullProcess ? (
+                <>
+                  <ChevronUp className="h-5 w-5" />
+                  Hide Full Process
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="h-5 w-5" />
+                  Show Full Process
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Full Process Details */}
+          {showFullProcess && (
+            <div className="mt-8 bg-gray-50 p-6 rounded-lg">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Complete Bonding Process</h3>
+              <ol className="space-y-4">
+                <li className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-medium">1</div>
+                  <span className="text-gray-600">Visit RUNEBond and browse available nodes</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-medium">2</div>
+                  <span className="text-gray-600">Find a node that matches your preferences</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-medium">3</div>
+                  <span className="text-gray-600">Connect your wallet to RUNEBond</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-medium">4</div>
+                  <span className="text-gray-600">Submit a whitelist request with your desired RUNE amount</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-medium">5</div>
+                  <span className="text-gray-600">Wait for the node operator to approve your request</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-medium">6</div>
+                  <span className="text-gray-600">Sign the bonding transaction when approved</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-medium">7</div>
+                  <span className="text-gray-600">Your RUNE is now bonded and earning rewards!</span>
+                </li>
+              </ol>
+            </div>
+          )}
+        </div>
+      </motion.section>
+
+      {/* Why Bond RUNE Section */}
+      <motion.section 
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+        viewport={{ once: true }}
+        className="py-16 bg-gray-50"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-3xl font-bold text-center text-gray-900 mb-12"
+          >
+            Why Bond RUNE?
+          </motion.h2>
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid md:grid-cols-2 gap-8"
+          >
+            <motion.div variants={itemVariants} className="bg-white p-6 rounded-lg shadow-sm">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">What is bonding?</h3>
+              <p className="text-gray-600">
+                Bonding is the process of locking your RUNE tokens to support a THORChain node's operations. 
+                It's like staking, but specifically for THORChain's unique architecture.
+              </p>
+            </motion.div>
+
+            <motion.div variants={itemVariants} className="bg-white p-6 rounded-lg shadow-sm">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">How do I earn rewards?</h3>
+              <p className="text-gray-600">
+                You earn rewards through transaction fees. The more RUNE you bond, 
+                the more rewards you can earn, proportional to your share of the node's total bond.
+              </p>
+            </motion.div>
+
+            <motion.div variants={itemVariants} className="bg-white p-6 rounded-lg shadow-sm">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Can I unbond?</h3>
+              <p className="text-gray-600">
+                Yes, but only when the Node Operator opens an unbonding window. There’s no formal request — you can unbond your RUNE freely only during that time frame. 
+                Outside of those windows, unbonding is not possible. This mechanism ensures the security and stability of the bonded node.
+              </p>
+            </motion.div>
+
+            <motion.div variants={itemVariants} className="bg-white p-6 rounded-lg shadow-sm">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Are there risks?</h3>
+              <p className="text-gray-600">
+                The main risk is if a node misbehaves, it can be slashed, which means a portion of bonded RUNE 
+                could be lost. That's why choosing a reliable node operator is crucial.
+              </p>
+            </motion.div>
+          </motion.div>
+        </div>
+      </motion.section>
+
+      {/* Stats Section */}
+      <motion.section 
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+        viewport={{ once: true }}
+        className="py-16 bg-white"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-3xl font-bold text-center text-gray-900 mb-12"
+          >
+            RUNEBond Statistics
+          </motion.h2>
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid md:grid-cols-3 gap-8"
+          >
+            <motion.div variants={statsVariants} className="bg-blue-50 p-6 rounded-lg text-center">
+              <div className="text-4xl font-bold text-blue-600 mb-2">
+                {stats.totalNodes}
+              </div>
+              <div className="text-gray-600">
+                Posted Nodes
+              </div>
+              <Tooltip content="Total number of nodes listed on RUNEBond">
+                <HelpCircle className="h-4 w-4 text-gray-400 cursor-help mx-auto mt-2" />
+              </Tooltip>
+            </motion.div>
+
+            <motion.div variants={statsVariants} className="bg-blue-50 p-6 rounded-lg text-center">
+              <div className="text-4xl font-bold text-blue-600 mb-2">
+                {stats.totalBonded}
+              </div>
+              <div className="text-gray-600">
+                Total RUNE Bonded
+              </div>
+              <Tooltip content="Total amount of RUNE bonded through RUNEBond">
+                <HelpCircle className="h-4 w-4 text-gray-400 cursor-help mx-auto mt-2" />
+              </Tooltip>
+            </motion.div>
+
+            <motion.div variants={statsVariants} className="bg-blue-50 p-6 rounded-lg text-center">
+              <div className="text-4xl font-bold text-blue-600 mb-2">
+                {stats.completedWhitelists}
+              </div>
+              <div className="text-gray-600">
+                Completed Whitelists
+              </div>
+              <Tooltip content="Total number of successful whitelist requests processed through RUNEBond">
+                <HelpCircle className="h-4 w-4 text-gray-400 cursor-help mx-auto mt-2" />
+              </Tooltip>
+            </motion.div>
+          </motion.div>
+        </div>
+      </motion.section>
 
       {/* CTA Section */}
-      <section className="bg-gray-50 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-blue-700 rounded-2xl shadow-xl overflow-hidden">
-            <div className="px-6 py-12 sm:px-12 sm:py-16 lg:flex lg:items-center lg:justify-between">
-              <div>
-                <h2 className="text-3xl font-extrabold text-white tracking-tight sm:text-4xl">
-                  Ready to get started?
-                </h2>
-                <p className="mt-4 text-lg text-blue-100 max-w-3xl">
-                  Join the THORChain ecosystem and start bonding with trusted node operators today.
-                </p>
-              </div>
-              <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
-                <div className="inline-flex rounded-md shadow">
-                  <Link to="/nodes">
-                    <Button variant="outline" size="lg" className="border-white text-white hover:bg-blue-700 hover:text-blue-700">
-                      Find Node Operators
-                    </Button>
-                  </Link>
-                </div>
-                <div className="ml-3 inline-flex rounded-md shadow">
-                  <Link to="/operator-dashboard">
-                    <Button variant="outline" size="lg" className="border-white text-white hover:bg-blue-800 hover:text-blue-700">
-                      Node Operator Portal
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
+      <motion.section 
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+        viewport={{ once: true }}
+        className="py-16 bg-gray-50"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-3xl font-bold text-gray-900 mb-6"
+          >
+            Ready to start bonding?
+          </motion.h2>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-xl text-gray-600 mb-8"
+          >
+            Join thousands of RUNE holders supporting the THORChain network
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <Link to="/nodes">
+              <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white">
+                Find a Node to Bond With
+              </Button>
+            </Link>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
     </div>
   );
 };
