@@ -309,7 +309,7 @@ const HomePage: React.FC = () => {
             <motion.div variants={itemVariants} className="bg-white p-6 rounded-lg shadow-sm">
               <h3 className="text-xl font-semibold text-gray-900 mb-4">How do I earn rewards?</h3>
               <p className="text-gray-600">
-                You earn rewards through transaction fees. The more RUNE you bond, 
+                You earn real-yield from fees collected by THORChain. The more RUNE you bond, 
                 the more rewards you can earn, proportional to your share of the node's total bond.
               </p>
             </motion.div>
