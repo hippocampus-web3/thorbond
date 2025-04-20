@@ -15,6 +15,7 @@
     "@xchainjs/xchain-crypto": "^0.3.7",
     "@xchainjs/xchain-midgard": "^0.5.13",
     "@xchainjs/xchain-thorchain": "^2.0.14",
+    "@xchainjs/xchain-thornode": "^0.3.22",
     "@xchainjs/xchain-util": "^1.0.8",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.7.4",

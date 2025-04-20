@@ -39,6 +39,7 @@ export interface WhitelistRequest {
   status: 'pending' | 'approved' | 'rejected' | 'bonded';
   rejectionReason?: string;
   timestamp: string;
+  txId: string;
 }
 
 export interface WhitelistRequestFormData {

@@ -20,10 +20,12 @@ import { Message } from './types';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import ScrollToTop from './components/ScrollToTop';
 import { assetAmount, assetToBase } from '@xchainjs/xchain-util';
+import { useTransactionPolling } from './hooks/useTransactionPolling';
+import { NodesResponse } from '@xchainjs/xchain-thornode';
 
 const AppContent: React.FC = () => {
   const [listedNodes, setListedNodes] = useState<Node[]>([]);
-  const [allNodes, setAllNodes] = useState<any[]>([]);
+  const [allNodes, setAllNodes] = useState<NodesResponse>([]);
   const [witheListsRequests, setWhitelistRequests] = useState<{ operator: WhitelistRequest[], user: WhitelistRequest[] }>({ operator: [], user: [] });
   const [searchOperator, setSearchOperator] = useState<string>('');
   const [searchUser, setSearchUser] = useState<string>('');
@@ -35,66 +37,71 @@ const AppContent: React.FC = () => {
   const [isKeystorePopupOpen, setIsKeystorePopupOpen] = useState(false);
   const [showTransactionConfirmation, setShowTransactionConfirmation] = useState(false);
   const [isTransactionLoading, setIsTransactionLoading] = useState(false);
-  const [isEngineInitialized, setIsEngineInitialized] = useState(false);
   const [pendingTransaction, setPendingTransaction] = useState<{
     type: 'listing' | 'whitelist' | 'enableBond' | 'bond' | 'unbond' | 'message';
     data: any;
-    additionalInfo?: any;
-    callback: () => Promise<void>;
+    additionalInfo?: { nodeAddress?: string, intendedBondAmount?: string };
+    callback: () => Promise<string>;
   } | null>(null);
 
   const { address, isConnected, connect, disconnect, walletProvider } = useWallet();
+  const { startPolling, stopPolling } = useTransactionPolling({
+    onTransactionConfirmed: async (type, additionalInfo) => {
+      try {
+        const engine = RuneBondEngine.getInstance();
+        
+        if (isConnected) {
+          const nodes = await engine.getAllNodes();
+          setAllNodes(nodes);
+        }
+        const listedNodes = await engine.getListedNodes();
+        setListedNodes(listedNodes);
+
+        if (addressTofilter) {
+          const requests = await engine.getWhitelistRequests(addressTofilter);
+          setWhitelistRequests(requests);
+        }
+
+        if (type === 'message' && additionalInfo?.nodeAddress) {
+          const messages = await engine.getChatMessages(additionalInfo.nodeAddress);
+          setChatMessages(messages);
+        }
+      } catch (error) {
+        console.error('Error updating state after transaction confirmation:', error);
+      }
+    }
+  });
 
   const addressTofilter = address || searchOperator || searchUser || import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR;
 
-  // Initialize engine only once when app starts
-  useEffect(() => {
-    const initializeEngine = async () => {
-      try {
-        const engine = RuneBondEngine.getInstance();
-        await engine.initialize();
-        setIsEngineInitialized(true);
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Error initializing RuneBondEngine';
-        toast.error(errorMessage);
-      }
-    };
 
-    initializeEngine();
-  }, []);
 
-  // Load nodes and requests only after engine is initialized
   useEffect(() => {
     const loadData = async () => {
-      if (!isEngineInitialized) return;
-      
       try {
         setIsLoadingNodes(true);
         const engine = RuneBondEngine.getInstance();
 
         if (isConnected) {
-          const nodes = engine.getAllNodes()
-          setAllNodes(nodes)
+          const nodes = await engine.getAllNodes();
+          setAllNodes(nodes);
         }
-        const listedNodes = engine.getListedNodes()
-        setListedNodes(listedNodes)
+        const listedNodes = await engine.getListedNodes();
+        setListedNodes(listedNodes);
 
         if (addressTofilter) {
-          const requests = await engine.getWhitelistRequests(addressTofilter as string)
+          const requests = await engine.getWhitelistRequests(addressTofilter);
           setWhitelistRequests(requests);
-        } else {
-          setWhitelistRequests({ user: [], operator: [] });
         }
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Error loading nodes';
-        toast.error(errorMessage);
+        console.error('Error loading data:', error);
       } finally {
         setIsLoadingNodes(false);
       }
     };
 
     loadData();
-  }, [addressTofilter, isConnected, isEngineInitialized]);
+  }, [addressTofilter, isConnected]);
 
   useEffect(() => {
     if (isConnected) {
@@ -235,6 +242,7 @@ const AppContent: React.FC = () => {
           if (!hash) {
             throw new Error('Transaction failed to send. Please try again or check your network and wallet settings.');
           }
+          return hash as string;
         }
       });
       setShowTransactionConfirmation(true);
@@ -270,6 +278,7 @@ const AppContent: React.FC = () => {
           if (!hash) {
             throw new Error('Transaction failed to send. Please try again or check your network and wallet settings.');
           }
+          return hash as string;
         }
       });
       setShowTransactionConfirmation(true);
@@ -328,6 +337,7 @@ const AppContent: React.FC = () => {
           if (!hash) {
             throw new Error('Transaction failed to send. Please try again or check your network and wallet settings.');
           }
+          return hash as string;
         }
       });
       setShowTransactionConfirmation(true);
@@ -346,11 +356,17 @@ const AppContent: React.FC = () => {
 
     try {
       setIsTransactionLoading(true);
-      await pendingTransaction.callback();
-      toast.success('Transaction submitted successfully!');
+      const txId = await pendingTransaction.callback();
+      
+      if (txId) {
+        const message = `Transaction submitted! Waiting for confirmation...`;
+        startPolling(txId, message, addressTofilter, pendingTransaction.type, pendingTransaction.data, pendingTransaction?.additionalInfo?.nodeAddress || null);
+        // toast.success('Transaction submitted successfully!');
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error submitting transaction';
       toast.error(errorMessage);
+      stopPolling();
     } finally {
       setShowTransactionConfirmation(false);
       setPendingTransaction(null);
@@ -380,6 +396,7 @@ const AppContent: React.FC = () => {
           if (!hash) {
             throw new Error('Transaction failed to send. Please try again or check your network and wallet settings.');
           }
+          return typeof hash === 'string' ? hash : hash.toString();
         }
       });
       setShowTransactionConfirmation(true);
@@ -411,6 +428,7 @@ const AppContent: React.FC = () => {
           if (!hash) {
             throw new Error('Transaction failed to send. Please try again or check your network and wallet settings.');
           }
+          return typeof hash === 'string' ? hash : hash.toString();
         }
       });
       setShowTransactionConfirmation(true);
@@ -433,8 +451,8 @@ const AppContent: React.FC = () => {
     try {
       const engine = RuneBondEngine.getInstance();
       
-      const nodeData = engine.getAllNodes();
-      const node = nodeData.find(n => n.node_address === nodeAddress);
+      const nodeData = await engine.getAllNodes();
+      const node = nodeData.find((n: any) => n.node_address === nodeAddress);
       if (!node) {
         throw new Error("Node not found");
       }
@@ -469,6 +487,9 @@ const AppContent: React.FC = () => {
       setPendingTransaction({
         type: 'message',
         data: transaction,
+        additionalInfo: {
+          nodeAddress
+        },
         callback: async () => {
           const hash = await engine.sendMessageTransaction(
             messageParams,
@@ -478,6 +499,7 @@ const AppContent: React.FC = () => {
           if (!hash) {
             throw new Error('Transaction failed or was rejected.');
           }
+          return typeof hash === 'string' ? hash : hash.toString();
         }
       });
       setShowTransactionConfirmation(true);
@@ -510,7 +532,7 @@ const AppContent: React.FC = () => {
           <Route
             path="/nodes"
             element={
-              !isEngineInitialized ? (
+              !allNodes || !listedNodes ? (
                 <LoadingScreen message="Loading nodes..." />
               ) : (
                 <NodesPage
@@ -527,7 +549,7 @@ const AppContent: React.FC = () => {
           <Route
             path="/nodes/:nodeAddress"
             element={
-              !isEngineInitialized ? (
+              !allNodes || !listedNodes ? (
                 <LoadingScreen message="Loading node details..." />
               ) : (
                 <NodeDetailsPageWrapper 
@@ -547,7 +569,7 @@ const AppContent: React.FC = () => {
           <Route
             path="/operator-dashboard"
             element={
-              !isEngineInitialized ? (
+              !allNodes || !listedNodes || !witheListsRequests ? (
                 <LoadingScreen message="Loading operator dashboard..." />
               ) : (
                 <OperatorDashboardPage
@@ -567,7 +589,7 @@ const AppContent: React.FC = () => {
           <Route
             path="/user-requests"
             element={
-              !isEngineInitialized ? (
+              !allNodes || !listedNodes || !witheListsRequests  ? (
                 <LoadingScreen message="Loading user requests..." />
               ) : (
                 <UserRequestsPage

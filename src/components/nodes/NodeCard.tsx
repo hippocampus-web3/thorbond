@@ -120,7 +120,7 @@ const NodeCard: React.FC<NodeCardProps> = ({
 
   return (
     <div 
-      className={`shadow rounded-lg p-4 hover:cursor-pointer min-h-[500px] flex flex-col ${
+      className={`shadow rounded-lg p-4 hover:cursor-pointer min-h-[450px] flex flex-col ${
         node.isHidden.hide ? 'bg-yellow-50 border-2 border-yellow-400' : 
         isFull ? 'bg-emerald-50 border-2 border-emerald-400' : 'bg-white'
       }`}

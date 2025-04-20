@@ -22,6 +22,12 @@ import {
 import { sendTransaction } from "./transactionSender";
 import { WalletProvider, WalletType } from "../../contexts/WalletContext";
 import { ThorchainTransferParams } from "../../types/wallets";
+import { Configuration, NodesApi, TransactionsApi } from "@xchainjs/xchain-thornode";
+
+const THORNODE_API_URL = "https://thornode.ninerealms.com/";
+const apiconfig = new Configuration({ basePath: THORNODE_API_URL })
+const nodesApi = new NodesApi(apiconfig, undefined, axios)
+const txApi = new TransactionsApi(apiconfig, undefined, axios)
 
 class RuneBondEngine {
   private static instance: RuneBondEngine;
@@ -29,9 +35,6 @@ class RuneBondEngine {
   private readonly RUNEBOND_ADDRESS =
     import.meta.env.VITE_RUNEBOND_ADDRESS ||
     "thor1xazgmh7sv0p393t9ntj6q9p52ahycc8jjlaap9";
-  private listedNodes: Node[] = [];
-  private thornodeNodes: any[] = [];
-  private isInitialized: boolean = false;
   private RUNE_DUST = 10000000;
 
   public static getInstance(): RuneBondEngine {
@@ -41,48 +44,77 @@ class RuneBondEngine {
     return RuneBondEngine.instance;
   }
 
-  public getIsInitialized(): boolean {
-    return this.isInitialized;
-  }
-
-  public getAllNodes(): any[] {
-    if (!this.isInitialized) {
-      throw new Error("RuneBondEngine not initialized");
-    }
-    return this.thornodeNodes;
-  }
-
-  public getListedNodes(): Node[] {
-    if (!this.isInitialized) {
-      throw new Error("RuneBondEngine not initialized");
-    }
-    return this.listedNodes;
-  }
-
-  public async initialize(): Promise<void> {
-    if (this.isInitialized) return;
-
+  public async getAllNodes(): Promise<any[]> {
     try {
-      // Obtener nodos de thornode
-      const THORNODE_API_URL = "https://thornode.ninerealms.com/thorchain/nodes";
-      const thornodeResponse = await axios.get(THORNODE_API_URL);
-      this.thornodeNodes = thornodeResponse.data;
+      const thornodeResponse = await nodesApi.nodes();
+      return thornodeResponse.data;
+    } catch (error) {
+      console.error("Failed to fetch nodes:", error);
+      throw new Error("Failed to fetch nodes");
+    }
+  }
 
-      // Obtener nodos listados
+  public async getListedNodes(): Promise<Node[]> {
+    try {
       const responseNodes = await axios.get(`${this.RUNEBOND_API_URL}/nodes`, {
         params: {},
       });
-      this.listedNodes = responseNodes.data.data || [];
-      this.isInitialized = true;
+      return responseNodes.data.data || [];
     } catch (error) {
-      console.error("Failed to initialize RuneBondEngine:", error);
-      throw new Error("Failed to initialize RuneBondEngine");
+      console.error("Failed to fetch listed nodes:", error);
+      throw new Error("Failed to fetch listed nodes");
     }
   }
 
-  public async refreshActions(): Promise<void> {
-    this.isInitialized = false;
-    await this.initialize();
+  public async getWhitelistRequests(
+    connectedAddress: string
+  ): Promise<{ operator: WhitelistRequest[]; user: WhitelistRequest[] }> {
+    try {
+      const responseNodes = await axios.get(
+        `${this.RUNEBOND_API_URL}/whitelist`,
+        {
+          params: {
+            address: connectedAddress,
+          },
+        }
+      );
+      const requests: WhitelistRequest[] = responseNodes.data.data || [];
+
+      const requestsUser: WhitelistRequest[] = [];
+      const requestsOperator: WhitelistRequest[] = [];
+
+      for (const request of requests) {
+        if (request.userAddress === connectedAddress) {
+          requestsUser.push(request);
+        }
+
+        if (request.node.operatorAddress === connectedAddress) {
+          requestsOperator.push(request);
+        }
+      }
+
+      return {
+        operator: requestsOperator,
+        user: requestsUser,
+      };
+    } catch (error) {
+      console.error("Failed to fetch whitelist requests:", error);
+      throw new Error("Failed to fetch whitelist requests");
+    }
+  }
+
+  public async getChatMessages(nodeAddress: string): Promise<Message[]> {
+    if (!nodeAddress.startsWith("thor1")) {
+      throw new Error("Invalid node address format for fetching messages");
+    }
+
+    try {
+      const response = await axios.get(`${this.RUNEBOND_API_URL}/chat/${nodeAddress}`);
+      return response.data.data || [];
+    } catch (error) {
+      console.error(`Failed to fetch chat messages for ${nodeAddress}:`, error);
+      return [];
+    }
   }
 
   public async sendListingTransaction(
@@ -316,58 +348,6 @@ class RuneBondEngine {
     );
   }
 
-  public async getChatMessages(nodeAddress: string): Promise<Message[]> {
-    if (!nodeAddress.startsWith("thor1")) {
-      throw new Error("Invalid node address format for fetching messages");
-    }
-
-    try {
-      const response = await axios.get(`${this.RUNEBOND_API_URL}/chat/${nodeAddress}`);
-      return response.data.data || [];
-    } catch (error) {
-      console.error(`Failed to fetch chat messages for ${nodeAddress}:`, error);
-      return []; 
-    }
-  }
-
-  public async getWhitelistRequests(
-    connectedAddress: string
-  ): Promise<{ operator: WhitelistRequest[]; user: WhitelistRequest[] }> {
-    if (!this.isInitialized) {
-      throw new Error("RuneBondEngine not initialized");
-    }
-
-    // TODO: Implement support for pagination
-    const responseNodes = await axios.get(
-      `${this.RUNEBOND_API_URL}/whitelist`,
-      {
-        params: {
-          address: connectedAddress,
-        },
-      }
-    );
-    const requests: WhitelistRequest[] = responseNodes.data.data || [];
-
-    const requestsUser: WhitelistRequest[] = [];
-    const requestsOperator: WhitelistRequest[] = [];
-
-    for (const request of requests) {
-      // TODO: Optimize taking into account rate limits
-      if (request.userAddress === connectedAddress) {
-        requestsUser.push(request);
-      }
-
-      if (request.node.operatorAddress === connectedAddress) {
-        requestsOperator.push(request);
-      }
-    }
-
-    return {
-      operator: requestsOperator,
-      user: requestsUser,
-    };
-  }
-
   public async getStats(): Promise<{
     totalNodes: number;
     completedWhitelists: number;
@@ -384,6 +364,23 @@ class RuneBondEngine {
       throw new Error("Failed to fetch stats");
     }
   }
+
+  public async isTransactionConfirmed(txId: string): Promise<boolean> {
+    try {
+      const response = await txApi.txStatus(txId);
+      const tx = response.data;
+      
+      if (tx?.stages?.inbound_finalised?.completed) {
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error(`Failed to check transaction status for ${txId}:`, error);
+      return false;
+    }
+  }
 }
 
 export default RuneBondEngine;
+

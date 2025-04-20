@@ -78,3 +78,7 @@ export const getNodeExplorerUrl = (nodeAddress: string): string => {
 export const getAddressExplorerUrl = (address: string): string => {
   return `https://thorchain.net/address/${address}`;
 };
+
+export const getTransactionExplorerUrl = (txId: string): string => {
+  return `https://thorchain.net/tx/${txId}`;
+};
