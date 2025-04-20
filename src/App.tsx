@@ -19,6 +19,7 @@ import { Keystore } from '@xchainjs/xchain-crypto';
 import { Message } from './types';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import ScrollToTop from './components/ScrollToTop';
+import { assetAmount, assetToBase } from '@xchainjs/xchain-util';
 
 const AppContent: React.FC = () => {
   const [listedNodes, setListedNodes] = useState<Node[]>([]);
@@ -38,6 +39,7 @@ const AppContent: React.FC = () => {
   const [pendingTransaction, setPendingTransaction] = useState<{
     type: 'listing' | 'whitelist' | 'enableBond' | 'bond' | 'unbond' | 'message';
     data: any;
+    additionalInfo?: any;
     callback: () => Promise<void>;
   } | null>(null);
 
@@ -314,6 +316,9 @@ const AppContent: React.FC = () => {
       setPendingTransaction({
         type: 'whitelist',
         data: transaction,
+        additionalInfo: {
+          intendedBondAmount: assetToBase(assetAmount(formData.intendedBondAmount)).amount().toString()
+        },
         callback: async () => {
           const hash = await engine.sendWhitelistRequest(
             whitelistParams,
@@ -600,6 +605,7 @@ const AppContent: React.FC = () => {
           transaction={pendingTransaction.data}
           transactionType={pendingTransaction.type}
           isLoading={isTransactionLoading}
+          additionalInfo={pendingTransaction.additionalInfo}
         />
       )}
       <ToastContainer

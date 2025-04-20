@@ -268,11 +268,6 @@ const NodeCard: React.FC<NodeCardProps> = ({
           <span className="text-gray-600">Total bond:</span>
           <span className="font-medium">{formatRune(baseAmount(node.officialInfo.totalBond))}</span>
         </div>
-
-        <div className="flex justify-between">
-          <span className="text-gray-600">Last status update:</span>
-          <span className="font-medium">{formatDuration(node.activeTime)}</span>
-        </div>
       </div>
 
       {node && (

@@ -12,6 +12,9 @@ interface TransactionConfirmationPopupProps {
   transaction: ThorchainTransferParams;
   transactionType: 'listing' | 'whitelist' | 'enableBond' | 'bond' | 'unbond' | 'message';
   isLoading?: boolean;
+  additionalInfo?: {
+    intendedBondAmount?: string;
+  };
 }
 
 const TransactionConfirmationPopup: React.FC<TransactionConfirmationPopupProps> = ({
@@ -20,7 +23,8 @@ const TransactionConfirmationPopup: React.FC<TransactionConfirmationPopupProps> 
   onConfirm,
   transaction,
   transactionType,
-  isLoading = false
+  isLoading = false,
+  additionalInfo
 }) => {
   const isMessageType = transactionType === 'message';
   const initialCheckboxes = isMessageType 
@@ -77,6 +81,12 @@ const TransactionConfirmationPopup: React.FC<TransactionConfirmationPopupProps> 
                 <span className="text-gray-500">Amount:</span>
                 <span className="font-medium">{formatRune(baseAmount(transaction.amount.amount, transaction.amount.decimals))} RUNE</span>
               </div>
+              {transactionType === 'whitelist' && additionalInfo?.intendedBondAmount && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Intended Bond Amount:</span>
+                  <span className="font-medium">{formatRune(baseAmount(additionalInfo.intendedBondAmount, 8), true)} RUNE</span>
+                </div>
+              )}
               {transaction.recipient && (
                 <div className="flex justify-between items-center">
                   <span className="text-gray-500">Recipient:</span>

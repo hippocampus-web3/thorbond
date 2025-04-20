@@ -31,7 +31,7 @@ export const sendTransaction = async (
             }
 
             // Try Vultisi
-            reject(new Error("No compatible wallet found. Please install XDEFI or Vultisig extension."));
+            reject(new Error("No compatible wallet found. Please install Ctrl or Vultisig extension."));
         });
     }
 
@@ -102,5 +102,5 @@ export const sendTransaction = async (
     }
 
 
-    throw new Error("No compatible wallet found. Please install XDEFI or Vultisig extension.");
+    throw new Error("No compatible wallet found. Please install Ctrl or Vultisig extension.");
 }; 
