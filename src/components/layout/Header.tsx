@@ -52,7 +52,7 @@ const Header: React.FC<HeaderProps> = ({
             <div className="flex-shrink-0 flex items-center">
               <Link to="/" className="flex items-center">
                 <img 
-                  src="runebond-isologo.svg" 
+                  src="/runebond-isologo.svg" 
                   alt="RUNE" 
                   className="h-12 w-12"
                 />
