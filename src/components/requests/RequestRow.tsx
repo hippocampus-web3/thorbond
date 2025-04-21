@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { Copy, Check } from 'lucide-react';
+import { Copy, Check, ExternalLink } from 'lucide-react';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
 import Tooltip from '../ui/Tooltip';
@@ -53,12 +53,17 @@ const RequestRow: React.FC<RequestRowProps> = ({ request, actionList = [], timeR
           {shortenAddress(address)}
         </Link>
       ) : (
+        <span className="text-sm text-gray-900">
+          {shortenAddress(address)}
+        </span>
+      )}
+      {!isNode && (
         <button
           onClick={() => handleOpenInExplorer(address, isNode)}
-          className="text-sm text-blue-600 hover:text-blue-800 hover:underline focus:outline-none"
+          className="p-1 hover:bg-gray-100 rounded"
           title="View in explorer"
         >
-          {shortenAddress(address)}
+          <ExternalLink className="h-4 w-4 text-gray-400" />
         </button>
       )}
       <button

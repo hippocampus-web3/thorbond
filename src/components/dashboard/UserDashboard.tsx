@@ -136,11 +136,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
                         label: `Approved (${approvedRequests.length})`,
                         content: <RequestList 
                           requests={approvedRequests} 
-                          actionList={address ? [{
-                            title: 'Bond', 
-                            type: 'primary', 
-                            action: (request) => onBondRequest(request)
-                          }] : []} 
+                          actionList={[]} 
                         />,
                       },
                       {
@@ -153,15 +149,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
                         label: `Bonded (${bondedRequests.length})`,
                         content: <RequestList 
                           requests={bondedRequests} 
-                          actionList={address ? [{
-                            title: 'Unbond', 
-                            type: 'outline', 
-                            isDisabled: (request) => request.node.status === 'Active' || request.node.status === 'Ready',
-                            tooltip: (request) => request.node.status === 'Active' || request.node.status === 'Ready' 
-                              ? 'Unbond is not available while the node is Active or Ready. The node operator must request a status change first.'
-                              : undefined,
-                            action: (request) => onUnbondRequest(request)
-                          }] : []} 
+                          actionList={[]} 
                         />,
                       },
                     ]}

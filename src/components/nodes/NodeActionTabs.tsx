@@ -8,6 +8,7 @@ import { Info, ExternalLink } from 'lucide-react';
 import Tooltip from '../ui/Tooltip';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import Alert from '../ui/Alert';
+import { Link } from 'react-router-dom';
 
 interface NodeActionTabsProps {
   node: Node;
@@ -18,6 +19,7 @@ interface NodeActionTabsProps {
   isLoadingWhitelist: boolean;
   balance: BaseAmount | null;
   isLoadingBalance: boolean;
+  onRefreshBondAmount: () => void;
 }
 
 const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
@@ -29,6 +31,7 @@ const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
   isLoadingWhitelist,
   balance,
   isLoadingBalance,
+  onRefreshBondAmount
 }) => {
   const { isConnected, address } = useWallet();
   const [activeTab, setActiveTab] = useState<'whitelist' | 'bond' | 'unbond'>('whitelist');
@@ -46,15 +49,15 @@ const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
   );
 
   const renderTabs = () => (
-    <div className="border-b border-gray-200 overflow-x-auto">
-      <nav className="flex space-x-4 sm:space-x-8" aria-label="Tabs">
+    <div className="border-b border-gray-200">
+      <nav className="flex" aria-label="Tabs">
         <button
           onClick={() => setActiveTab('whitelist')}
           className={`${
             activeTab === 'whitelist'
               ? 'border-blue-500 text-blue-600'
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-          } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm`}
+          } flex-1 py-2 px-1 border-b-2 font-medium text-sm text-center`}
         >
           Whitelist Request
         </button>
@@ -64,9 +67,9 @@ const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
             activeTab === 'bond'
               ? 'border-green-500 text-green-600'
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-          } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm`}
+          } flex-1 py-2 px-1 border-b-2 font-medium text-sm text-center`}
         >
-          Bond RUNE
+          Bond
         </button>
         <button
           onClick={() => setActiveTab('unbond')}
@@ -74,9 +77,9 @@ const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
             activeTab === 'unbond'
               ? 'border-red-500 text-red-600'
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-          } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm`}
+          } flex-1 py-2 px-1 border-b-2 font-medium text-sm text-center`}
         >
-          Unbond RUNE
+          Unbond
         </button>
       </nav>
     </div>
@@ -90,8 +93,6 @@ const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
     if (isLoadingWhitelist) {
       return <LoadingSpinner />;
     }
-
-    console.log(whitelistRequest);
 
     if (whitelistRequest) {
       return (
@@ -114,12 +115,25 @@ const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
                   : 'success'
               }
             >
-              Your whitelist request is {whitelistRequest.status.toLowerCase()}. 
-              {whitelistRequest.status === 'pending' 
-                ? ' The node operator will review your request soon.'
-                : whitelistRequest.status === 'rejected'
-                ? ' Please contact the node operator for more information.'
-                : ' You can now bond RUNE to this node.'}
+              <div className="space-y-2">
+                <p>
+                  Your whitelist request is {whitelistRequest.status.toLowerCase()}. 
+                  {whitelistRequest.status === 'pending' 
+                    ? ' The node operator will review your request soon.'
+                    : whitelistRequest.status === 'rejected'
+                    ? ' Please contact the node operator for more information.'
+                    : ' You can now bond RUNE to this node.'}
+                </p>
+                {whitelistRequest.status === 'pending' && (
+                  <Link 
+                    to="/user-requests" 
+                    className="text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Track your request status in My Requests
+                  </Link>
+                )}
+              </div>
             </Alert>
           )}
         </div>
@@ -265,32 +279,6 @@ const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
       return <LoadingSpinner />;
     }
 
-    // if (!whitelistRequest || whitelistRequest.status === 'pending' || whitelistRequest.status === 'rejected') {
-    //   return (
-    //     <div className="space-y-4">
-    //       <Alert variant="warning">
-    //         You need to be whitelisted to unbond RUNE from this node.
-    //       </Alert>
-    //       <div className="bg-gray-50 p-3 rounded-lg">
-    //         <div className="flex items-center justify-between">
-    //           <span className="text-sm font-medium text-gray-700">Current bond amount</span>
-    //           <div className="flex items-center gap-2">
-    //             <span className="text-sm text-gray-900">{formatRune(baseAmount(0))} RUNE</span>
-    //             <a 
-    //               href={`https://rune.tools/bond?bond_address=${address || ''}&node_address=${node.nodeAddress}`} 
-    //               target="_blank" 
-    //               rel="noopener noreferrer"
-    //               className="text-gray-400 hover:text-gray-500"
-    //             >
-    //               <ExternalLink className="h-4 w-4" />
-    //             </a>
-    //           </div>
-    //         </div>
-    //       </div>
-    //     </div>
-    //   );
-    // }
-
     const isUnbondDisabled = node.status === 'Active' || node.status === 'Ready';
     const maxUnbondAmount = whitelistRequest?.realBond ? Number(whitelistRequest.realBond) : 0;
 
@@ -302,7 +290,43 @@ const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
           </Alert>
           <div className="bg-gray-50 p-3 rounded-lg">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700">Current bond amount</span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700">Current bond amount</span>
+                <Tooltip
+                  content={
+                    <div className="flex items-start gap-2">
+                      <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <h3 className="font-medium text-gray-900 mb-2">Bond Amount Update</h3>
+                        <p className="text-sm text-gray-600">
+                          The current bond amount may take a few minutes to update after a transaction. Use the refresh button to check for updates.
+                        </p>
+                      </div>
+                    </div>
+                  }
+                >
+                  <Info className="h-4 w-4 text-gray-400 cursor-help hover:text-gray-500" />
+                </Tooltip>
+                <button
+                  onClick={() => onRefreshBondAmount()}
+                  className="p-1 hover:bg-gray-100 rounded-full transition-all duration-200 hover:scale-110 active:scale-95"
+                  title="Refresh bond amount"
+                >
+                  <svg
+                    className="h-4 w-4 text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                </button>
+              </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-900">{formatRune(baseAmount(maxUnbondAmount))} RUNE</span>
                 <a 
@@ -334,7 +358,43 @@ const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
                   </label>
                   <div className="bg-gray-50 p-3 rounded-lg">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-700">Current bond amount</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-700">Current bond amount</span>
+                        <Tooltip
+                          content={
+                            <div className="flex items-start gap-2">
+                              <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                              <div>
+                                <h3 className="font-medium text-gray-900 mb-2">Bond Amount Update</h3>
+                                <p className="text-sm text-gray-600">
+                                  The current bond amount may take a few minutes to update after a transaction. Use the refresh button to check for updates.
+                                </p>
+                              </div>
+                            </div>
+                          }
+                        >
+                          <Info className="h-4 w-4 text-gray-400 cursor-help hover:text-gray-500" />
+                        </Tooltip>
+                        <button
+                          onClick={() => onRefreshBondAmount()}
+                          className="p-1 hover:bg-gray-100 rounded-full transition-all duration-200 hover:scale-110 active:scale-95"
+                          title="Refresh bond amount"
+                        >
+                          <svg
+                            className="h-4 w-4 text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                            />
+                          </svg>
+                        </button>
+                      </div>
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-gray-900">{formatRune(baseAmount(maxUnbondAmount))} RUNE</span>
                         <a 

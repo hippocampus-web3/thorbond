@@ -10,8 +10,8 @@ interface UserRequestsPageProps {
   searchValue: string;
   isConnected: boolean;
   isLoading: boolean;
-  onBondRequest: (request: WhitelistRequest) => Promise<void>;
-  onUnbondRequest: (request: WhitelistRequest) => Promise<void>;
+  onBondRequest: (nodeAddress: string, userAddress: string, amount: number) => Promise<void>;
+  onUnbondRequest: (nodeAddress: string, userAddress: string, amount: number) => Promise<void>;
 }
 
 const UserRequestsPage: React.FC<UserRequestsPageProps> = ({
@@ -109,8 +109,16 @@ const UserRequestsPage: React.FC<UserRequestsPageProps> = ({
       <UserDashboard
         requests={requests}
         searchValue={searchValue}
-        onBondRequest={onBondRequest}
-        onUnbondRequest={onUnbondRequest}
+        onBondRequest={(request) => onBondRequest(
+          request.node.nodeAddress,
+          request.userAddress,
+          request.intendedBondAmount
+        )}
+        onUnbondRequest={(request) => onUnbondRequest(
+          request.node.nodeAddress,
+          request.userAddress,
+          request.realBond
+        )}
       />
     </div>
   );

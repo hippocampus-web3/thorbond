@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Node, WhitelistRequestFormData, Message, WhitelistRequest } from '../types';
 import { formatRune, shortenAddress, getTimeAgo, getNodeExplorerUrl, formatDuration } from '../lib/utils';
@@ -24,6 +24,9 @@ interface NodeDetailsPageProps {
   isLoadingMessages?: boolean;
   balance: BaseAmount | null;
   isLoadingBalance: boolean;
+  onBondRequest: (nodeAddress: string, userAddress: string, amount: number) => Promise<void>;
+  onUnbondRequest: (nodeAddress: string, userAddress: string, amount: number) => Promise<void>;
+  refreshWhitelistFlag: number;
 }
 
 const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
@@ -37,6 +40,9 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
   isLoadingMessages = false,
   balance,
   isLoadingBalance,
+  onBondRequest,
+  onUnbondRequest,
+  refreshWhitelistFlag
 }) => {
   const { nodeAddress } = useParams<{ nodeAddress: string }>();
   const navigate = useNavigate();
@@ -54,23 +60,25 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
     }
   }, [isConnected]);
 
-  useEffect(() => {
-    const fetchWhitelistRequest = async () => {
-      if (!isConnected || !address || !node) return;
+  const fetchWhitelistRequest = useCallback(async () => {
+    if (!isConnected || !address || !node) return;
 
-      setIsLoadingWhitelist(true);
-      try {
-        const { user } = await RuneBondEngine.getInstance().getWhitelistRequests(address, node.nodeAddress);
-        setWhitelistRequest(user[0] || null);
-      } catch (error) {
-        console.error('Failed to fetch whitelist request:', error);
-      } finally {
-        setIsLoadingWhitelist(false);
-      }
-    };
-
-    fetchWhitelistRequest();
+    setIsLoadingWhitelist(true);
+    try {
+      const { user } = await RuneBondEngine.getInstance().getWhitelistRequests(address, node.nodeAddress);
+      setWhitelistRequest(user[0] || null);
+    } catch (error) {
+      console.error('Failed to fetch whitelist request:', error);
+    } finally {
+      setIsLoadingWhitelist(false);
+    }
   }, [isConnected, address, node]);
+
+  useEffect(() => {
+    if (nodeAddress && address) {
+      fetchWhitelistRequest();
+    }
+  }, [nodeAddress, address, refreshWhitelistFlag, fetchWhitelistRequest]);
 
   if (!node) {
     return (
@@ -163,11 +171,13 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
   };
 
   const handleBondSubmit = (amount: string) => {
-    // TODO: Implement bond submission
+    if (!node || !address) return;
+    onBondRequest(node.nodeAddress, address, Number(amount));
   };
 
   const handleUnbondSubmit = (amount: string) => {
-    // TODO: Implement unbond submission
+    if (!node || !address) return;
+    onUnbondRequest(node.nodeAddress, address, Number(amount));
   };
 
   const renderAddress = (address: string, isNode: boolean = false) => (
@@ -407,6 +417,7 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
               isLoadingWhitelist={isLoadingWhitelist}
               balance={balance}
               isLoadingBalance={isLoadingBalance}
+              onRefreshBondAmount={fetchWhitelistRequest}
             />
 
             {/* Chat Interface */}

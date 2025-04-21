@@ -196,12 +196,16 @@ class RuneBondEngine {
   }
 
   public async sendBondRequest(
-    params: WhitelistRequest, 
+    params: { 
+      nodeAddress: string;
+      userAddress: string;
+      amount: number;
+    }, 
     walletType?: WalletType, 
     walletProvider?: WalletProvider,
     emulate?: boolean
   ): Promise<string | ThorchainTransferParams> {
-    const memo = createBondMemo(params);
+    const memo = createBondMemo(params.nodeAddress);
     const transaction: ThorchainTransferParams = {
       asset: {
         chain: "THOR",
@@ -210,7 +214,7 @@ class RuneBondEngine {
       },
       from: params.userAddress,
       amount: {
-        amount: params.intendedBondAmount,
+        amount: params.amount,
         decimals: 8,
       },
       memo,
@@ -233,12 +237,16 @@ class RuneBondEngine {
   }
 
   public async sendUnbondRequest(
-    params: WhitelistRequest, 
+    params: { 
+      nodeAddress: string;
+      userAddress: string;
+      amount: number;
+    }, 
     walletType?: WalletType, 
     walletProvider?: WalletProvider,
     emulate?: boolean
   ): Promise<string | ThorchainTransferParams> {
-    const memo = createUnbondMemo(params);
+    const memo = createUnbondMemo(params.nodeAddress, params.amount.toString());
     const transaction: ThorchainTransferParams = {
       asset: {
         chain: "THOR",

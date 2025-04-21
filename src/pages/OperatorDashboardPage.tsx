@@ -10,7 +10,7 @@ import { NodesResponse } from '@xchainjs/xchain-thornode';
 
 interface OperatorDashboardPageProps {
   nodes: Node[];
-  availableNodes: NodesResponse[];
+  availableNodes: NodesResponse;
   requests: WhitelistRequest[];
   onCreateListing: (data: NodeOperatorFormData) => void;
   onDeleteListing: () => void;

@@ -16,6 +16,9 @@ interface NodeDetailsPageWrapperProps {
   isLoadingMessages: boolean;
   balance: BaseAmount | null;
   isLoadingBalance: boolean;
+  onBondRequest: (nodeAddress: string, userAddress: string, amount: number) => Promise<void>;
+  onUnbondRequest: (nodeAddress: string, userAddress: string, amount: number) => Promise<void>;
+  refreshWhitelistFlag: number;
 }
 
 const NodeDetailsPageWrapper: React.FC<NodeDetailsPageWrapperProps> = ({
@@ -30,6 +33,9 @@ const NodeDetailsPageWrapper: React.FC<NodeDetailsPageWrapperProps> = ({
   isLoadingMessages,
   balance,
   isLoadingBalance,
+  onBondRequest,
+  onUnbondRequest,
+  refreshWhitelistFlag
 }) => {
   const { nodeAddress } = useParams<{ nodeAddress: string }>();
 
@@ -53,6 +59,9 @@ const NodeDetailsPageWrapper: React.FC<NodeDetailsPageWrapperProps> = ({
       isLoadingMessages={isLoadingMessages}
       balance={balance}
       isLoadingBalance={isLoadingBalance}
+      onBondRequest={onBondRequest}
+      onUnbondRequest={onUnbondRequest}
+      refreshWhitelistFlag={refreshWhitelistFlag}
     />
   );
 };

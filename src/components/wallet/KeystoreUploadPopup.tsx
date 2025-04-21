@@ -88,8 +88,9 @@ const KeystoreUploadPopup: React.FC<KeystoreUploadPopupProps> = ({
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div
-          className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-gray-400 transition-colors"
+          className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-gray-400 transition-colors focus:outline-none"
           onClick={() => fileInputRef.current?.click()}
+          tabIndex={0}
         >
           <input
             type="file"
@@ -120,6 +121,7 @@ const KeystoreUploadPopup: React.FC<KeystoreUploadPopupProps> = ({
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           fullWidth
+          className="focus:outline-none focus:ring-0"
         />
 
         {error && (
@@ -128,7 +130,7 @@ const KeystoreUploadPopup: React.FC<KeystoreUploadPopupProps> = ({
 
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-0"
         >
           Connect Wallet
         </button>

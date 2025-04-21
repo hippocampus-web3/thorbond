@@ -15,7 +15,6 @@ import RuneBondEngine from './lib/runebondEngine/runebondEngine';
 import WalletConnectPopup from './components/wallet/WalletConnectPopup';
 import KeystoreUploadPopup from './components/wallet/KeystoreUploadPopup';
 import TransactionConfirmationPopup from './components/wallet/TransactionConfirmationPopup';
-import { Keystore } from '@xchainjs/xchain-crypto';
 import { Message } from './types';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import ScrollToTop from './components/ScrollToTop';
@@ -45,14 +44,19 @@ const AppContent: React.FC = () => {
     additionalInfo?: { nodeAddress?: string, intendedBondAmount?: string };
     callback: () => Promise<string>;
   } | null>(null);
+  const [refreshWhitelistFlag, setRefreshWhitelistFlag] = useState(0);
 
   const { address, isConnected, connect, disconnect, walletProvider } = useWallet();
+  const addressTofilter = address || searchOperator || searchUser || import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR;
+
   const { startPolling, stopPolling } = useTransactionPolling({
     onTransactionConfirmed: async (type, additionalInfo) => {
       try {
         const engine = RuneBondEngine.getInstance();
         
         if (isConnected) {
+          const addressBalance = await engine.getAddressBalance(addressTofilter);
+          setBalance(addressBalance);
           const nodes = await engine.getAllNodes();
           setAllNodes(nodes);
         }
@@ -68,13 +72,15 @@ const AppContent: React.FC = () => {
           const messages = await engine.getChatMessages(additionalInfo.nodeAddress);
           setChatMessages(messages);
         }
+
+        if (type === 'bond' || type === 'unbond') {
+          setRefreshWhitelistFlag(Date.now());
+        }
       } catch (error) {
         console.error('Error updating state after transaction confirmation:', error);
       }
     }
   });
-
-  const addressTofilter = address || searchOperator || searchUser || import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR;
 
   useEffect(() => {
     const loadData = async () => {
@@ -172,14 +178,6 @@ const AppContent: React.FC = () => {
   const handleDisconnect = async () => {
     try {
       await disconnect();
-      // toast.info('Wallet disconnected', {
-      //   position: "top-right",
-      //   autoClose: 3000,
-      //   hideProgressBar: false,
-      //   closeOnClick: true,
-      //   pauseOnHover: true,
-      //   draggable: true,
-      // });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error disconnecting wallet';
       toast.error(errorMessage, {
@@ -354,11 +352,19 @@ const AppContent: React.FC = () => {
     }
   };
 
-  const handleBondRequest = async (request: WhitelistRequest) => {
+  const handleBondRequest = async (
+    nodeAddress: string,
+    userAddress: string,
+    amount: number
+  ) => {
     try {
       const engine = RuneBondEngine.getInstance();
       const transaction = await engine.sendBondRequest(
-        request,
+        {
+          nodeAddress,
+          userAddress,
+          amount
+        },
         undefined,
         undefined,
         true
@@ -369,7 +375,11 @@ const AppContent: React.FC = () => {
         data: transaction,
         callback: async () => {
           const hash = await engine.sendBondRequest(
-            request,
+            {
+              nodeAddress,
+              userAddress,
+              amount
+            },
             isConnected as WalletType,
             walletProvider as WalletProvider
           );
@@ -386,11 +396,19 @@ const AppContent: React.FC = () => {
     }
   };
 
-  const handleUnbondRequest = async (request: WhitelistRequest) => {
+  const handleUnbondRequest = async (
+    nodeAddress: string,
+    userAddress: string,
+    amount: number
+  ) => {
     try {
       const engine = RuneBondEngine.getInstance();
       const transaction = await engine.sendUnbondRequest(
-        request,
+        {
+          nodeAddress,
+          userAddress,
+          amount
+        },
         undefined,
         undefined,
         true
@@ -401,7 +419,11 @@ const AppContent: React.FC = () => {
         data: transaction,
         callback: async () => {
           const hash = await engine.sendUnbondRequest(
-            request,
+            {
+              nodeAddress,
+              userAddress,
+              amount
+            },
             isConnected as WalletType,
             walletProvider as WalletProvider
           );
@@ -546,6 +568,9 @@ const AppContent: React.FC = () => {
                   isLoadingMessages={isLoadingMessages}
                   balance={balance}
                   isLoadingBalance={isLoadingBalance}
+                  onBondRequest={handleBondRequest}
+                  onUnbondRequest={handleUnbondRequest}
+                  refreshWhitelistFlag={refreshWhitelistFlag}
                 />
               )
             }
