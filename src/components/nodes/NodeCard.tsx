@@ -120,7 +120,7 @@ const NodeCard: React.FC<NodeCardProps> = ({
 
   return (
     <div 
-      className={`shadow rounded-lg p-4 hover:cursor-pointer min-h-[500px] flex flex-col ${
+      className={`shadow rounded-lg p-4 hover:cursor-pointer min-h-[450px] flex flex-col ${
         node.isHidden.hide ? 'bg-yellow-50 border-2 border-yellow-400' : 
         isFull ? 'bg-emerald-50 border-2 border-emerald-400' : 'bg-white'
       }`}
@@ -268,11 +268,6 @@ const NodeCard: React.FC<NodeCardProps> = ({
           <span className="text-gray-600">Total bond:</span>
           <span className="font-medium">{formatRune(baseAmount(node.officialInfo.totalBond))}</span>
         </div>
-
-        <div className="flex justify-between">
-          <span className="text-gray-600">Last status update:</span>
-          <span className="font-medium">{formatDuration(node.activeTime)}</span>
-        </div>
       </div>
 
       {node && (
@@ -302,11 +297,11 @@ const NodeCard: React.FC<NodeCardProps> = ({
         <Button
           onClick={(e) => {
             e.stopPropagation();
-            onRequestWhitelist(node);
+            navigate(`/nodes/${node.nodeAddress}`);
           }}
           className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white"
         >
-          Request for Whitelist
+          Bond your RUNE
         </Button>
       ) : (
         <Tooltip

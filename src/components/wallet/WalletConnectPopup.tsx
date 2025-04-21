@@ -27,8 +27,8 @@ const WalletConnectPopup: React.FC<WalletConnectPopupProps> = ({
     },
     {
       id: 'xdefi',
-      name: 'XDEFI',
-      description: 'Connect with XDEFI Wallet',
+      name: 'Ctrl',
+      description: 'Connect with Ctrl Wallet',
       icon: <CtrlSVG className="h-6 w-6" />,
       disabled: false,
       tooltip: null

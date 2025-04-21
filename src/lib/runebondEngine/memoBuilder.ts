@@ -25,11 +25,11 @@ export function createWhitelistRequestMemo(
     .toString()}`;
 }
 
-export function createBondMemo(params: WhitelistRequest): string {
-  if (!params.node.nodeAddress.startsWith("thor1")) {
+export function createBondMemo(nodeAddress: string): string {
+  if (!nodeAddress.startsWith("thor1")) {
     throw new Error("Invalid node address format");
   }
-  return `BOND:${params.node.nodeAddress}`;
+  return `BOND:${nodeAddress}`;
 }
 
 export function createEnableBondMemo(params: WhitelistRequest): string {
@@ -44,11 +44,11 @@ export function createEnableBondMemo(params: WhitelistRequest): string {
   }`;
 }
 
-export function createUnbondMemo(params: WhitelistRequest): string {
-  if (!params.node.nodeAddress.startsWith("thor1")) {
+export function createUnbondMemo(nodeAddress: string, amount: string): string {
+  if (!nodeAddress.startsWith("thor1")) {
     throw new Error("Invalid node address format");
   }
-  return `UNBOND:${params.node.nodeAddress}:${params.realBond}`;
+  return `UNBOND:${nodeAddress}:${amount}`;
 }
 
 export function createListing(params: ListingParams): string {

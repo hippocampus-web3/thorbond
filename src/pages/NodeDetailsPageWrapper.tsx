@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Node, WhitelistRequestFormData, Message } from '../types';
 import NodeDetailsPage from './NodeDetailsPage';
+import { BaseAmount } from '@xchainjs/xchain-util';
 
 interface NodeDetailsPageWrapperProps {
   listedNodes: Node[];
@@ -13,6 +14,11 @@ interface NodeDetailsPageWrapperProps {
   onSendMessage: (nodeAddress: string, message: string) => Promise<void>;
   loadChatMessages: (nodeAddr: string) => Promise<void>;
   isLoadingMessages: boolean;
+  balance: BaseAmount | null;
+  isLoadingBalance: boolean;
+  onBondRequest: (nodeAddress: string, userAddress: string, amount: number) => Promise<void>;
+  onUnbondRequest: (nodeAddress: string, userAddress: string, amount: number) => Promise<void>;
+  refreshWhitelistFlag: number;
 }
 
 const NodeDetailsPageWrapper: React.FC<NodeDetailsPageWrapperProps> = ({
@@ -25,6 +31,11 @@ const NodeDetailsPageWrapper: React.FC<NodeDetailsPageWrapperProps> = ({
   onSendMessage,
   loadChatMessages,
   isLoadingMessages,
+  balance,
+  isLoadingBalance,
+  onBondRequest,
+  onUnbondRequest,
+  refreshWhitelistFlag
 }) => {
   const { nodeAddress } = useParams<{ nodeAddress: string }>();
 
@@ -46,6 +57,11 @@ const NodeDetailsPageWrapper: React.FC<NodeDetailsPageWrapperProps> = ({
       messages={messages}
       onSendMessage={onSendMessage}
       isLoadingMessages={isLoadingMessages}
+      balance={balance}
+      isLoadingBalance={isLoadingBalance}
+      onBondRequest={onBondRequest}
+      onUnbondRequest={onUnbondRequest}
+      refreshWhitelistFlag={refreshWhitelistFlag}
     />
   );
 };

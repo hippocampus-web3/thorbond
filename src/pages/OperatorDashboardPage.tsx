@@ -6,10 +6,11 @@ import NodeOperatorForm from '../components/nodes/NodeForm';
 import OperatorDashboard from '../components/dashboard/OperatorDashboard';
 import NodeOperatorSearch from '../components/nodes/NodeOperatorSearch';
 import { Node, NodeOperatorFormData, WhitelistRequest } from '../types';
+import { NodesResponse } from '@xchainjs/xchain-thornode';
 
 interface OperatorDashboardPageProps {
   nodes: Node[];
-  availableNodes: Node[];
+  availableNodes: NodesResponse;
   requests: WhitelistRequest[];
   onCreateListing: (data: NodeOperatorFormData) => void;
   onDeleteListing: () => void;

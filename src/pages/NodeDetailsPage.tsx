@@ -1,15 +1,17 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Node, WhitelistRequestFormData, Message } from '../types';
-import Button from '../components/ui/Button';
-import { formatRune, shortenAddress, getTimeAgo, getNodeExplorerUrl } from '../lib/utils';
+import { Node, WhitelistRequestFormData, Message, WhitelistRequest } from '../types';
+import { formatRune, shortenAddress, getTimeAgo, getNodeExplorerUrl, formatDuration } from '../lib/utils';
 import { useWallet } from '../contexts/WalletContext';
 import { baseAmount } from "@xchainjs/xchain-util";
-import { ArrowLeft, Eye, Info, Trophy, Sparkles } from 'lucide-react';
+import { ArrowLeft, Eye, Info, Trophy, Sparkles, ExternalLink, Copy, Check } from 'lucide-react';
 import WhitelistRequestForm from '../components/nodes/WhitelistRequestForm';
 import Tooltip from '../components/ui/Tooltip';
 import ChatInterface from '../components/nodes/ChatInterface';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import NodeActionTabs from '../components/nodes/NodeActionTabs';
+import RuneBondEngine from '../lib/runebondEngine/runebondEngine';
+import { BaseAmount } from '@xchainjs/xchain-util';
 
 interface NodeDetailsPageProps {
   nodes: Node[];
@@ -20,6 +22,11 @@ interface NodeDetailsPageProps {
   messages: Message[];
   onSendMessage: (nodeAddress: string, message: string) => Promise<void>;
   isLoadingMessages?: boolean;
+  balance: BaseAmount | null;
+  isLoadingBalance: boolean;
+  onBondRequest: (nodeAddress: string, userAddress: string, amount: number) => Promise<void>;
+  onUnbondRequest: (nodeAddress: string, userAddress: string, amount: number) => Promise<void>;
+  refreshWhitelistFlag: number;
 }
 
 const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
@@ -31,12 +38,47 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
   messages,
   onSendMessage,
   isLoadingMessages = false,
+  balance,
+  isLoadingBalance,
+  onBondRequest,
+  onUnbondRequest,
+  refreshWhitelistFlag
 }) => {
   const { nodeAddress } = useParams<{ nodeAddress: string }>();
   const navigate = useNavigate();
   const { isConnected, address } = useWallet();
+  const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
+  const [whitelistRequest, setWhitelistRequest] = useState<WhitelistRequest | null>(null);
+  const [isLoadingWhitelist, setIsLoadingWhitelist] = useState(false);
 
   const node = nodes.find(n => n.nodeAddress === nodeAddress);
+
+  useEffect(() => {
+    if (!isConnected) {
+      setWhitelistRequest(null);
+      setIsLoadingWhitelist(false);
+    }
+  }, [isConnected]);
+
+  const fetchWhitelistRequest = useCallback(async () => {
+    if (!isConnected || !address || !node) return;
+
+    setIsLoadingWhitelist(true);
+    try {
+      const { user } = await RuneBondEngine.getInstance().getWhitelistRequests(address, node.nodeAddress);
+      setWhitelistRequest(user[0] || null);
+    } catch (error) {
+      console.error('Failed to fetch whitelist request:', error);
+    } finally {
+      setIsLoadingWhitelist(false);
+    }
+  }, [isConnected, address, node]);
+
+  useEffect(() => {
+    if (nodeAddress && address) {
+      fetchWhitelistRequest();
+    }
+  }, [nodeAddress, address, refreshWhitelistFlag, fetchWhitelistRequest]);
 
   if (!node) {
     return (
@@ -110,7 +152,6 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
     );
   }
 
-  const isOperator = address === node.operatorAddress;
   const isFull = node.maxRune < 0 || node.maxRune < node.minRune;
 
   const handleSendMessageForNode = (message: string) => {
@@ -118,6 +159,84 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
       onSendMessage(node.nodeAddress, message);
     }
   };
+
+  const handleCopy = async (address: string) => {
+    try {
+      await navigator.clipboard.writeText(address);
+      setCopiedAddress(address);
+      setTimeout(() => setCopiedAddress(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy address:', err);
+    }
+  };
+
+  const handleBondSubmit = (amount: string) => {
+    if (!node || !address) return;
+    onBondRequest(node.nodeAddress, address, Number(amount));
+  };
+
+  const handleUnbondSubmit = (amount: string) => {
+    if (!node || !address) return;
+    onUnbondRequest(node.nodeAddress, address, Number(amount));
+  };
+
+  const renderAddress = (address: string, isNode: boolean = false) => (
+    <div className="flex items-center space-x-2">
+      {isNode ? (
+        <div className="flex flex-col">
+          <span className="text-sm font-medium text-gray-500">Node Address</span>
+          <div className="flex items-center space-x-2 mt-1">
+            <span className="text-lg font-mono font-medium text-gray-900 break-all w-full sm:w-auto">
+              <span className="hidden sm:inline">{address}</span>
+              <span className="sm:hidden">{shortenAddress(address)}</span>
+            </span>
+            <button
+              onClick={() => window.open(getNodeExplorerUrl(address), '_blank')}
+              className="p-1 hover:bg-gray-100 rounded flex-shrink-0"
+              title="View in explorer"
+            >
+              <ExternalLink className="h-4 w-4 text-gray-400" />
+            </button>
+            <button
+              onClick={() => handleCopy(address)}
+              className="p-1 hover:bg-gray-100 rounded flex-shrink-0"
+              title="Copy address"
+            >
+              {copiedAddress === address ? (
+                <Check className="h-4 w-4 text-green-500" />
+              ) : (
+                <Copy className="h-4 w-4 text-gray-400" />
+              )}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center space-x-2">
+          <span className="text-gray-900">
+            {shortenAddress(address)}
+          </span>
+          <button
+            onClick={() => window.open(`https://thorchain.net/address/${address}`, '_blank')}
+            className="p-1 hover:bg-gray-100 rounded flex-shrink-0"
+            title="View in explorer"
+          >
+            <ExternalLink className="h-4 w-4 text-gray-400" />
+          </button>
+          <button
+            onClick={() => handleCopy(address)}
+            className="p-1 hover:bg-gray-100 rounded flex-shrink-0"
+            title="Copy address"
+          >
+            {copiedAddress === address ? (
+              <Check className="h-4 w-4 text-green-500" />
+            ) : (
+              <Copy className="h-4 w-4 text-gray-400" />
+            )}
+          </button>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -176,7 +295,7 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
                               </h3>
                               {isFull ? (
                                 <p className="text-sm text-gray-600">
-                                  This node has achieved an incredible milestone by reaching its maximum bonding capacity! This is a testament to its reliability and the trust it has earned from the community. While it's not currently accepting more liquidity, you can still request whitelist - the node operator may review your request and potentially make space for your delegation. Being part of a full capacity node is a prestigious achievement in the THORChain ecosystem! 🚀
+                                  This node has achieved an incredible milestone by reaching its maximum bonding capacity! This is a testament to its reliability and the trust it has earned from the community. Being part of a full capacity node is a prestigious achievement in the THORChain ecosystem! 🚀
                                 </p>
                               ) : (
                                 <>
@@ -197,12 +316,9 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
                       </Tooltip>
                     </div>
                   )}
-                  <button
-                    onClick={() => window.open(getNodeExplorerUrl(node.nodeAddress), '_blank')}
-                    className="text-blue-600 hover:text-blue-800 hover:underline focus:outline-none"
-                  >
-                    {shortenAddress(node.nodeAddress)}
-                  </button>
+                  <div className="mt-6 bg-gray-50 p-4 rounded-lg">
+                    {renderAddress(node.nodeAddress, true)}
+                  </div>
                 </div>
                 <span className="px-3 py-1 text-sm rounded-full bg-blue-100 text-blue-800">
                   {node.status}
@@ -222,7 +338,7 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
                     isFull ? 'text-emerald-700' : 'text-yellow-700'
                   }`}>
                     {isFull 
-                      ? "This node has achieved an incredible milestone by reaching its maximum bonding capacity! This is a testament to its reliability and the trust it has earned from the community. While it's not currently accepting more liquidity, you can still request whitelist - the node operator may review your request and potentially make space for your delegation. Being part of a full capacity node is a prestigious achievement in the THORChain ecosystem! 🚀"
+                      ? "This node has achieved an incredible milestone by reaching its maximum bonding capacity! This is a testament to its reliability and the trust it has earned from the community. Being part of a full capacity node is a prestigious achievement in the THORChain ecosystem! 🚀"
                       : "These are nodes flagged as potentially risky due to unusual behavior or missing information. They're hidden by default to protect users, but you can choose to view and delegate to them at your own risk."}
                   </p>
                 </div>
@@ -232,7 +348,9 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Operator Address</h3>
-                    <p className="mt-1 text-gray-900">{shortenAddress(node.operatorAddress)}</p>
+                    <div className="mt-1">
+                      {renderAddress(node.operatorAddress)}
+                    </div>
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Bonding Capacity</h3>
@@ -257,6 +375,10 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Total bond</h3>
                     <p className="mt-1 text-gray-900">{formatRune(baseAmount(node.officialInfo.totalBond))}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">Active Time</h3>
+                    <p className="mt-1 text-gray-900">{formatDuration(node.activeTime)}</p>
                   </div>
                 </div>
 
@@ -285,25 +407,18 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
 
           {/* Action and Chat Section */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Whitelist Request Button */}
-            <div className="bg-white shadow rounded-lg p-6">
-              {isOperator ? (
-                <Button
-                  disabled
-                  className="w-full text-gray-500 cursor-not-allowed"
-                >
-                  Your Node
-                </Button>
-              ) : (
-                <Button
-                  onClick={() => onRequestWhitelist(node)}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                  disabled={!isConnected}
-                >
-                  {isConnected ? 'Request for Whitelist' : 'Connect Wallet to Request'}
-                </Button>
-              )}
-            </div>
+            {/* Action Tabs */}
+            <NodeActionTabs
+              node={node}
+              onRequestWhitelist={onRequestWhitelist}
+              onBondSubmit={handleBondSubmit}
+              onUnbondSubmit={handleUnbondSubmit}
+              whitelistRequest={whitelistRequest}
+              isLoadingWhitelist={isLoadingWhitelist}
+              balance={balance}
+              isLoadingBalance={isLoadingBalance}
+              onRefreshBondAmount={fetchWhitelistRequest}
+            />
 
             {/* Chat Interface */}
             {isLoadingMessages ? (

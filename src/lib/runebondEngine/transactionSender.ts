@@ -31,7 +31,7 @@ export const sendTransaction = async (
             }
 
             // Try Vultisi
-            reject(new Error("No compatible wallet found. Please install XDEFI or Vultisig extension."));
+            reject(new Error("No compatible wallet found. Please install Ctrl or Vultisig extension."));
         });
     }
 
@@ -50,7 +50,7 @@ export const sendTransaction = async (
                         },
                     ],
                 })
-                return result;
+                return result.replace('0x', '').toUpperCase();;
             }
 
             if (method === 'deposit') {
@@ -67,10 +67,10 @@ export const sendTransaction = async (
                         }
                     }],
                 });
-                if (Object.keys(result).length === 0 && result.constructor === Object) {
+                if (!result || Object.keys(result).length === 0 && result.constructor === Object) {
                     throw Error("User cancel action"); // vulticonnect returns {} when user cancel action
                 }
-                return result;
+                return result.replace('0x', '').toUpperCase();;
             }
         }
     }
@@ -102,5 +102,5 @@ export const sendTransaction = async (
     }
 
 
-    throw new Error("No compatible wallet found. Please install XDEFI or Vultisig extension.");
+    throw new Error("No compatible wallet found. Please install Ctrl or Vultisig extension.");
 }; 

@@ -1,53 +1,41 @@
 import { BaseAmount, baseToAsset } from "@xchainjs/xchain-util";
 
-export function formatRune(baseAmount: BaseAmount): string {
+export function formatRune(baseAmount: BaseAmount, showFullAmount: boolean = false): string {
   const amount = baseToAsset(baseAmount).amount().toNumber();
   
-  if (amount === 0) {
-    return '0';
+  if (amount === 0) return '0';
+  
+  // If showFullAmount is true, return the full number with 2 decimal places
+  if (showFullAmount) {
+    return amount.toFixed(2).replace(/\.?0+$/, '');
   }
-
+  
   const absAmount = Math.abs(amount);
   
+  // Handle scientific notation for very small or very large numbers
   if (absAmount < 0.000001 || absAmount > 1000000000000) {
     return amount.toExponential(2);
   }
   
-  if (absAmount >= 1000000000000) {
-    const value = amount / 1000000000000;
-    const decimal = value % 1;
-    return `${decimal === 0 ? value : value.toFixed(3)}T`;
-  }
+  // Define thresholds and their corresponding suffixes and divisors
+  const thresholds = [
+    { value: 1000000000000, suffix: 'T', decimals: 3, divisor: 1000000000000 },
+    { value: 1000000000, suffix: 'B', decimals: 1, divisor: 1000000000 },
+    { value: 1000000, suffix: 'M', decimals: 1, divisor: 1000000 },
+    { value: 1000, suffix: 'K', decimals: 2, divisor: 1000 }
+  ];
   
-  if (absAmount >= 1000000000) {
-    const value = amount / 1000000000;
-    const decimal = value % 1;
-    return `${decimal === 0 ? value : value.toFixed(1)}B`;
-  }
-  
-  if (absAmount >= 1000000) {
-    const value = amount / 1000000;
-    const decimal = value % 1;
-    if (amount % 10000 === 0) {
-      return `${decimal === 0 ? value : value.toFixed(2)}M`;
+  // Find the appropriate threshold
+  for (const { value, suffix, decimals, divisor } of thresholds) {
+    if (absAmount >= value) {
+      const formatted = (amount / divisor).toFixed(decimals);
+      // Remove trailing zeros after decimal point
+      return formatted.replace(/\.?0+$/, '') + suffix;
     }
-    return `${decimal === 0 ? value : value.toFixed(1)}M`;
   }
   
-  if (absAmount >= 1000) {
-    const value = amount / 1000;
-    const decimal = value % 1;
-    if (amount % 10 === 0 && amount >= 10000) {
-      return `${decimal === 0 ? value : value.toFixed(2)}K`;
-    }
-    if (amount % 100 === 0) {
-      return `${decimal === 0 ? value : value.toFixed(1)}K`;
-    }
-    return `${decimal === 0 ? value : value.toFixed(1)}K`;
-  }
-  
-  const decimal = amount % 1;
-  return `${decimal === 0 ? amount : amount.toFixed(2)}`;
+  // For numbers less than 1000, show up to 2 decimal places
+  return amount.toFixed(2).replace(/\.?0+$/, '');
 }
 
 export function formatDuration(seconds: number): string {
@@ -89,4 +77,8 @@ export const getNodeExplorerUrl = (nodeAddress: string): string => {
 
 export const getAddressExplorerUrl = (address: string): string => {
   return `https://thorchain.net/address/${address}`;
+};
+
+export const getTransactionExplorerUrl = (txId: string): string => {
+  return `https://thorchain.net/tx/${txId}`;
 };
