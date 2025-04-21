@@ -1,22 +1,26 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import Button from '../ui/Button';
-import { shortenAddress } from '../../lib/utils';
+import { shortenAddress, formatRune } from '../../lib/utils';
 import { Copy, Check } from 'lucide-react';
-
+import { BaseAmount } from '@xchainjs/xchain-util';
 
 interface HeaderProps {
   isAuthenticated: boolean;
   onConnect: () => Promise<void>;
   onDisconnect: () => Promise<void>;
   walletAddress: string | null;
+  balance: BaseAmount | null;
+  isLoadingBalance: boolean;
 }
 
 const Header: React.FC<HeaderProps> = ({
   isAuthenticated,
   onConnect,
   onDisconnect,
-  walletAddress
+  walletAddress,
+  balance,
+  isLoadingBalance
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
@@ -95,21 +99,30 @@ const Header: React.FC<HeaderProps> = ({
           <div className="hidden sm:ml-6 sm:flex sm:items-center">
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-500">
-                    {walletAddress && shortenAddress(walletAddress)}
-                  </span>
-                  <button
-                    onClick={() => handleCopy(walletAddress!)}
-                    className="p-1 hover:bg-gray-100 rounded"
-                    title="Copy address"
-                  >
-                    {copiedAddress === walletAddress ? (
-                      <Check className="h-4 w-4 text-green-500" />
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-gray-500">
+                      {walletAddress && shortenAddress(walletAddress)}
+                    </span>
+                    <button
+                      onClick={() => handleCopy(walletAddress!)}
+                      className="p-1 hover:bg-gray-100 rounded"
+                      title="Copy address"
+                    >
+                      {copiedAddress === walletAddress ? (
+                        <Check className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Copy className="h-4 w-4 text-gray-400" />
+                      )}
+                    </button>
+                  </div>
+                  <div className="text-sm text-gray-500 border-l pl-4 border-gray-200">
+                    {isLoadingBalance ? (
+                      <span className="animate-pulse">Loading balance...</span>
                     ) : (
-                      <Copy className="h-4 w-4 text-gray-400" />
+                      <>Balance: {balance ? formatRune(balance) : '0'} RUNE</>
                     )}
-                  </button>
+                  </div>
                 </div>
                 <Button
                   variant="secondary"
@@ -198,6 +211,13 @@ const Header: React.FC<HeaderProps> = ({
                       <Copy className="h-4 w-4 text-gray-400" />
                     )}
                   </button>
+                </div>
+                <div className="text-sm text-gray-500 py-2">
+                  {isLoadingBalance ? (
+                    <span className="animate-pulse">Loading balance...</span>
+                  ) : (
+                    <>Balance: {balance ? formatRune(balance) : '0'} RUNE</>
+                  )}
                 </div>
                 <Button
                   variant="secondary"

@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Node, WhitelistRequestFormData, Message } from '../types';
-import Button from '../components/ui/Button';
+import { Node, WhitelistRequestFormData, Message, WhitelistRequest } from '../types';
 import { formatRune, shortenAddress, getTimeAgo, getNodeExplorerUrl, formatDuration } from '../lib/utils';
 import { useWallet } from '../contexts/WalletContext';
 import { baseAmount } from "@xchainjs/xchain-util";
@@ -10,6 +9,9 @@ import WhitelistRequestForm from '../components/nodes/WhitelistRequestForm';
 import Tooltip from '../components/ui/Tooltip';
 import ChatInterface from '../components/nodes/ChatInterface';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import NodeActionTabs from '../components/nodes/NodeActionTabs';
+import RuneBondEngine from '../lib/runebondEngine/runebondEngine';
+import { BaseAmount } from '@xchainjs/xchain-util';
 
 interface NodeDetailsPageProps {
   nodes: Node[];
@@ -20,6 +22,8 @@ interface NodeDetailsPageProps {
   messages: Message[];
   onSendMessage: (nodeAddress: string, message: string) => Promise<void>;
   isLoadingMessages?: boolean;
+  balance: BaseAmount | null;
+  isLoadingBalance: boolean;
 }
 
 const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
@@ -31,13 +35,42 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
   messages,
   onSendMessage,
   isLoadingMessages = false,
+  balance,
+  isLoadingBalance,
 }) => {
   const { nodeAddress } = useParams<{ nodeAddress: string }>();
   const navigate = useNavigate();
   const { isConnected, address } = useWallet();
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
+  const [whitelistRequest, setWhitelistRequest] = useState<WhitelistRequest | null>(null);
+  const [isLoadingWhitelist, setIsLoadingWhitelist] = useState(false);
 
   const node = nodes.find(n => n.nodeAddress === nodeAddress);
+
+  useEffect(() => {
+    if (!isConnected) {
+      setWhitelistRequest(null);
+      setIsLoadingWhitelist(false);
+    }
+  }, [isConnected]);
+
+  useEffect(() => {
+    const fetchWhitelistRequest = async () => {
+      if (!isConnected || !address || !node) return;
+
+      setIsLoadingWhitelist(true);
+      try {
+        const { user } = await RuneBondEngine.getInstance().getWhitelistRequests(address, node.nodeAddress);
+        setWhitelistRequest(user[0] || null);
+      } catch (error) {
+        console.error('Failed to fetch whitelist request:', error);
+      } finally {
+        setIsLoadingWhitelist(false);
+      }
+    };
+
+    fetchWhitelistRequest();
+  }, [isConnected, address, node]);
 
   if (!node) {
     return (
@@ -111,7 +144,6 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
     );
   }
 
-  const isOperator = address === node.operatorAddress;
   const isFull = node.maxRune < 0 || node.maxRune < node.minRune;
 
   const handleSendMessageForNode = (message: string) => {
@@ -130,14 +162,23 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
     }
   };
 
+  const handleBondSubmit = (amount: string) => {
+    // TODO: Implement bond submission
+  };
+
+  const handleUnbondSubmit = (amount: string) => {
+    // TODO: Implement unbond submission
+  };
+
   const renderAddress = (address: string, isNode: boolean = false) => (
     <div className="flex items-center space-x-2">
       {isNode ? (
         <div className="flex flex-col">
           <span className="text-sm font-medium text-gray-500">Node Address</span>
           <div className="flex items-center space-x-2 mt-1">
-            <span className="text-lg font-mono font-medium text-gray-900 break-all">
-              {address}
+            <span className="text-lg font-mono font-medium text-gray-900 break-all w-full sm:w-auto">
+              <span className="hidden sm:inline">{address}</span>
+              <span className="sm:hidden">{shortenAddress(address)}</span>
             </span>
             <button
               onClick={() => window.open(getNodeExplorerUrl(address), '_blank')}
@@ -244,7 +285,7 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
                               </h3>
                               {isFull ? (
                                 <p className="text-sm text-gray-600">
-                                  This node has achieved an incredible milestone by reaching its maximum bonding capacity! This is a testament to its reliability and the trust it has earned from the community. While it's not currently accepting more liquidity, you can still request whitelist - the node operator may review your request and potentially make space for your delegation. Being part of a full capacity node is a prestigious achievement in the THORChain ecosystem! 🚀
+                                  This node has achieved an incredible milestone by reaching its maximum bonding capacity! This is a testament to its reliability and the trust it has earned from the community. Being part of a full capacity node is a prestigious achievement in the THORChain ecosystem! 🚀
                                 </p>
                               ) : (
                                 <>
@@ -287,7 +328,7 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
                     isFull ? 'text-emerald-700' : 'text-yellow-700'
                   }`}>
                     {isFull 
-                      ? "This node has achieved an incredible milestone by reaching its maximum bonding capacity! This is a testament to its reliability and the trust it has earned from the community. While it's not currently accepting more liquidity, you can still request whitelist - the node operator may review your request and potentially make space for your delegation. Being part of a full capacity node is a prestigious achievement in the THORChain ecosystem! 🚀"
+                      ? "This node has achieved an incredible milestone by reaching its maximum bonding capacity! This is a testament to its reliability and the trust it has earned from the community. Being part of a full capacity node is a prestigious achievement in the THORChain ecosystem! 🚀"
                       : "These are nodes flagged as potentially risky due to unusual behavior or missing information. They're hidden by default to protect users, but you can choose to view and delegate to them at your own risk."}
                   </p>
                 </div>
@@ -356,25 +397,17 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
 
           {/* Action and Chat Section */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Whitelist Request Button */}
-            <div className="bg-white shadow rounded-lg p-6">
-              {isOperator ? (
-                <Button
-                  disabled
-                  className="w-full text-gray-500 cursor-not-allowed"
-                >
-                  Your Node
-                </Button>
-              ) : (
-                <Button
-                  onClick={() => onRequestWhitelist(node)}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                  disabled={!isConnected}
-                >
-                  {isConnected ? 'Request for Whitelist' : 'Connect Wallet to Request'}
-                </Button>
-              )}
-            </div>
+            {/* Action Tabs */}
+            <NodeActionTabs
+              node={node}
+              onRequestWhitelist={onRequestWhitelist}
+              onBondSubmit={handleBondSubmit}
+              onUnbondSubmit={handleUnbondSubmit}
+              whitelistRequest={whitelistRequest}
+              isLoadingWhitelist={isLoadingWhitelist}
+              balance={balance}
+              isLoadingBalance={isLoadingBalance}
+            />
 
             {/* Chat Interface */}
             {isLoadingMessages ? (

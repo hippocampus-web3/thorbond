@@ -40,18 +40,18 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           isOperator
             ? 'bg-blue-50 text-blue-900'
             : isBondProvider
-            ? 'bg-yellow-50 text-yellow-900'
+            ? 'bg-purple-50 text-purple-900'
             : 'bg-white border border-gray-200 text-gray-900'
         }`}
       >
-        <div className="flex items-center justify-between mb-1 gap-2 flex-wrap">
-          <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-1 gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
             <RoleIcon
               className={`h-4 w-4 flex-shrink-0 ${
                 isOperator
                   ? 'text-blue-600'
                   : isBondProvider
-                  ? 'text-yellow-500'
+                  ? 'text-purple-500'
                   : 'text-gray-400'
               }`}
             />
@@ -60,10 +60,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
               href={getAddressExplorerUrl(senderAddress)}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
+              className="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 break-all"
               title={`View ${shortenAddress(senderAddress)} in explorer`}
             >
-              <span>{shortenAddress(senderAddress)}</span>
+              <span className="break-all">{shortenAddress(senderAddress)}</span>
               <ExternalLink className="h-3 w-3 flex-shrink-0" />
             </a>
           </div>

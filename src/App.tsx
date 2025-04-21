@@ -19,7 +19,7 @@ import { Keystore } from '@xchainjs/xchain-crypto';
 import { Message } from './types';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import ScrollToTop from './components/ScrollToTop';
-import { assetAmount, assetToBase } from '@xchainjs/xchain-util';
+import { assetAmount, assetToBase, BaseAmount } from '@xchainjs/xchain-util';
 import { useTransactionPolling } from './hooks/useTransactionPolling';
 import { NodesResponse } from '@xchainjs/xchain-thornode';
 
@@ -37,6 +37,8 @@ const AppContent: React.FC = () => {
   const [isKeystorePopupOpen, setIsKeystorePopupOpen] = useState(false);
   const [showTransactionConfirmation, setShowTransactionConfirmation] = useState(false);
   const [isTransactionLoading, setIsTransactionLoading] = useState(false);
+  const [balance, setBalance] = useState<BaseAmount | null>(null);
+  const [isLoadingBalance, setIsLoadingBalance] = useState(false);
   const [pendingTransaction, setPendingTransaction] = useState<{
     type: 'listing' | 'whitelist' | 'enableBond' | 'bond' | 'unbond' | 'message';
     data: any;
@@ -74,8 +76,6 @@ const AppContent: React.FC = () => {
 
   const addressTofilter = address || searchOperator || searchUser || import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR;
 
-
-
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -110,6 +110,28 @@ const AppContent: React.FC = () => {
     }
   }, [isConnected]);
 
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (address) {
+        setIsLoadingBalance(true);
+        try {
+          const engine = RuneBondEngine.getInstance();
+          const addressBalance = await engine.getAddressBalance(address);
+          setBalance(addressBalance);
+        } catch (error) {
+          console.error('Error fetching balance:', error);
+          setBalance(null);
+        } finally {
+          setIsLoadingBalance(false);
+        }
+      } else {
+        setBalance(null);
+      }
+    };
+
+    fetchBalance();
+  }, [address]);
+
   const loadChatMessages = useCallback(async (nodeAddr: string) => {
     if (!nodeAddr) return;
     try {
@@ -139,14 +161,7 @@ const AppContent: React.FC = () => {
       }
       await connect(walletType);
       if (address) {
-        toast.success('Wallet connected successfully', {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
+        toast.success('Wallet connected successfully');
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error connecting wallet';
@@ -154,51 +169,17 @@ const AppContent: React.FC = () => {
     }
   };
 
-  const handleKeystoreUpload = async (file: File, password: string) => {
-    try {
-      const fileContent = await file.text();
-      let keystoreData: Keystore;
-
-      try {
-        keystoreData = JSON.parse(fileContent);
-      } catch (e) {
-        throw new Error('Invalid keystore file format');
-      }
-
-      if (!keystoreData.crypto) {
-        throw new Error('Invalid keystore file format');
-      }
-
-      await connect('keystore', { keystoreData, password });
-
-      setIsKeystorePopupOpen(false);
-
-      toast.success('Keystore uploaded and decrypted successfully', {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error processing keystore';
-      toast.error(errorMessage);
-      setIsKeystorePopupOpen(false);
-    }
-  };
-
   const handleDisconnect = async () => {
     try {
       await disconnect();
-      toast.info('Wallet disconnected', {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+      // toast.info('Wallet disconnected', {
+      //   position: "top-right",
+      //   autoClose: 3000,
+      //   hideProgressBar: false,
+      //   closeOnClick: true,
+      //   pauseOnHover: true,
+      //   draggable: true,
+      // });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error disconnecting wallet';
       toast.error(errorMessage, {
@@ -361,7 +342,6 @@ const AppContent: React.FC = () => {
       if (txId) {
         const message = `Transaction submitted! Waiting for confirmation...`;
         startPolling(txId, message, addressTofilter, pendingTransaction.type, pendingTransaction.data, pendingTransaction?.additionalInfo?.nodeAddress || null);
-        // toast.success('Transaction submitted successfully!');
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error submitting transaction';
@@ -526,6 +506,8 @@ const AppContent: React.FC = () => {
         onConnect={handleConnect}
         onDisconnect={handleDisconnect}
         walletAddress={address}
+        balance={balance}
+        isLoadingBalance={isLoadingBalance}
       >
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -562,6 +544,8 @@ const AppContent: React.FC = () => {
                   onSendMessage={handleSendMessage}
                   loadChatMessages={loadChatMessages}
                   isLoadingMessages={isLoadingMessages}
+                  balance={balance}
+                  isLoadingBalance={isLoadingBalance}
                 />
               )
             }
@@ -614,7 +598,6 @@ const AppContent: React.FC = () => {
       <KeystoreUploadPopup
         isOpen={isKeystorePopupOpen}
         onClose={() => setIsKeystorePopupOpen(false)}
-        onUpload={handleKeystoreUpload}
       />
       {pendingTransaction && (
         <TransactionConfirmationPopup

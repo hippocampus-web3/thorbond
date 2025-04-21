@@ -10,6 +10,7 @@ import {
 import {
   assetToBase,
   assetAmount,
+  BaseAmount,
 } from "@xchainjs/xchain-util";
 import {
   createBondMemo,
@@ -22,12 +23,7 @@ import {
 import { sendTransaction } from "./transactionSender";
 import { WalletProvider, WalletType } from "../../contexts/WalletContext";
 import { ThorchainTransferParams } from "../../types/wallets";
-import { Configuration, NodesApi, TransactionsApi } from "@xchainjs/xchain-thornode";
-
-const THORNODE_API_URL = "https://thornode.ninerealms.com/";
-const apiconfig = new Configuration({ basePath: THORNODE_API_URL })
-const nodesApi = new NodesApi(apiconfig, undefined, axios)
-const txApi = new TransactionsApi(apiconfig, undefined, axios)
+import { ThornodeClient } from '../thornode/client';
 
 class RuneBondEngine {
   private static instance: RuneBondEngine;
@@ -36,6 +32,11 @@ class RuneBondEngine {
     import.meta.env.VITE_RUNEBOND_ADDRESS ||
     "thor1xazgmh7sv0p393t9ntj6q9p52ahycc8jjlaap9";
   private RUNE_DUST = 10000000;
+  private thornodeClient: ThornodeClient;
+
+  private constructor() {
+    this.thornodeClient = ThornodeClient.getInstance();
+  }
 
   public static getInstance(): RuneBondEngine {
     if (!RuneBondEngine.instance) {
@@ -46,8 +47,7 @@ class RuneBondEngine {
 
   public async getAllNodes(): Promise<any[]> {
     try {
-      const thornodeResponse = await nodesApi.nodes();
-      return thornodeResponse.data;
+      return await this.thornodeClient.getAllNodes();
     } catch (error) {
       console.error("Failed to fetch nodes:", error);
       throw new Error("Failed to fetch nodes");
@@ -67,7 +67,8 @@ class RuneBondEngine {
   }
 
   public async getWhitelistRequests(
-    connectedAddress: string
+    connectedAddress: string,
+    nodeAddress?: string
   ): Promise<{ operator: WhitelistRequest[]; user: WhitelistRequest[] }> {
     try {
       const responseNodes = await axios.get(
@@ -75,6 +76,7 @@ class RuneBondEngine {
         {
           params: {
             address: connectedAddress,
+            ...(nodeAddress && { nodeAddress })
           },
         }
       );
@@ -366,19 +368,11 @@ class RuneBondEngine {
   }
 
   public async isTransactionConfirmed(txId: string): Promise<boolean> {
-    try {
-      const response = await txApi.txStatus(txId);
-      const tx = response.data;
-      
-      if (tx?.stages?.inbound_finalised?.completed) {
-        return true;
-      }
-      
-      return false;
-    } catch (error) {
-      console.error(`Failed to check transaction status for ${txId}:`, error);
-      return false;
-    }
+    return this.thornodeClient.isTransactionConfirmed(txId);
+  }
+
+  public async getAddressBalance(address: string): Promise<BaseAmount> {
+    return this.thornodeClient.getAddressBalance(address);
   }
 }
 

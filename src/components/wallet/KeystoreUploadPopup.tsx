@@ -2,22 +2,24 @@ import React, { useState, useRef } from 'react';
 import { Upload, X } from 'lucide-react';
 import Modal from '../ui/Modal';
 import Input from '../ui/Input';
+import { toast } from 'react-toastify';
+import { Keystore } from '@xchainjs/xchain-crypto';
+import { useWallet } from '../../contexts/WalletContext';
 
 interface KeystoreUploadPopupProps {
   isOpen: boolean;
   onClose: () => void;
-  onUpload: (file: File, password: string) => void;
 }
 
 const KeystoreUploadPopup: React.FC<KeystoreUploadPopupProps> = ({
   isOpen,
   onClose,
-  onUpload,
 }) => {
   const [file, setFile] = useState<File | null>(null);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { connect } = useWallet();
 
   const isValidFile = (fileName: string): boolean => {
     return fileName.endsWith('.json') || 
@@ -38,7 +40,7 @@ const KeystoreUploadPopup: React.FC<KeystoreUploadPopupProps> = ({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) {
       setError('Please select a keystore file');
@@ -48,20 +50,39 @@ const KeystoreUploadPopup: React.FC<KeystoreUploadPopupProps> = ({
       setError('Please enter your password');
       return;
     }
-    const fileToUpload = file
-    const passwordToUpload = password
-    setFile(null)
-    setPassword('')
-    onUpload(fileToUpload, passwordToUpload);
+
+    try {
+      const fileContent = await file.text();
+      let keystoreData: Keystore;
+
+      try {
+        keystoreData = JSON.parse(fileContent);
+      } catch (e) {
+        throw new Error('Invalid keystore file format');
+      }
+
+      if (!keystoreData.crypto) {
+        throw new Error('Invalid keystore file format');
+      }
+
+      await connect('keystore', { keystoreData, password });
+      onClose();
+      toast.success('Keystore uploaded and decrypted successfully');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error processing keystore';
+      setError(errorMessage);
+      toast.error(errorMessage);
+    }
   };
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={() => {
-        setFile(null)
-        setPassword('')
-        onClose()
+        setFile(null);
+        setPassword('');
+        setError('');
+        onClose();
       }}
       title="Upload Keystore File"
     >

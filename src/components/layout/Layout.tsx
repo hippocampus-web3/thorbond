@@ -1,6 +1,7 @@
 import React from 'react';
 import Header from './Header';
 import Footer from './Footer';
+import { BaseAmount } from '@xchainjs/xchain-util';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -8,6 +9,8 @@ interface LayoutProps {
   onConnect: () => Promise<void>;
   onDisconnect: () => Promise<void>;
   walletAddress: string | null;
+  balance: BaseAmount | null;
+  isLoadingBalance: boolean;
 }
 
 const Layout: React.FC<LayoutProps> = ({
@@ -15,7 +18,9 @@ const Layout: React.FC<LayoutProps> = ({
   isAuthenticated,
   onConnect,
   onDisconnect,
-  walletAddress
+  walletAddress,
+  balance,
+  isLoadingBalance
 }) => {
   return (
     <div className="flex flex-col min-h-screen">
@@ -24,6 +29,8 @@ const Layout: React.FC<LayoutProps> = ({
         onConnect={onConnect}
         onDisconnect={onDisconnect}
         walletAddress={walletAddress}
+        balance={balance}
+        isLoadingBalance={isLoadingBalance}
       />
       <main className="flex-grow bg-gray-50">
         {children}
