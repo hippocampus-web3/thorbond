@@ -297,11 +297,11 @@ const NodeCard: React.FC<NodeCardProps> = ({
         <Button
           onClick={(e) => {
             e.stopPropagation();
-            onRequestWhitelist(node);
+            navigate(`/nodes/${node.nodeAddress}`);
           }}
           className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white"
         >
-          Request for Whitelist
+          Bond your RUNE
         </Button>
       ) : (
         <Tooltip

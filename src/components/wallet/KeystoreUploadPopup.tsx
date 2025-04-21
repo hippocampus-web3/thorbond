@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Upload, X } from 'lucide-react';
 import Modal from '../ui/Modal';
 import Input from '../ui/Input';
@@ -20,6 +20,14 @@ const KeystoreUploadPopup: React.FC<KeystoreUploadPopupProps> = ({
   const [error, setError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { connect } = useWallet();
+
+  useEffect(() => {
+    if (!isOpen) {
+      setFile(null);
+      setPassword('');
+      setError('');
+    }
+  }, [isOpen]);
 
   const isValidFile = (fileName: string): boolean => {
     return fileName.endsWith('.json') || 
