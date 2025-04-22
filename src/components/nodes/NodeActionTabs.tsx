@@ -324,7 +324,7 @@ const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
       return <LoadingSpinner />;
     }
 
-    const isUnbondDisabled = false;
+    const isUnbondDisabled = node.status === 'Active' || node.status === 'Ready';
     const maxUnbondAmount = getRealBond();
     const formattedMaxUnbond = formatRune(baseAmount(maxUnbondAmount), true);
 
