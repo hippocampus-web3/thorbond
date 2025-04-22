@@ -12,6 +12,7 @@ import LoadingSpinner from '../components/ui/LoadingSpinner';
 import NodeActionTabs from '../components/nodes/NodeActionTabs';
 import RuneBondEngine from '../lib/runebondEngine/runebondEngine';
 import { BaseAmount } from '@xchainjs/xchain-util';
+import { NodesResponse } from '@xchainjs/xchain-thornode';
 
 interface NodeDetailsPageProps {
   nodes: Node[];
@@ -27,6 +28,7 @@ interface NodeDetailsPageProps {
   onBondRequest: (nodeAddress: string, userAddress: string, amount: number) => Promise<void>;
   onUnbondRequest: (nodeAddress: string, userAddress: string, amount: number) => Promise<void>;
   refreshWhitelistFlag: number;
+  oficialNodes: NodesResponse;
 }
 
 const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
@@ -42,7 +44,8 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
   isLoadingBalance,
   onBondRequest,
   onUnbondRequest,
-  refreshWhitelistFlag
+  refreshWhitelistFlag,
+  oficialNodes
 }) => {
   const { nodeAddress } = useParams<{ nodeAddress: string }>();
   const navigate = useNavigate();
@@ -52,6 +55,7 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
   const [isLoadingWhitelist, setIsLoadingWhitelist] = useState(false);
 
   const node = nodes.find(n => n.nodeAddress === nodeAddress);
+  const officialNode = oficialNodes.find(n => n.node_address === nodeAddress);
 
   useEffect(() => {
     if (!isConnected) {
@@ -295,7 +299,7 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
                               </h3>
                               {isFull ? (
                                 <p className="text-sm text-gray-600">
-                                  This node has achieved an incredible milestone by reaching its maximum bonding capacity! This is a testament to its reliability and the trust it has earned from the community. Being part of a full capacity node is a prestigious achievement in the THORChain ecosystem! 🚀
+                                  This node has achieved an incredible milestone by reaching its maximum bonding capacity! This is a testament to its reliability and the trust it has earned from the community. While it's not currently accepting more liquidity, you can still request whitelist - the node operator may review your request and potentially make space for your delegation. Being part of a full capacity node is a prestigious achievement in the THORChain ecosystem! 🚀
                                 </p>
                               ) : (
                                 <>
@@ -338,7 +342,7 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
                     isFull ? 'text-emerald-700' : 'text-yellow-700'
                   }`}>
                     {isFull 
-                      ? "This node has achieved an incredible milestone by reaching its maximum bonding capacity! This is a testament to its reliability and the trust it has earned from the community. Being part of a full capacity node is a prestigious achievement in the THORChain ecosystem! 🚀"
+                      ? "This node has achieved an incredible milestone by reaching its maximum bonding capacity! This is a testament to its reliability and the trust it has earned from the community. While it's not currently accepting more liquidity, you can still request whitelist - the node operator may review your request and potentially make space for your delegation. Being part of a full capacity node is a prestigious achievement in the THORChain ecosystem! 🚀"
                       : "These are nodes flagged as potentially risky due to unusual behavior or missing information. They're hidden by default to protect users, but you can choose to view and delegate to them at your own risk."}
                   </p>
                 </div>
@@ -418,6 +422,8 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
               balance={balance}
               isLoadingBalance={isLoadingBalance}
               onRefreshBondAmount={fetchWhitelistRequest}
+              isOperator={address === node.operatorAddress}
+              officialNode={officialNode}
             />
 
             {/* Chat Interface */}

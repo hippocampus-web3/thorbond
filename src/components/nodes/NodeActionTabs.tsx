@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Node, WhitelistRequest } from '../../types';
 import Button from '../ui/Button';
 import { formatRune } from '../../lib/utils';
-import { baseAmount, BaseAmount } from '@xchainjs/xchain-util';
+import { assetAmount, assetToBase, baseAmount, BaseAmount } from '@xchainjs/xchain-util';
 import { useWallet } from '../../contexts/WalletContext';
 import { Info, ExternalLink } from 'lucide-react';
 import Tooltip from '../ui/Tooltip';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import Alert from '../ui/Alert';
 import { Link } from 'react-router-dom';
+import { Node as OfficialNode } from '@xchainjs/xchain-thornode';
 
 interface NodeActionTabsProps {
   node: Node;
@@ -20,6 +21,8 @@ interface NodeActionTabsProps {
   balance: BaseAmount | null;
   isLoadingBalance: boolean;
   onRefreshBondAmount: () => void;
+  isOperator: boolean;
+  officialNode?: OfficialNode;
 }
 
 const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
@@ -31,14 +34,32 @@ const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
   isLoadingWhitelist,
   balance,
   isLoadingBalance,
-  onRefreshBondAmount
+  onRefreshBondAmount,
+  isOperator,
+  officialNode
 }) => {
   const { isConnected, address } = useWallet();
   const [activeTab, setActiveTab] = useState<'whitelist' | 'bond' | 'unbond'>('whitelist');
+  const provider = officialNode?.bond_providers?.providers?.find(
+    provider => provider.bond_address === address
+  );
+
+  const isAlreadyWhitelistedOutOfRunebond = !!provider && !whitelistRequest;
+  const getRealBond = () => provider ? Number(provider.bond) : 0;
+
+  const minBondAmount = whitelistRequest?.status === 'bonded' || isAlreadyWhitelistedOutOfRunebond || 
+                       (whitelistRequest?.realBond && Number(whitelistRequest.realBond) >= whitelistRequest.intendedBondAmount) 
+                       ? 0 
+                       : Number(formatRune(baseAmount(whitelistRequest?.intendedBondAmount), true)) || 0;
+
   const [bondAmount, setBondAmount] = useState<string>('');
   const [unbondAmount, setUnbondAmount] = useState<string>('');
 
-  const isOperator = isConnected && node.operatorAddress === node.nodeAddress;
+  useEffect(() => {
+    if (whitelistRequest || isAlreadyWhitelistedOutOfRunebond) {
+      setBondAmount(String(minBondAmount));
+    }
+  }, [whitelistRequest, isAlreadyWhitelistedOutOfRunebond, minBondAmount]);
 
   const renderWalletConnectionRequired = () => (
     <div className="space-y-4">
@@ -92,6 +113,20 @@ const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
 
     if (isLoadingWhitelist) {
       return <LoadingSpinner />;
+    }
+
+    if (isAlreadyWhitelistedOutOfRunebond) {
+      return (
+        <div className="space-y-2 min-h-[140px]">
+          <Alert variant="success">
+            <div className="space-y-2">
+              <p>
+                Your whitelist request is approved. You can now bond RUNE to this node.
+              </p>
+            </div>
+          </Alert>
+        </div>
+      );
     }
 
     if (whitelistRequest) {
@@ -182,7 +217,7 @@ const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
       return <LoadingSpinner />;
     }
 
-    if (!whitelistRequest || whitelistRequest.status === 'pending' || whitelistRequest.status === 'rejected') {
+    if (!whitelistRequest && !isAlreadyWhitelistedOutOfRunebond) {
       return (
         <div className="space-y-4">
           <Alert variant="warning">
@@ -192,8 +227,9 @@ const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
       );
     }
 
-    const minBondAmount = whitelistRequest.status === 'bonded' ? 0 : whitelistRequest.intendedBondAmount;
     const availableBalance = balance?.amount().toString() || '0';
+    const formattedBalance = formatRune(baseAmount(availableBalance), true);
+    const maxBondAmount = Number(formattedBalance);
 
     return (
       <div className="space-y-4">
@@ -214,7 +250,7 @@ const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
                             <h3 className="font-medium text-gray-900 mb-2">Bonding Information</h3>
                             <div className="space-y-2 text-sm text-gray-600">
                               <p>
-                                The minimum bond amount is {formatRune(baseAmount(whitelistRequest.intendedBondAmount))} RUNE, as specified in your whitelist request.
+                                The minimum bond amount is {formatRune(baseAmount(whitelistRequest?.intendedBondAmount), true)} RUNE, as specified in your whitelist request.
                               </p>
                               <p>
                                 After this initial amount, you can delegate as much RUNE as you want. However, it's recommended to consult with the node operator first, as they might suggest distributing larger amounts across different nodes to maximize performance.
@@ -232,34 +268,43 @@ const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
                   <input
                     type="range"
                     min={minBondAmount}
-                    max={availableBalance}
-                    value={bondAmount || minBondAmount}
-                    onChange={(e) => setBondAmount(e.target.value)}
+                    max={maxBondAmount}
+                    value={bondAmount ? Number(bondAmount) : minBondAmount}
+                    step="0.01"
+                    onChange={(e) => {
+                      const value = Math.min(Number(e.target.value), maxBondAmount);
+                      setBondAmount(String(value));
+                    }}
                     className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                   />
                   <input
-                    type="text"
-                    value={formatRune(baseAmount(bondAmount || minBondAmount))}
+                    type="number"
+                    min={minBondAmount}
+                    max={maxBondAmount}
+                    step="0.01"
+                    value={bondAmount}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/[^0-9.]/g, '');
+                      const value = e.target.value;
                       if (value === '') {
-                        setBondAmount(String(minBondAmount));
+                        setBondAmount('');
                       } else {
-                        const baseValue = Number(value) * 100000000;
-                        setBondAmount(String(Math.min(Math.max(baseValue, minBondAmount), Number(availableBalance))));
+                        const numericValue = Number(value);
+                        if (numericValue <= maxBondAmount) {
+                          setBondAmount(value);
+                        }
                       }
                     }}
                     className="w-full sm:w-24 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
                 </div>
                 <div className="mt-1">
-                  <span className="text-sm text-gray-500">Available: {formatRune(balance || baseAmount(0))} RUNE</span>
+                  <span className="text-sm text-gray-500">Available: {formattedBalance} RUNE</span>
                 </div>
               </div>
               <Button
-                onClick={() => onBondSubmit(bondAmount)}
+                onClick={() => onBondSubmit(assetToBase(assetAmount(bondAmount || '0')).amount().toString())}
                 className="w-full bg-green-600 hover:bg-green-700 text-white"
-                disabled={!isConnected || !bondAmount || Number(bondAmount) < minBondAmount || Number(bondAmount) > Number(availableBalance)}
+                disabled={!isConnected || !bondAmount || Number(bondAmount) < minBondAmount || Number(bondAmount) > maxBondAmount}
               >
                 {isConnected ? 'Confirm Bond' : 'Connect Wallet to Bond'}
               </Button>
@@ -280,7 +325,8 @@ const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
     }
 
     const isUnbondDisabled = node.status === 'Active' || node.status === 'Ready';
-    const maxUnbondAmount = whitelistRequest?.realBond ? Number(whitelistRequest.realBond) : 0;
+    const maxUnbondAmount = getRealBond();
+    const formattedMaxUnbond = formatRune(baseAmount(maxUnbondAmount), true);
 
     if (isUnbondDisabled) {
       return (
@@ -328,7 +374,7 @@ const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
                 </button>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-900">{formatRune(baseAmount(maxUnbondAmount))} RUNE</span>
+                <span className="text-sm text-gray-900">{formattedMaxUnbond} RUNE</span>
                 <a 
                   href={`https://rune.tools/bond?bond_address=${address || ''}&node_address=${node.nodeAddress}`} 
                   target="_blank" 
@@ -361,68 +407,43 @@ const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
                   <input
                     type="range"
                     min="0"
-                    max={maxUnbondAmount}
-                    value={unbondAmount || 0}
-                    onChange={(e) => setUnbondAmount(e.target.value)}
+                    max={formattedMaxUnbond}
+                    value={unbondAmount ? Number(unbondAmount) : 0}
+                    step="0.01"
+                    onChange={(e) => {
+                      const value = Math.min(Number(e.target.value), maxUnbondAmount);
+                      setUnbondAmount(String(value));
+                    }}
                     className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                   />
                   <input
-                    type="text"
-                    value={formatRune(baseAmount(unbondAmount || 0))}
+                    type="number"
+                    min="0"
+                    max={formattedMaxUnbond}
+                    step="0.01"
+                    value={unbondAmount}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/[^0-9.]/g, '');
+                      const value = e.target.value;
                       if (value === '') {
-                        setUnbondAmount('0');
+                        setUnbondAmount('');
                       } else {
-                        const baseValue = Number(value) * 100000000;
-                        setUnbondAmount(String(Math.min(Math.max(baseValue, 0), maxUnbondAmount)));
+                        const numericValue = Number(value);
+                        if (numericValue <= Number(formattedMaxUnbond)) {
+                          setUnbondAmount(value);
+                        }
                       }
                     }}
-                    className="w-full sm:w-24 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-0"
+                    className="w-full sm:w-24 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                   />
                 </div>
-                <div className="mt-1 flex items-center gap-2">
-                  <span className="text-sm text-gray-500">Available to Unbond: {formatRune(baseAmount(maxUnbondAmount))} RUNE</span>
-                  <Tooltip
-                    content={
-                      <div className="flex items-start gap-2">
-                        <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                        <div>
-                          <h3 className="font-medium text-gray-900 mb-2">Bond Amount Update</h3>
-                          <p className="text-sm text-gray-600">
-                            The current bond amount may take a few minutes to update after a transaction. Use the refresh button to check for updates.
-                          </p>
-                        </div>
-                      </div>
-                    }
-                  >
-                    <Info className="h-4 w-4 text-gray-400 cursor-help hover:text-gray-500" />
-                  </Tooltip>
-                  <button
-                    onClick={() => onRefreshBondAmount()}
-                    className="p-1 hover:bg-gray-100 rounded-full transition-all duration-200 hover:scale-110 active:scale-95"
-                    title="Refresh bond amount"
-                  >
-                    <svg
-                      className="h-4 w-4 text-gray-500 hover:text-gray-700 transition-colors duration-200"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                      />
-                    </svg>
-                  </button>
+                <div className="mt-1">
+                  <span className="text-sm text-gray-500">Available to Unbond: {formattedMaxUnbond} RUNE</span>
                 </div>
               </div>
               <Button
-                onClick={() => onUnbondSubmit(unbondAmount)}
+                onClick={() => onUnbondSubmit(assetToBase(assetAmount(unbondAmount || '0')).amount().toString())}
                 className="w-full bg-red-600 hover:bg-red-700 text-white"
-                disabled={!isConnected || !unbondAmount || Number(unbondAmount) <= 0}
+                disabled={!isConnected || !unbondAmount || Number(unbondAmount) <= 0 || Number(unbondAmount) > maxUnbondAmount}
               >
                 {isConnected ? 'Confirm Unbond' : 'Connect Wallet to Unbond'}
               </Button>

@@ -24,6 +24,7 @@ import { sendTransaction } from "./transactionSender";
 import { WalletProvider, WalletType } from "../../contexts/WalletContext";
 import { ThorchainTransferParams } from "../../types/wallets";
 import { ThornodeClient } from '../thornode/client';
+import { NodesResponse } from "@xchainjs/xchain-thornode";
 
 class RuneBondEngine {
   private static instance: RuneBondEngine;
@@ -45,7 +46,7 @@ class RuneBondEngine {
     return RuneBondEngine.instance;
   }
 
-  public async getAllNodes(): Promise<any[]> {
+  public async getAllNodes(): Promise<NodesResponse> {
     try {
       return await this.thornodeClient.getAllNodes();
     } catch (error) {

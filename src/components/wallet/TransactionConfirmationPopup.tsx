@@ -73,7 +73,7 @@ const TransactionConfirmationPopup: React.FC<TransactionConfirmationPopupProps> 
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-500">Amount:</span>
-              <span className="font-medium">{formatRune(baseAmount(transaction.amount.amount, transaction.amount.decimals))} RUNE</span>
+              <span className="font-medium">{formatRune(baseAmount(transaction.amount.amount, transaction.amount.decimals), true)} RUNE</span>
             </div>
             {transactionType === 'whitelist' && additionalInfo?.intendedBondAmount && (
               <div className="flex justify-between">
