@@ -9,14 +9,14 @@ import Dropdown from '../ui/Dropdown';
 
 interface FormData {
   address: string;
-  bondingCapacity: string;
+  totalBondTarget: string;
   minimumBond: string;
   feePercentage: string;
 }
 
 const validationSchema = z.object({
   address: z.string().min(1, 'Address is required'),
-  bondingCapacity: z.string().min(1, 'Bonding capacity is required'),
+  totalBondTarget: z.string().min(1, 'Bonding capacity is required'),
   minimumBond: z.string().min(1, 'Minimum bond is required'),
   feePercentage: z.string().min(1, 'Fee percentage is required')
 });
@@ -37,7 +37,7 @@ const NodeForm: React.FC<NodeFormProps> = ({
 }) => {
   const [formData, setFormData] = useState<FormData>({
     address: initialData?.address || '',
-    bondingCapacity: initialData?.bondingCapacity || '',
+    totalBondTarget: initialData?.totalBondTarget || '',
     minimumBond: initialData?.minimumBond || '',
     feePercentage: initialData?.feePercentage || '16',
   });
@@ -65,7 +65,7 @@ const NodeForm: React.FC<NodeFormProps> = ({
   };
 
   const isValid = formData.address && 
-                 formData.bondingCapacity && 
+                 formData.totalBondTarget && 
                  formData.minimumBond && 
                  formData.feePercentage
 
@@ -106,14 +106,14 @@ const NodeForm: React.FC<NodeFormProps> = ({
             }
             
             <Input
-              label="Available Bonding Capacity (RUNE)"
+              label="Total bond target (RUNE)"
               type="number"
               min="0"
               step="1"
-              name="bondingCapacity"
-              value={formData.bondingCapacity}
+              name="totalBondTarget"
+              value={formData.totalBondTarget}
               onChange={({target}: React.ChangeEvent<HTMLInputElement>)  => handleInputChange(target.name, target.value)}
-              error={errors.bondingCapacity?.message}
+              error={errors.totalBondTarget?.message}
               fullWidth
             />
             

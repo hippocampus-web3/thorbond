@@ -1,6 +1,6 @@
 export interface NodeOperatorFormData {
   address: string;
-  bondingCapacity: string;
+  totalBondTarget: string;
   minimumBond: string;
   feePercentage: string;
   description?: string;
@@ -60,7 +60,7 @@ export interface ListingParams {
   nodeAddress: string;
   operatorAddress: string;
   minRune: number;
-  maxRune: number;
+  totalBondTarget: number;
   feePercentage: number;
 }
 

@@ -198,7 +198,7 @@ const AppContent: React.FC = () => {
         nodeAddress: formData.address,
         operatorAddress: address || '',
         minRune: Number(formData.minimumBond),
-        maxRune: Number(formData.bondingCapacity),
+        totalBondTarget: Number(formData.totalBondTarget),
         feePercentage: Number(formData.feePercentage)
       };
 

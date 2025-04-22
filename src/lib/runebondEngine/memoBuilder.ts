@@ -61,14 +61,14 @@ export function createListing(params: ListingParams): string {
   if (params.minRune <= 0) {
     throw new Error("Minimum RUNE amount must be greater than 0");
   }
-  if (params.maxRune <= params.minRune) {
-    throw new Error("Maximum RUNE amount must be greater than minimum amount");
+  if (params.totalBondTarget <= params.minRune) {
+    throw new Error("Total bond target RUNE amount must be greater than minimum amount");
   }
   if (params.feePercentage < 0 || params.feePercentage > 100) {
     throw new Error("Fee percentage must be between 0 and 100");
   }
 
-  return `TB:LIST:${params.nodeAddress}:${params.operatorAddress}:${assetToBase(assetAmount(params.minRune)).amount().toString()}:${assetToBase(assetAmount(params.maxRune)).amount().toString()}:${params.feePercentage * 100}`;
+  return `TB:V2:LIST:${params.nodeAddress}:${assetToBase(assetAmount(params.minRune)).amount().toString()}:${assetToBase(assetAmount(params.totalBondTarget)).amount().toString()}:${params.feePercentage * 100}`;
 }
 
 export function createMessageMemo(params: {
