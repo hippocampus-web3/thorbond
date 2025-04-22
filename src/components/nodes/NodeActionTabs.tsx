@@ -47,7 +47,7 @@ const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
     provider => provider.bond_address === address
   );
 
-  const isAlreadyWhitelisted = !!provider;
+  const isAlreadyWhitelistedOutOfRunebond = !!provider && !whitelistRequest;
   const getRealBond = () => provider ? Number(provider.bond) : 0;
 
   const renderWalletConnectionRequired = () => (
@@ -104,7 +104,7 @@ const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
       return <LoadingSpinner />;
     }
 
-    if (isAlreadyWhitelisted) {
+    if (isAlreadyWhitelistedOutOfRunebond) {
       return (
         <div className="space-y-2 min-h-[140px]">
           <Alert variant="success">
@@ -206,7 +206,7 @@ const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
       return <LoadingSpinner />;
     }
 
-    if (!whitelistRequest && !isAlreadyWhitelisted) {
+    if (!whitelistRequest && !isAlreadyWhitelistedOutOfRunebond) {
       return (
         <div className="space-y-4">
           <Alert variant="warning">
@@ -216,7 +216,7 @@ const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
       );
     }
 
-    const minBondAmount = whitelistRequest?.status === 'bonded' || isAlreadyWhitelisted || 
+    const minBondAmount = whitelistRequest?.status === 'bonded' || isAlreadyWhitelistedOutOfRunebond || 
                          (whitelistRequest?.realBond && Number(whitelistRequest.realBond) >= whitelistRequest.intendedBondAmount) 
                          ? 0 
                          : whitelistRequest?.intendedBondAmount || 0;
