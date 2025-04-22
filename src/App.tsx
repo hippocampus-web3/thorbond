@@ -571,6 +571,7 @@ const AppContent: React.FC = () => {
                   onBondRequest={handleBondRequest}
                   onUnbondRequest={handleUnbondRequest}
                   refreshWhitelistFlag={refreshWhitelistFlag}
+                  oficialNodes={allNodes}
                 />
               )
             }

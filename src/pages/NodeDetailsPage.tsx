@@ -12,6 +12,7 @@ import LoadingSpinner from '../components/ui/LoadingSpinner';
 import NodeActionTabs from '../components/nodes/NodeActionTabs';
 import RuneBondEngine from '../lib/runebondEngine/runebondEngine';
 import { BaseAmount } from '@xchainjs/xchain-util';
+import { NodesResponse } from '@xchainjs/xchain-thornode';
 
 interface NodeDetailsPageProps {
   nodes: Node[];
@@ -27,6 +28,7 @@ interface NodeDetailsPageProps {
   onBondRequest: (nodeAddress: string, userAddress: string, amount: number) => Promise<void>;
   onUnbondRequest: (nodeAddress: string, userAddress: string, amount: number) => Promise<void>;
   refreshWhitelistFlag: number;
+  oficialNodes: NodesResponse;
 }
 
 const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
@@ -42,7 +44,8 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
   isLoadingBalance,
   onBondRequest,
   onUnbondRequest,
-  refreshWhitelistFlag
+  refreshWhitelistFlag,
+  oficialNodes
 }) => {
   const { nodeAddress } = useParams<{ nodeAddress: string }>();
   const navigate = useNavigate();
@@ -52,6 +55,7 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
   const [isLoadingWhitelist, setIsLoadingWhitelist] = useState(false);
 
   const node = nodes.find(n => n.nodeAddress === nodeAddress);
+  const officialNode = oficialNodes.find(n => n.node_address === nodeAddress);
 
   useEffect(() => {
     if (!isConnected) {
@@ -145,6 +149,38 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
               <div className="h-[500px] bg-gray-50 rounded-lg p-4">
                 <div className="h-full w-full bg-gray-200 rounded animate-pulse"></div>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!officialNode) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="mb-8">
+          <button
+            onClick={() => {
+              navigate('/nodes')
+            }}
+            className="flex items-center text-blue-600 hover:text-blue-800"
+          >
+            <ArrowLeft className="h-5 w-5 mr-2" />
+            Back to Nodes
+          </button>
+        </div>
+        <div className="bg-red-50 border-l-4 border-red-400 p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-700">
+                Error: Could not find node information in the network. Please try again later or contact support if the problem persists.
+              </p>
             </div>
           </div>
         </div>
@@ -419,6 +455,7 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
               isLoadingBalance={isLoadingBalance}
               onRefreshBondAmount={fetchWhitelistRequest}
               isOperator={address === node.operatorAddress}
+              officialNode={officialNode}
             />
 
             {/* Chat Interface */}

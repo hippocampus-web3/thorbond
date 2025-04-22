@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Node, WhitelistRequestFormData, Message } from '../types';
 import NodeDetailsPage from './NodeDetailsPage';
 import { BaseAmount } from '@xchainjs/xchain-util';
+import { NodesResponse } from '@xchainjs/xchain-thornode';
 
 interface NodeDetailsPageWrapperProps {
   listedNodes: Node[];
@@ -19,6 +20,7 @@ interface NodeDetailsPageWrapperProps {
   onBondRequest: (nodeAddress: string, userAddress: string, amount: number) => Promise<void>;
   onUnbondRequest: (nodeAddress: string, userAddress: string, amount: number) => Promise<void>;
   refreshWhitelistFlag: number;
+  oficialNodes: NodesResponse;
 }
 
 const NodeDetailsPageWrapper: React.FC<NodeDetailsPageWrapperProps> = ({
@@ -35,7 +37,8 @@ const NodeDetailsPageWrapper: React.FC<NodeDetailsPageWrapperProps> = ({
   isLoadingBalance,
   onBondRequest,
   onUnbondRequest,
-  refreshWhitelistFlag
+  refreshWhitelistFlag,
+  oficialNodes
 }) => {
   const { nodeAddress } = useParams<{ nodeAddress: string }>();
 
@@ -62,6 +65,7 @@ const NodeDetailsPageWrapper: React.FC<NodeDetailsPageWrapperProps> = ({
       onBondRequest={onBondRequest}
       onUnbondRequest={onUnbondRequest}
       refreshWhitelistFlag={refreshWhitelistFlag}
+      oficialNodes={oficialNodes}
     />
   );
 };
