@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Node, WhitelistRequest } from '../../types';
 import Button from '../ui/Button';
 import { formatRune } from '../../lib/utils';
@@ -20,6 +20,7 @@ interface NodeActionTabsProps {
   balance: BaseAmount | null;
   isLoadingBalance: boolean;
   onRefreshBondAmount: () => void;
+  isOperator: boolean;
 }
 
 const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
@@ -31,14 +32,23 @@ const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
   isLoadingWhitelist,
   balance,
   isLoadingBalance,
-  onRefreshBondAmount
+  onRefreshBondAmount,
+  isOperator
 }) => {
   const { isConnected, address } = useWallet();
   const [activeTab, setActiveTab] = useState<'whitelist' | 'bond' | 'unbond'>('whitelist');
   const [bondAmount, setBondAmount] = useState<string>('');
   const [unbondAmount, setUnbondAmount] = useState<string>('');
 
-  const isOperator = isConnected && node.operatorAddress === node.nodeAddress;
+  useEffect(() => {
+    if (whitelistRequest && activeTab === 'bond') {
+      const minBondAmount = whitelistRequest.status === 'bonded' || 
+                           (whitelistRequest.realBond && Number(whitelistRequest.realBond) >= whitelistRequest.intendedBondAmount) 
+                           ? 0 
+                           : whitelistRequest.intendedBondAmount;
+      setBondAmount(String(minBondAmount));
+    }
+  }, [whitelistRequest, activeTab]);
 
   const renderWalletConnectionRequired = () => (
     <div className="space-y-4">
@@ -192,7 +202,10 @@ const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
       );
     }
 
-    const minBondAmount = whitelistRequest.status === 'bonded' ? 0 : whitelistRequest.intendedBondAmount;
+    const minBondAmount = whitelistRequest.status === 'bonded' || 
+                         (whitelistRequest.realBond && Number(whitelistRequest.realBond) >= whitelistRequest.intendedBondAmount) 
+                         ? 0 
+                         : whitelistRequest.intendedBondAmount;
     const availableBalance = balance?.amount().toString() || '0';
 
     return (
@@ -214,7 +227,7 @@ const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
                             <h3 className="font-medium text-gray-900 mb-2">Bonding Information</h3>
                             <div className="space-y-2 text-sm text-gray-600">
                               <p>
-                                The minimum bond amount is {formatRune(baseAmount(whitelistRequest.intendedBondAmount))} RUNE, as specified in your whitelist request.
+                                The minimum bond amount is {formatRune(baseAmount(whitelistRequest.intendedBondAmount), true)} RUNE, as specified in your whitelist request.
                               </p>
                               <p>
                                 After this initial amount, you can delegate as much RUNE as you want. However, it's recommended to consult with the node operator first, as they might suggest distributing larger amounts across different nodes to maximize performance.
@@ -239,7 +252,7 @@ const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
                   />
                   <input
                     type="text"
-                    value={formatRune(baseAmount(bondAmount || minBondAmount))}
+                    value={formatRune(baseAmount(bondAmount || minBondAmount), true)}
                     onChange={(e) => {
                       const value = e.target.value.replace(/[^0-9.]/g, '');
                       if (value === '') {
@@ -253,13 +266,13 @@ const NodeActionTabs: React.FC<NodeActionTabsProps> = ({
                   />
                 </div>
                 <div className="mt-1">
-                  <span className="text-sm text-gray-500">Available: {formatRune(balance || baseAmount(0))} RUNE</span>
+                  <span className="text-sm text-gray-500">Available: {formatRune(balance || baseAmount(0), true)} RUNE</span>
                 </div>
               </div>
               <Button
                 onClick={() => onBondSubmit(bondAmount)}
                 className="w-full bg-green-600 hover:bg-green-700 text-white"
-                disabled={!isConnected || !bondAmount || Number(bondAmount) < minBondAmount || Number(bondAmount) > Number(availableBalance)}
+                disabled={!isConnected || !bondAmount || Number(bondAmount) < minBondAmount || Number(bondAmount) >= Number(availableBalance)}
               >
                 {isConnected ? 'Confirm Bond' : 'Connect Wallet to Bond'}
               </Button>
