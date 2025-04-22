@@ -4,7 +4,7 @@ import Button from '../ui/Button';
 import { formatRune, shortenAddress, getTimeAgo, formatDuration, getNodeExplorerUrl } from '../../lib/utils';
 import { useWallet } from '../../contexts/WalletContext';
 import { baseAmount } from "@xchainjs/xchain-util";
-import { Copy, Check, Share2, Info, Eye, EyeOff, Trophy, Sparkles } from 'lucide-react';
+import { Copy, Check, Share2, Info, Eye, EyeOff, Trophy, Sparkles, Shield, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Tooltip from '../ui/Tooltip';
 
@@ -28,8 +28,79 @@ const NodeCard: React.FC<NodeCardProps> = ({
   const [copiedAddress, setCopiedAddress] = useState(false);
   const [copiedWhitelistMemo, setCopiedWhitelistMemo] = useState(false);
   const isFull = node.maxRune < 0 || node.maxRune < node.minRune;
-  const [isVisible, setIsVisible] = useState(!node.isHidden.hide && !isFull);
+  const [isVisible, setIsVisible] = useState(!node.isHidden.hide && !isFull && !node.isYieldGuarded.hide);
   const navigate = useNavigate();
+
+  // Determine the primary state to display
+  const getPrimaryState = () => {
+    if (node.isHidden.hide) return 'hidden';
+    if (isFull) return 'full';
+    if (node.isYieldGuarded.hide) return 'yieldGuarded';
+    return 'normal';
+  };
+
+  const primaryState = getPrimaryState();
+
+  const getStateStyles = () => {
+    switch (primaryState) {
+      case 'hidden':
+        return {
+          bgColor: 'bg-yellow-50',
+          borderColor: 'border-yellow-400',
+          textColor: 'text-yellow-800',
+          icon: <EyeOff className="h-5 w-5 text-yellow-600" />,
+          title: "Hidden Node",
+          description: "These are nodes flagged as potentially risky due to unusual behavior or missing information. They're hidden by default to protect users, but you can choose to view and delegate to them at your own risk.",
+          buttonVariant: "outline" as const,
+          buttonClass: ""
+        };
+      case 'full':
+        return {
+          bgColor: 'bg-emerald-50',
+          borderColor: 'border-emerald-400',
+          textColor: 'text-emerald-800',
+          icon: (
+            <div className="flex items-center space-x-2">
+              <Trophy className="h-5 w-5 text-emerald-600" />
+              <Sparkles className="h-4 w-4 text-emerald-500" />
+            </div>
+          ),
+          title: "Full Capacity Node 🎉",
+          description: "This node has achieved an incredible milestone by reaching its maximum bonding capacity! This is a testament to its reliability and the trust it has earned from the community. While it's not currently accepting more liquidity, you can still request whitelist - the node operator may review your request and potentially make space for your delegation. Being part of a full capacity node is a prestigious achievement in the THORChain ecosystem! 🚀",
+          buttonVariant: "primary" as const,
+          buttonClass: "bg-emerald-600 hover:bg-emerald-700 text-white"
+        };
+      case 'yieldGuarded':
+        return {
+          bgColor: 'bg-purple-50',
+          borderColor: 'border-purple-400',
+          textColor: 'text-purple-800',
+          icon: (
+            <div className="flex items-center space-x-2">
+              <Shield className="h-5 w-5 text-purple-600" />
+              <Lock className="h-4 w-4 text-purple-500" />
+            </div>
+          ),
+          title: "Yield Guard Active ⚡",
+          description: "The Yield Guard system has identified that delegating RUNE to this node may not generate optimal returns at the current network state. This is a protective measure to help you maximize your earnings. You can still view and delegate to this node, but consider checking other nodes that might offer better yield opportunities at this time.",
+          buttonVariant: "primary" as const,
+          buttonClass: "bg-purple-600 hover:bg-purple-700 text-white"
+        };
+      default:
+        return {
+          bgColor: 'bg-white',
+          borderColor: '',
+          textColor: '',
+          icon: null,
+          title: "",
+          description: "",
+          buttonVariant: "outline" as const,
+          buttonClass: ""
+        };
+    }
+  };
+
+  const stateStyles = getStateStyles();
 
   const handleCopy = async (text: string, setCopied: (value: boolean) => void) => {
     try {
@@ -66,52 +137,30 @@ const NodeCard: React.FC<NodeCardProps> = ({
     navigate(`/nodes/${node.nodeAddress}`);
   };
 
-  if ((node.isHidden.hide || isFull) && !isVisible) {
+  if ((node.isHidden.hide || isFull || node.isYieldGuarded.hide) && !isVisible) {
     return (
-      <div className={`shadow rounded-lg p-4 hover:cursor-pointer min-h-[500px] flex flex-col ${
-        node.isHidden.hide ? 'bg-yellow-50 border-2 border-yellow-400' : 
-        isFull ? 'bg-emerald-50 border-2 border-emerald-400' : 'bg-white'
-      }`} onClick={handleCardClick}>
+      <div className={`shadow rounded-lg p-4 hover:cursor-pointer min-h-[500px] flex flex-col ${stateStyles.bgColor} border-2 ${stateStyles.borderColor}`} onClick={handleCardClick}>
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center space-x-2">
-            {isFull ? (
-              <div className="flex items-center space-x-2">
-                <Trophy className="h-5 w-5 text-emerald-600" />
-                <Sparkles className="h-4 w-4 text-emerald-500" />
-              </div>
-            ) : (
-              <EyeOff className="h-5 w-5 text-yellow-600" />
-            )}
-            <span className={`${
-              node.isHidden.hide ? 'text-yellow-800' : 'text-emerald-800 font-medium'
-            }`}>
-              {isFull ? "Full Capacity Node 🎉" : "Hidden Node"}
+            {stateStyles.icon}
+            <span className={`font-medium ${stateStyles.textColor}`}>
+              {stateStyles.title}
             </span>
           </div>
           <Button
             onClick={() => setIsVisible(true)}
-            className={`text-sm ${
-              isFull ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''
-            }`}
-            variant={isFull ? "primary" : "outline"}
+            className={`text-sm ${stateStyles.buttonClass}`}
+            variant={stateStyles.buttonVariant}
           >
             Show Node
           </Button>
         </div>
-        <div className={`p-4 rounded-lg border ${
-          node.isHidden.hide ? 'bg-yellow-50 border-yellow-200' : 'bg-emerald-50 border-emerald-200'
-        }`}>
-          <h4 className={`text-sm font-medium ${
-            node.isHidden.hide ? 'text-yellow-800' : 'text-emerald-800'
-          } mb-2`}>
-            {isFull ? "🎉 Congratulations! This Node is at Full Capacity" : "What are hidden nodes?"}
+        <div className={`p-4 rounded-lg border ${stateStyles.bgColor} border-${stateStyles.borderColor.replace('border-', '')}`}>
+          <h4 className={`text-sm font-medium ${stateStyles.textColor} mb-2`}>
+            {primaryState === 'hidden' ? "What are hidden nodes?" : stateStyles.title}
           </h4>
-          <p className={`text-sm ${
-            node.isHidden.hide ? 'text-yellow-700' : 'text-emerald-700'
-          }`}>
-            {isFull 
-              ? "This node has achieved an incredible milestone by reaching its maximum bonding capacity! This is a testament to its reliability and the trust it has earned from the community. While it's not currently accepting more liquidity, you can still request whitelist - the node operator may review your request and potentially make space for your delegation. Being part of a full capacity node is a prestigious achievement in the THORChain ecosystem! 🚀"
-              : "These are nodes flagged as potentially risky due to unusual behavior or missing information. They're hidden by default to protect users, but you can choose to view and delegate to them at your own risk."}
+          <p className={`text-sm ${stateStyles.textColor.replace('800', '700')}`}>
+            {stateStyles.description}
           </p>
         </div>
       </div>
@@ -120,16 +169,13 @@ const NodeCard: React.FC<NodeCardProps> = ({
 
   return (
     <div 
-      className={`shadow rounded-lg p-4 hover:cursor-pointer min-h-[450px] flex flex-col ${
-        node.isHidden.hide ? 'bg-yellow-50 border-2 border-yellow-400' : 
-        isFull ? 'bg-emerald-50 border-2 border-emerald-400' : 'bg-white'
-      }`}
+      className={`shadow rounded-lg p-4 hover:cursor-pointer min-h-[450px] flex flex-col ${stateStyles.bgColor} border-2 ${stateStyles.borderColor}`}
       onClick={handleCardClick}
     >
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center space-x-2">
           <h3 className="text-lg font-medium text-gray-900">Node</h3>
-          {node.isHidden.hide && (
+          {primaryState === 'hidden' && (
             <div className="flex items-center space-x-1">
               <Eye className="h-4 w-4 text-yellow-600" />
               <span className="text-sm font-medium text-yellow-600">Why hidden?</span>
@@ -152,7 +198,7 @@ const NodeCard: React.FC<NodeCardProps> = ({
               </Tooltip>
             </div>
           )}
-          {isFull && (
+          {primaryState === 'full' && (
             <div className="flex items-center space-x-1">
               <span className="text-sm font-medium text-emerald-600">Full Capacity</span>
               <Tooltip
@@ -168,6 +214,27 @@ const NodeCard: React.FC<NodeCardProps> = ({
                 }
               >
                 <Info className="h-4 w-4 text-emerald-600 cursor-help" />
+              </Tooltip>
+            </div>
+          )}
+          {primaryState === 'yieldGuarded' && (
+            <div className="flex items-center space-x-1">
+              <span className="text-sm font-medium text-purple-600">Yield Guard</span>
+              <Tooltip
+                content={
+                  <div className="flex items-start gap-2">
+                    <div>
+                      <h3 className="font-medium text-gray-900 mb-2">Yield Guard Active</h3>
+                      {node.isYieldGuarded.reasons && node.isYieldGuarded.reasons.map((reason, index) => (
+                        <p key={index} className="text-sm text-gray-600 mb-2">
+                          • {reason}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                }
+              >
+                <Info className="h-4 w-4 text-purple-600 cursor-help" />
               </Tooltip>
             </div>
           )}

@@ -37,7 +37,7 @@ const NodesList: React.FC<NodeListProps> = ({
   };
 
   const handleCopyMemo = () => {
-    const memo = "TB:LIST:<node_address>:<operator_address>:<min_rune>:<max_rune>:<fee_percentage>";
+    const memo = "TB:V2:LIST:<node_address>:<min_rune>:<total-bond-target>:<fee_percentage>";
     navigator.clipboard.writeText(memo);
     setCopiedMemo(true);
     setTimeout(() => setCopiedMemo(false), 2000);
@@ -64,10 +64,18 @@ const NodesList: React.FC<NodeListProps> = ({
       return true;
     })
     .sort((a, b) => {
+      // First, sort by status priority
       if (a.isHidden.hide !== b.isHidden.hide) {
         return a.isHidden.hide ? 1 : -1;
       }
+      if (a.isYieldGuarded.hide !== b.isYieldGuarded.hide) {
+        return a.isYieldGuarded.hide ? 1 : -1;
+      }
+      if ((a.maxRune < 0 || a.maxRune < a.minRune) !== (b.maxRune < 0 || b.maxRune < b.minRune)) {
+        return (a.maxRune < 0 || a.maxRune < a.minRune) ? 1 : -1;
+      }
       
+      // Then sort by the selected criteria
       switch (sortBy) {
         case 'bondingCapacity':
           return b.maxRune - a.maxRune;
@@ -182,7 +190,7 @@ const NodesList: React.FC<NodeListProps> = ({
                     <div className="bg-gray-50 p-3 rounded-md">
                       <div className="flex items-center justify-between">
                         <code className="text-sm font-mono text-gray-800 break-all">
-                          TB:LIST:&lt;node_address&gt;:&lt;operator_address&gt;:&lt;min_rune&gt;:&lt;max_rune&gt;:&lt;fee_percentage&gt;
+                          TB:V2:LIST:&lt;node-address&gt;:&lt;min-amount&gt;:&lt;total-bond-target&gt;:&lt;fee-percentage&gt;
                         </code>
                         <button
                           onClick={handleCopyMemo}
@@ -199,11 +207,10 @@ const NodesList: React.FC<NodeListProps> = ({
                     <div className="mt-3 text-sm text-gray-600 mb-3">
                       <p className="font-medium mb-1">Parameters:</p>
                       <ul className="list-disc list-inside space-y-1">
-                        <li><code className="bg-gray-100 px-1 rounded">node_address</code>: Your node's address (must start with thor1)</li>
-                        <li><code className="bg-gray-100 px-1 rounded">operator_address</code>: Your operator address (must start with thor1)</li>
-                        <li><code className="bg-gray-100 px-1 rounded">min_rune</code>: Minimum bond amount. Must be in base amount. For example: 1 RUNE = 100000000 (must be greater than 0)</li>
-                        <li><code className="bg-gray-100 px-1 rounded">max_rune</code>: Maximum bond amount. Must be in base amount. For example: 1 RUNE = 100000000 (must be greater than min_rune)</li>
-                        <li><code className="bg-gray-100 px-1 rounded">fee_percentage</code>: Fee percentage (0-100, e.g., 100 for 1%)</li>
+                        <li><code className="bg-gray-100 px-1 rounded">node-address</code>: Your node's address (must start with thor1)</li>
+                        <li><code className="bg-gray-100 px-1 rounded">min-amount</code>: Minimum bond amount. Must be in base amount. For example: 1 RUNE = 100000000 (must be greater than 0)</li>
+                        <li><code className="bg-gray-100 px-1 rounded">total-bond-target</code>: The desired total bond the node operator wants to maintain on the node. This value is used to calculate the node's bond capacity. Must be in base amount. For example: 1 RUNE = 100000000 (must be greater than min-amount)</li>
+                        <li><code className="bg-gray-100 px-1 rounded">fee-percentage</code>: Fee percentage (0-100, e.g., 100 for 1%)</li>
                       </ul>
                     </div>
                     <div className="mt-3">
