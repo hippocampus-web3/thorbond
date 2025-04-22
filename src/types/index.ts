@@ -29,6 +29,10 @@ export interface Node {
       hide: boolean,
       reasons: null | string[]
   }
+  isYieldGuarded: {
+    hide: boolean,
+    reasons: null | string[]
+  }
 }
 
 export interface WhitelistRequest {
