@@ -1,7 +1,8 @@
 import { WalletProvider, WalletType } from '../../contexts/WalletContext';
-import { ThorchainProvider, ThorchainTransferParams, VultisigThorchainProvider } from '../../types/wallets';
+import { KeplrProvider, ThorchainProvider, ThorchainTransferParams, VultisigThorchainProvider } from '../../types/wallets';
 import { Client as ThorChainClient } from "@xchainjs/xchain-thorchain";
 import { baseAmount } from "@xchainjs/xchain-util";
+import { buildAndSignTransaction } from '../wallet/keplr';
 
 export const sendTransaction = async (
     params: ThorchainTransferParams,
@@ -101,6 +102,21 @@ export const sendTransaction = async (
         }
     }
 
+    if (walletType === 'keplr') {
+        if (walletProvider) {
+            const keplr = walletProvider as KeplrProvider;
+
+            if (method === 'transfer') {
+                const hash = await buildAndSignTransaction(params,  keplr, 'transfer');
+                return hash
+            }
+
+            if (method === 'deposit') {
+                const hash = await buildAndSignTransaction(params,  keplr, 'deposit');
+                return hash
+            }
+        }
+    }
 
     throw new Error("No compatible wallet found. Please install Ctrl or Vultisig extension.");
 }; 

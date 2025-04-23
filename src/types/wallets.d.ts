@@ -56,11 +56,21 @@ export interface XDEFIProvider {
   thorchain: ThorchainProvider;
 }
 
+export interface KeplrProvider {
+  enable: (chainId: string) => Promise<void>;
+  experimentalSuggestChain: any;
+  getOfflineSignerOnlyAmino: any
+}
+
+// Update WalletProvider type
+export type WalletProvider = ThorChainClient | VultisigThorchainProvider | ThorchainProvider | KeplrProvider;
+
 // Global window interface
 declare global {
   interface Window {
     vultisig?: VultisigProvider;
     xfi?: XDEFIProvider;
     ctrlEthProviders?: Record<string, any>;
+    keplr?: KeplrProvider;
   }
 } 

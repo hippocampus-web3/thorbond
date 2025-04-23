@@ -5,11 +5,11 @@ import {
   Client as ThorChainClient,
   defaultClientConfig as defaultThorchainClientConfig,
 } from "@xchainjs/xchain-thorchain";
-import { ThorchainProvider, VultisigThorchainProvider } from '../types/wallets';
+import { KeplrProvider, ThorchainProvider, VultisigThorchainProvider } from '../types/wallets';
+import { KeplrThorchainConfig } from '../lib/wallet/keplr';
 
-
-export type WalletType = 'xdefi' | 'vultisig' | 'keystore';
-export type WalletProvider = ThorChainClient | VultisigThorchainProvider | ThorchainProvider;
+export type WalletType = 'xdefi' | 'vultisig' | 'keystore' | 'keplr';
+export type WalletProvider = ThorChainClient | VultisigThorchainProvider | ThorchainProvider | KeplrProvider;
 
 interface WalletContextType {
   address: string | null;
@@ -85,14 +85,14 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           if (!accounts[0]) {
             throw new Error('No account connected');
           }
-      
+
           setWalletProvider(window.xfi.thorchain);
           setAddress(accounts[0]);
 
           break;
 
         case 'keystore':
-          
+
           if (!data?.keystoreData || !data?.password) {
             throw new Error('Keystore data and password are required');
           }
@@ -104,15 +104,43 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               ...defaultThorchainClientConfig,
               phrase
             });
-  
+
             const address = await thorchainClient.getAddressAsync();
-  
+
             setWalletProvider(thorchainClient)
-            
+
             setAddress(address)
           }
 
           break;
+
+        case 'keplr': {
+          if (!window.keplr) {
+            throw new Error('Keplr extension not found');
+          }
+
+          let offlineSigner = null
+
+          try {
+            await window.keplr.enable('thorchain-1');
+            offlineSigner = window.keplr.getOfflineSignerOnlyAmino('thorchain-1');
+          } catch (e) {
+            await window.keplr.experimentalSuggestChain(KeplrThorchainConfig);
+          }
+
+          if (!offlineSigner) {
+            throw new Error('Chain is not enabled');
+          }
+
+          const accounts = await offlineSigner.getAccounts();
+          if (!accounts[0]) {
+            throw new Error('No account connected');
+          }
+
+          setWalletProvider(window.keplr);
+          setAddress(accounts[0].address);
+          break;
+        }
 
         default:
           throw new Error(`Unsupported wallet type: ${walletType}`);
