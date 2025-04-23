@@ -7,6 +7,7 @@ import Button from '../components/ui/Button';
 import Tooltip from '../components/ui/Tooltip';
 import { formatRune } from '../lib/utils';
 import RuneBondEngine from '../lib/runebondEngine/runebondEngine';
+import RoadmapSection from '../components/roadmap/RoadmapSection';
 
 const HomePage: React.FC = () => {
   const [showFullProcess, setShowFullProcess] = useState(false);
@@ -317,7 +318,7 @@ const HomePage: React.FC = () => {
             <motion.div variants={itemVariants} className="bg-white p-6 rounded-lg shadow-sm">
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Can I unbond?</h3>
               <p className="text-gray-600">
-                Yes, but only when the Node Operator opens an unbonding window. There’s no formal request — you can unbond your RUNE freely only during that time frame. 
+                Yes, but only when the Node Operator opens an unbonding window. There's no formal request — you can unbond your RUNE freely only during that time frame. 
                 Outside of those windows, unbonding is not possible. This mechanism ensures the security and stability of the bonded node.
               </p>
             </motion.div>
@@ -396,6 +397,9 @@ const HomePage: React.FC = () => {
           </motion.div>
         </div>
       </motion.section>
+
+      {/* Roadmap Section */}
+      <RoadmapSection />
 
       {/* CTA Section */}
       <motion.section 
