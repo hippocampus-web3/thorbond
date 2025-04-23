@@ -374,6 +374,20 @@ const RoadmapSection: React.FC = () => {
     rootMargin: '50px'
   });
 
+  // Handle scroll to anchor on initial load
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash === '#roadmap') {
+      const element = document.getElementById('roadmap');
+      if (element) {
+        // Small delay to ensure content is rendered
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, []);
+
   const currentRune = useMemo(() => stats.totalBonded, [stats.totalBonded]);
   const targetRune = useMemo(() => 500000000000000, []); // 5M RUNE * 100,000,000
 
