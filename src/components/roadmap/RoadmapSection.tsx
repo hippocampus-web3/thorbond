@@ -299,7 +299,6 @@ const MilestoneItem = React.memo(({
         </div>
       </motion.div>
 
-      {/* Panel de detalles - Mobile (siempre visible) */}
       <div className="md:hidden mt-4 bg-white rounded-xl shadow-sm overflow-hidden w-full">
         <div className="p-4">
           <div className="flex items-center gap-3 mb-3">
@@ -437,7 +436,7 @@ const RoadmapSection: React.FC = () => {
     };
 
     fetchStats();
-    const interval = setInterval(fetchStats, 30000); // Update every 30 seconds
+    const interval = setInterval(fetchStats, 60000); // Update every 30 seconds
 
     return () => clearInterval(interval);
   }, []);
