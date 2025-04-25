@@ -15,6 +15,14 @@ interface NodeListProps {
   isLoading?: boolean;
 }
 
+// Helper function to determine restriction priority (lower number = higher priority in sorting)
+const getNodeRestrictionPriority = (node: Node): number => {
+  if (node.isHidden.hide) return 3; // Hidden is the most restrictive, appears last (highest number)
+  if (node.maxRune < 0 || node.maxRune < node.minRune) return 2; // Full is next
+  if (node.isYieldGuarded.hide) return 1; // Yield guarded is least restrictive, appears first (lowest number)
+  return 0; // Should not happen for restricted nodes
+};
+
 const NodesList: React.FC<NodeListProps> = ({
   nodes,
   onRequestWhitelist,
@@ -64,18 +72,33 @@ const NodesList: React.FC<NodeListProps> = ({
       return true;
     })
     .sort((a, b) => {
-      // First, sort by status priority
-      if (a.isHidden.hide !== b.isHidden.hide) {
-        return a.isHidden.hide ? 1 : -1;
+      // First, check if nodes have any restrictions
+      const aHasRestrictions = a.isYieldGuarded.hide || a.isHidden.hide || (a.maxRune < 0 || a.maxRune < a.minRune);
+      const bHasRestrictions = b.isYieldGuarded.hide || b.isHidden.hide || (b.maxRune < 0 || b.maxRune < b.minRune);
+
+      // Nodes without restrictions come first
+      if (aHasRestrictions !== bHasRestrictions) {
+        return aHasRestrictions ? 1 : -1;
       }
-      if (a.isYieldGuarded.hide !== b.isYieldGuarded.hide) {
-        return a.isYieldGuarded.hide ? 1 : -1;
+
+      // If both have restrictions, sort by restriction priority
+      if (aHasRestrictions && bHasRestrictions) {
+        const priorityA = getNodeRestrictionPriority(a);
+        const priorityB = getNodeRestrictionPriority(b);
+        if (priorityA !== priorityB) {
+          return priorityA - priorityB; // Lower priority number comes first
+        }
       }
-      if ((a.maxRune < 0 || a.maxRune < a.minRune) !== (b.maxRune < 0 || b.maxRune < b.minRune)) {
-        return (a.maxRune < 0 || a.maxRune < a.minRune) ? 1 : -1;
+
+      // For nodes without restrictions, sort by status
+      if (!aHasRestrictions && !bHasRestrictions) {
+        if (a.status === 'Active' && b.status !== 'Active') return -1;
+        if (a.status !== 'Active' && b.status === 'Active') return 1;
+        if (a.status === 'Standby' && b.status !== 'Standby') return -1;
+        if (a.status !== 'Standby' && b.status === 'Standby') return 1;
       }
       
-      // Then sort by the selected criteria
+      // Finally, sort by the selected criteria if priorities are the same
       switch (sortBy) {
         case 'bondingCapacity':
           return b.maxRune - a.maxRune;
