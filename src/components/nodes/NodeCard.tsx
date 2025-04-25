@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Node } from '../../types';
 import Button from '../ui/Button';
-import { formatRune, shortenAddress, getTimeAgo, formatDuration, getNodeExplorerUrl } from '../../lib/utils';
+import { formatRune, shortenAddress, getNodeExplorerUrl } from '../../lib/utils';
 import { useWallet } from '../../contexts/WalletContext';
 import { baseAmount } from "@xchainjs/xchain-util";
-import { Copy, Check, Share2, Info, Eye, EyeOff, Trophy, Sparkles, Shield, Lock } from 'lucide-react';
+import { Copy, Check, Share2, Info, Eye, EyeOff, Trophy, Sparkles, Shield, Lock, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Tooltip from '../ui/Tooltip';
 
@@ -30,6 +30,69 @@ const NodeCard: React.FC<NodeCardProps> = ({
   const isFull = node.maxRune < 0 || node.maxRune < node.minRune;
   const [isVisible, setIsVisible] = useState(!node.isHidden.hide && !isFull && !node.isYieldGuarded.hide);
   const navigate = useNavigate();
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+
+  // Countdown Timer Logic
+  useEffect(() => {
+    // Check if maxTimeToLeave is a valid positive number
+    if (node.maxTimeToLeave > 0) {
+      // Initialize timeLeft with the value from the node
+      setTimeLeft(node.maxTimeToLeave);
+
+      const interval = setInterval(() => {
+        setTimeLeft(prevTimeLeft => {
+          const newTimeLeft = Math.max(0, (prevTimeLeft || 0) - 1);
+          if (newTimeLeft <= 0) {
+            clearInterval(interval);
+          }
+          return newTimeLeft;
+        });
+      }, 1000);
+
+      // Cleanup interval on component unmount or when node changes
+      return () => clearInterval(interval);
+    } else {
+      // If maxTimeToLeave is not positive or not present, set timeLeft to null or 0
+      setTimeLeft(node.maxTimeToLeave <= 0 ? 0 : null);
+    }
+  }, [node.maxTimeToLeave]);
+
+  // Helper to format countdown time
+  const formatCountdown = (seconds: number): string => {
+    const weekThreshold = 7 * 24 * 3600;
+    const monthSeconds = 30 * 24 * 3600; // Approximation
+    const weekSeconds = 7 * 24 * 3600;
+    const daySeconds = 24 * 3600;
+
+    if (seconds <= 0) return "0w"; // Return 0w if expired
+
+    let remainingSeconds = seconds;
+    const parts: string[] = [];
+
+    // Calculate months
+    const months = Math.floor(remainingSeconds / monthSeconds);
+    if (months > 0) {
+      parts.push(`${months}m`);
+      remainingSeconds %= monthSeconds;
+    }
+
+    // Calculate weeks and remaining days
+    let weeks = Math.floor(remainingSeconds / weekSeconds);
+    const remainingDaysSeconds = remainingSeconds % weekSeconds;
+    const days = Math.floor(remainingDaysSeconds / daySeconds);
+
+    // If there are any days remaining, round up to at least 1 week
+    if (days > 0 || remainingDaysSeconds > 0) {
+      weeks = Math.max(1, weeks + 1);
+    }
+
+    // Add weeks part if > 0 or if it's the only unit
+    if (weeks > 0 || parts.length === 0) {
+      parts.push(`${weeks}w`);
+    }
+
+    return parts.join(' ') || "0w";
+  };
 
   // Determine the primary state to display
   const getPrimaryState = () => {
@@ -139,7 +202,7 @@ const NodeCard: React.FC<NodeCardProps> = ({
 
   if ((node.isHidden.hide || isFull || node.isYieldGuarded.hide) && !isVisible) {
     return (
-      <div className={`shadow rounded-lg p-4 hover:cursor-pointer min-h-[470px] flex flex-col ${stateStyles.bgColor} border-2 ${stateStyles.borderColor}`} onClick={handleCardClick}>
+      <div className={`shadow rounded-lg p-4 hover:cursor-pointer min-h-[450px] flex flex-col ${stateStyles.bgColor} border-2 ${stateStyles.borderColor}`} onClick={handleCardClick}>
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center space-x-2">
             {stateStyles.icon}
@@ -173,8 +236,8 @@ const NodeCard: React.FC<NodeCardProps> = ({
       onClick={handleCardClick}
     >
       <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center space-x-2">
-          <h3 className="text-lg font-medium text-gray-900">Node</h3>
+        <div className="flex items-center space-x-2 flex-wrap">
+          <h3 className="text-lg font-medium text-gray-900 mr-2">Node</h3>
           {primaryState === 'hidden' && (
             <div className="flex items-center space-x-1">
               <Eye className="h-4 w-4 text-yellow-600" />
@@ -239,7 +302,7 @@ const NodeCard: React.FC<NodeCardProps> = ({
             </div>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <button
             onClick={handleShare}
             className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
@@ -251,9 +314,49 @@ const NodeCard: React.FC<NodeCardProps> = ({
               <Share2 className="h-4 w-4" />
             )}
           </button>
-          <span className="px-2 py-1 text-sm rounded-full bg-blue-100 text-blue-800">
+          <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
             {node.status}
           </span>
+          {/* Countdown Timer Section with Tooltip */}
+          {timeLeft !== null && node.maxTimeToLeave > 0 && (
+            <Tooltip
+              content={
+                <div className="max-w-xs text-sm">
+                  <div className="flex items-start gap-2">
+                    <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-1">Next Opportunity to Unlock RUNE</h4>
+                      <p className="text-gray-600 mb-2">
+                        Estimated maximum time before this node could leave the active set, giving you the next opportunity to unlock your bonded RUNE.
+                      </p>
+                      <p className="text-gray-600 mb-2">
+                        This is a reference value, not a guarantee — actual timing may vary if the node requests to leave, or if older nodes exit voluntarily or are removed by the network.
+                      </p>
+                      <p className="text-gray-600 mt-1">
+                        This estimate is stable, but currently in beta.
+                      </p>
+                      <a 
+                        href="https://thorbond.gitbook.io/runebond/maximum-time-to-leave" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 text-sm mt-2 inline-block"
+                      >
+                        Learn more about time to leave
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              }
+              position="bottom"
+            >
+              <div 
+                className={`text-xs font-medium flex items-center cursor-pointer ${timeLeft <= 0 ? 'text-gray-500' : 'text-gray-700'}`}
+              >
+                <Clock className={`h-3 w-3 mr-1 ${timeLeft <= 0 ? 'text-gray-400' : 'text-gray-500'}`} />
+                <span>{formatCountdown(timeLeft)}</span>
+              </div>
+            </Tooltip>
+          )}
         </div>
       </div>
 
@@ -337,103 +440,37 @@ const NodeCard: React.FC<NodeCardProps> = ({
         </div>
       </div>
 
-      {node && (
-        <p className="mt-4 text-gray-600">
+      {node.description && (
+        <p className="mt-4 text-sm text-gray-600">
           {node.description}
         </p>
       )}
 
       {node.contactInfo && (
-        <p className="mt-2 text-gray-600">
+        <p className="mt-2 text-sm text-gray-600">
           {node.contactInfo}
         </p>
       )}
 
-      <div className="mt-4 text-sm text-gray-500">
-        Listed {getTimeAgo(node.timestamp)}
-      </div>
-
-      {isOperator ? (
-        <Button
-          disabled
-          className="w-full mt-4 text-gray-500 cursor-not-allowed"
-        >
-          Your Node
-        </Button>
-      ) : isConnected ? (
-        <Button
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate(`/nodes/${node.nodeAddress}`);
-          }}
-          className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white"
-        >
-          Bond your RUNE
-        </Button>
-      ) : (
-        <Tooltip
-          content={
-            <div className="flex items-start gap-2">
-              <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <h3 className="font-medium text-gray-900 mb-2">How to request whitelist manually</h3>
-                <div className="mb-3">
-                  <p className="text-sm text-gray-600 mb-2">Send a transaction with:</p>
-                  <div className="space-y-2">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Send to address:</p>
-                      <div className="bg-gray-50 p-2 rounded-md flex items-center justify-between">
-                        <code className="text-sm font-mono text-gray-800 break-all">{RUNEBOND_ADDRESS}</code>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCopy(RUNEBOND_ADDRESS, setCopiedAddress);
-                          }}
-                          className="p-1 hover:bg-gray-100 rounded"
-                        >
-                          {copiedAddress ? (
-                            <Check className="h-4 w-4 text-green-500" />
-                          ) : (
-                            <Copy className="h-4 w-4 text-gray-400" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Amount:</p>
-                      <p className="text-sm text-gray-600">0.1 RUNE</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Memo:</p>
-                      <div className="bg-gray-50 p-2 rounded-md flex items-center justify-between">
-                        <code className="text-sm font-mono text-gray-800 break-all">
-                          TB:WHT:{node.nodeAddress}:&lt;your_address&gt;:&lt;amount&gt;
-                        </code>
-                        <button
-                          onClick={handleCopyWhitelistMemo}
-                          className="p-1 hover:bg-gray-100 rounded"
-                        >
-                          {copiedWhitelistMemo ? (
-                            <Check className="h-4 w-4 text-green-500" />
-                          ) : (
-                            <Copy className="h-4 w-4 text-gray-400" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-3 text-sm text-gray-600">
-                  <p className="font-medium mb-1">Parameters:</p>
-                  <ul className="list-disc list-inside space-y-1">
-                    <li><code className="bg-gray-100 px-1 rounded">your_address</code>: Your THORChain address (must start with thor1)</li>
-                    <li><code className="bg-gray-100 px-1 rounded">amount</code>: Amount you want to delegate. For example: 1 RUNE = 100000000</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          }
-        >
+      <div className="mt-auto pt-4">
+        {isOperator ? (
+          <Button
+            disabled
+            className="w-full mt-4 text-gray-500 cursor-not-allowed"
+          >
+            Your Node
+          </Button>
+        ) : isConnected ? (
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/nodes/${node.nodeAddress}`);
+            }}
+            className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Bond your RUNE
+          </Button>
+        ) : (
           <Button
             onClick={(e) => {
               e.stopPropagation();
@@ -444,8 +481,8 @@ const NodeCard: React.FC<NodeCardProps> = ({
           >
             Connect Wallet to Request
           </Button>
-        </Tooltip>
-      )}
+        )}
+      </div>
     </div>
   );
 };

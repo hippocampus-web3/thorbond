@@ -4,7 +4,7 @@ import { Node, WhitelistRequestFormData, Message, WhitelistRequest } from '../ty
 import { formatRune, shortenAddress, getTimeAgo, getNodeExplorerUrl, formatDuration } from '../lib/utils';
 import { useWallet } from '../contexts/WalletContext';
 import { baseAmount } from "@xchainjs/xchain-util";
-import { ArrowLeft, Eye, Info, Trophy, Sparkles, ExternalLink, Copy, Check, EyeOff, Shield, Lock } from 'lucide-react';
+import { ArrowLeft, Eye, Info, Trophy, Sparkles, ExternalLink, Copy, Check, EyeOff, Shield, Lock, Clock } from 'lucide-react';
 import WhitelistRequestForm from '../components/nodes/WhitelistRequestForm';
 import Tooltip from '../components/ui/Tooltip';
 import ChatInterface from '../components/nodes/ChatInterface';
@@ -83,6 +83,46 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
       fetchWhitelistRequest();
     }
   }, [nodeAddress, address, refreshWhitelistFlag, fetchWhitelistRequest]);
+
+  // Helper to format time to leave
+  const formatTimeToLeave = (seconds: number): string => {
+    const monthSeconds = 30 * 24 * 3600; // Approximation
+    const weekSeconds = 7 * 24 * 3600;
+    const daySeconds = 24 * 3600;
+
+    if (seconds <= 0) return "0 weeks";
+
+    let remainingSeconds = seconds;
+    const parts: string[] = [];
+
+    // Calculate months
+    const months = Math.floor(remainingSeconds / monthSeconds);
+    if (months > 0) {
+      parts.push(`${months} ${months === 1 ? 'month' : 'months'}`);
+      remainingSeconds %= monthSeconds;
+    }
+
+    // Calculate weeks
+    const weeks = Math.floor(remainingSeconds / weekSeconds);
+    if (weeks > 0) {
+      parts.push(`${weeks} ${weeks === 1 ? 'week' : 'weeks'}`);
+      remainingSeconds %= weekSeconds;
+    }
+
+    // Calculate days
+    const days = Math.floor(remainingSeconds / daySeconds);
+    if (days > 0) {
+      parts.push(`${days} ${days === 1 ? 'day' : 'days'}`);
+      remainingSeconds %= daySeconds;
+    }
+
+    // If there are any remaining seconds, round up to at least 1 day
+    if (remainingSeconds > 0 && days === 0) {
+      parts.push("1 day");
+    }
+
+    return parts.join(' ') || "0 weeks";
+  };
 
   if (!node) {
     return (
@@ -463,8 +503,49 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
                     <p className="mt-1 text-gray-900">{formatRune(baseAmount(node.officialInfo.totalBond))}</p>
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500">Active Time</h3>
-                    <p className="mt-1 text-gray-900">{formatDuration(node.activeTime)}</p>
+                    <h3 className="text-sm font-medium text-gray-500">Maximum time to leave</h3>
+                    {node.maxTimeToLeave > 0 ? (
+                      <Tooltip
+                        content={
+                          <div className="max-w-xs text-sm">
+                            <div className="flex items-start gap-2">
+                              <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                              <div>
+                                <h4 className="font-medium text-gray-900 mb-1">Next Opportunity to unlock RUNE</h4>
+                                <p className="text-gray-600 mb-2">
+                                  Estimated maximum time before this node could leave the active set, giving you the next opportunity to unlock your bonded RUNE.
+                                </p>
+                                <p className="text-gray-600 mb-2">
+                                  This is a reference value, not a guarantee — actual timing may vary if the node requests to leave, or if older nodes exit voluntarily or are removed by the network.
+                                </p>
+                                <p className="text-gray-600 mt-1">
+                                  This estimate is stable, but currently in beta.
+                                </p>
+                                <a 
+                                  href="https://thorbond.gitbook.io/runebond/maximum-time-to-leave" 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800 text-sm mt-2 inline-block"
+                                >
+                                  Learn more about time to leave
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                        }
+                        position="bottom"
+                      >
+                        <div className="flex items-center mt-1 cursor-pointer">
+                          <Clock className="h-4 w-4 mr-1 text-gray-500" />
+                          <span className="text-gray-900">
+                            {formatTimeToLeave(node.maxTimeToLeave)}
+                          </span>
+                          <span className="ml-1 text-xs text-gray-500">(estimate)</span>
+                        </div>
+                      </Tooltip>
+                    ) : (
+                      <p className="mt-1 text-gray-900">-</p>
+                    )}
                   </div>
                 </div>
 

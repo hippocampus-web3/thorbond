@@ -108,6 +108,12 @@ const NodesList: React.FC<NodeListProps> = ({
           return a.feePercentage - b.feePercentage;
         case 'newest':
           return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+        case 'timeToLeave':
+          // Sort by time to leave, shortest first
+          if (a.maxTimeToLeave === 0 && b.maxTimeToLeave === 0) return 0;
+          if (a.maxTimeToLeave === 0) return 1;
+          if (b.maxTimeToLeave === 0) return -1;
+          return a.maxTimeToLeave - b.maxTimeToLeave;
         default:
           return 0;
       }
@@ -196,75 +202,146 @@ const NodesList: React.FC<NodeListProps> = ({
                 { value: 'minimumBond', label: 'Lowest Minimum Bond' },
                 { value: 'feePercentage', label: 'Lowest Fee' },
                 { value: 'newest', label: 'Newest First' },
+                { value: 'timeToLeave', label: 'Time to Leave' },
               ]}
               value={sortBy}
               onChange={setSortBy}
             />
 
-            <Tooltip
-              content={
-                <div className="flex items-start gap-2">
-                  <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <h3 className="font-medium text-gray-900 mb-2">How to list your node</h3>
-                    <p className="text-sm text-gray-600 mb-3">
-                      To list your node, you can connect your wallet or send a transaction to the THORChain network with amount 0.1 RUNE and the following MEMO:
-                    </p>
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <div className="flex items-center justify-between">
-                        <code className="text-sm font-mono text-gray-800 break-all">
-                          TB:V2:LIST:&lt;node-address&gt;:&lt;min-amount&gt;:&lt;total-bond-target&gt;:&lt;fee-percentage&gt;
-                        </code>
-                        <button
-                          onClick={handleCopyMemo}
-                          className="p-1 hover:bg-gray-100 rounded"
-                        >
-                          {copiedMemo ? (
-                            <Check className="h-4 w-4 text-green-500" />
-                          ) : (
-                            <Copy className="h-4 w-4 text-gray-400" />
-                          )}
-                        </button>
+            <div className="flex flex-col space-y-2">
+              <Tooltip
+                content={
+                  <div className="flex items-start gap-2">
+                    <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="font-medium text-gray-900 mb-2">How to list your node manually</h3>
+                      <p className="text-sm text-gray-600 mb-3">
+                        To list your node, you can connect your wallet or send a transaction to the THORChain network with amount 0.1 RUNE and the following MEMO:
+                      </p>
+                      <div className="bg-gray-50 p-3 rounded-md">
+                        <div className="flex items-center justify-between">
+                          <code className="text-sm font-mono text-gray-800 break-all">
+                            TB:V2:LIST:&lt;node-address&gt;:&lt;min-amount&gt;:&lt;total-bond-target&gt;:&lt;fee-percentage&gt;
+                          </code>
+                          <button
+                            onClick={handleCopyMemo}
+                            className="p-1 hover:bg-gray-100 rounded"
+                          >
+                            {copiedMemo ? (
+                              <Check className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <Copy className="h-4 w-4 text-gray-400" />
+                            )}
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                    <div className="mt-3 text-sm text-gray-600 mb-3">
-                      <p className="font-medium mb-1">Parameters:</p>
-                      <ul className="list-disc list-inside space-y-1">
-                        <li><code className="bg-gray-100 px-1 rounded">node-address</code>: Your node's address (must start with thor1)</li>
-                        <li><code className="bg-gray-100 px-1 rounded">min-amount</code>: Minimum bond amount. Must be in base amount. For example: 1 RUNE = 100000000 (must be greater than 0)</li>
-                        <li><code className="bg-gray-100 px-1 rounded">total-bond-target</code>: The desired total bond the node operator wants to maintain on the node. This value is used to calculate the node's bond capacity. Must be in base amount. For example: 1 RUNE = 100000000 (must be greater than min-amount)</li>
-                        <li><code className="bg-gray-100 px-1 rounded">fee-percentage</code>: Fee percentage (0-100, e.g., 100 for 1%)</li>
-                      </ul>
-                    </div>
-                    <div className="mt-3">
-                      <p className="text-sm font-medium text-gray-900 mb-2">Send to address:</p>
-                      <div className="bg-gray-50 p-2 rounded-md flex items-center justify-between">
-                        <code className="text-sm font-mono text-gray-800 break-all">{RUNEBOND_ADDRESS}</code>
-                        <button
-                          onClick={handleCopyAddress}
-                          className="p-1 hover:bg-gray-100 rounded"
-                        >
-                          {copiedAddress ? (
-                            <Check className="h-4 w-4 text-green-500" />
-                          ) : (
-                            <Copy className="h-4 w-4 text-gray-400" />
-                          )}
-                        </button>
+                      <div className="mt-3 text-sm text-gray-600 mb-3">
+                        <p className="font-medium mb-1">Parameters:</p>
+                        <ul className="list-disc list-inside space-y-1">
+                          <li><code className="bg-gray-100 px-1 rounded">node-address</code>: Your node's address (must start with thor1)</li>
+                          <li><code className="bg-gray-100 px-1 rounded">min-amount</code>: Minimum bond amount. Must be in base amount. For example: 1 RUNE = 100000000 (must be greater than 0)</li>
+                          <li><code className="bg-gray-100 px-1 rounded">total-bond-target</code>: The desired total bond the node operator wants to maintain on the node. This value is used to calculate the node's bond capacity. Must be in base amount. For example: 1 RUNE = 100000000 (must be greater than min-amount)</li>
+                          <li><code className="bg-gray-100 px-1 rounded">fee-percentage</code>: Fee percentage (0-100, e.g., 100 for 1%)</li>
+                        </ul>
+                      </div>
+                      <div className="mt-3">
+                        <p className="text-sm font-medium text-gray-900 mb-2">Send to address:</p>
+                        <div className="bg-gray-50 p-2 rounded-md flex items-center justify-between">
+                          <code className="text-sm font-mono text-gray-800 break-all">{RUNEBOND_ADDRESS}</code>
+                          <button
+                            onClick={handleCopyAddress}
+                            className="p-1 hover:bg-gray-100 rounded"
+                          >
+                            {copiedAddress ? (
+                              <Check className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <Copy className="h-4 w-4 text-gray-400" />
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              }
-            >
-              <a 
-                href="https://thorbond.gitbook.io/runebond/sections/markdown/list-your-node#list-your-node-manually"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                }
               >
-                Want to list your node?
-              </a>
-            </Tooltip>
+                <a 
+                  href="https://thorbond.gitbook.io/runebond/sections/markdown/list-your-node#list-your-node-manually"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                >
+                  How to list your node?
+                </a>
+              </Tooltip>
+
+              <Tooltip
+                content={
+                  <div className="flex items-start gap-2">
+                    <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="font-medium text-gray-900 mb-2">How to request whitelist manually</h3>
+                      <div className="mb-3">
+                        <p className="text-sm text-gray-600 mb-2">Send a transaction with:</p>
+                        <div className="space-y-2">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">Send to address:</p>
+                            <div className="bg-gray-50 p-2 rounded-md flex items-center justify-between">
+                              <code className="text-sm font-mono text-gray-800 break-all">{RUNEBOND_ADDRESS}</code>
+                              <button
+                                onClick={handleCopyAddress}
+                                className="p-1 hover:bg-gray-100 rounded"
+                              >
+                                {copiedAddress ? (
+                                  <Check className="h-4 w-4 text-green-500" />
+                                ) : (
+                                  <Copy className="h-4 w-4 text-gray-400" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">Amount:</p>
+                            <p className="text-sm text-gray-600">0.1 RUNE</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">Memo:</p>
+                            <div className="bg-gray-50 p-2 rounded-md flex items-center justify-between">
+                              <code className="text-sm font-mono text-gray-800 break-all">
+                                TB:WHT:&lt;node_address&gt;:&lt;your_address&gt;:&lt;amount&gt;
+                              </code>
+                              <button
+                                onClick={handleCopyMemo}
+                                className="p-1 hover:bg-gray-100 rounded"
+                              >
+                                {copiedMemo ? (
+                                  <Check className="h-4 w-4 text-green-500" />
+                                ) : (
+                                  <Copy className="h-4 w-4 text-gray-400" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-3 text-sm text-gray-600">
+                        <p className="font-medium mb-1">Parameters:</p>
+                        <ul className="list-disc list-inside space-y-1">
+                          <li><code className="bg-gray-100 px-1 rounded">your_address</code>: Your THORChain address (must start with thor1)</li>
+                          <li><code className="bg-gray-100 px-1 rounded">amount</code>: Amount you want to delegate in base. For example: 1 RUNE = 100000000</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                }
+              >
+                <a 
+                  href="#"
+                  className="text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                >
+                  How to request whitelist?
+                </a>
+              </Tooltip>
+            </div>
           </div>
         </div>
       </div>
