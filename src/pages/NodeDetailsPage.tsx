@@ -511,7 +511,7 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
                             <div className="flex items-start gap-2">
                               <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
                               <div>
-                                <h4 className="font-medium text-gray-900 mb-1">Next Opportunity to Unlock RUNE</h4>
+                                <h4 className="font-medium text-gray-900 mb-1">Next Opportunity to unlock RUNE</h4>
                                 <p className="text-gray-600 mb-2">
                                   Estimated maximum time before this node could leave the active set, giving you the next opportunity to unlock your bonded RUNE.
                                 </p>
@@ -521,17 +521,26 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
                                 <p className="text-gray-600 mt-1">
                                   This estimate is stable, but currently in beta.
                                 </p>
+                                <a 
+                                  href="https://thorbond.gitbook.io/runebond/maximum-time-to-leave" 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800 text-sm mt-2 inline-block"
+                                >
+                                  Learn more about time to leave
+                                </a>
                               </div>
                             </div>
                           </div>
                         }
                         position="bottom"
                       >
-                        <div className="flex items-center mt-1">
+                        <div className="flex items-center mt-1 cursor-pointer">
                           <Clock className="h-4 w-4 mr-1 text-gray-500" />
                           <span className="text-gray-900">
                             {formatTimeToLeave(node.maxTimeToLeave)}
                           </span>
+                          <span className="ml-1 text-xs text-gray-500">(estimate)</span>
                         </div>
                       </Tooltip>
                     ) : (

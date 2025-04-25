@@ -335,6 +335,14 @@ const NodeCard: React.FC<NodeCardProps> = ({
                       <p className="text-gray-600 mt-1">
                         This estimate is stable, but currently in beta.
                       </p>
+                      <a 
+                        href="https://thorbond.gitbook.io/runebond/maximum-time-to-leave" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 text-sm mt-2 inline-block"
+                      >
+                        Learn more about time to leave
+                      </a>
                     </div>
                   </div>
                 </div>
