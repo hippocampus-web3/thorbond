@@ -21,6 +21,7 @@ export interface Node {
   bondProvidersCount: number;
   description?: string;
   contactInfo?: string;
+  maxTimeToLeave: number;
   officialInfo: {
     currentFee: number;
     totalBond: number;
