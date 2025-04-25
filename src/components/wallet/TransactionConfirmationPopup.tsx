@@ -5,6 +5,7 @@ import { formatRune } from '../../lib/utils';
 import { baseAmount } from '@xchainjs/xchain-util';
 import Tooltip from '../ui/Tooltip';
 import Modal from '../ui/Modal';
+import { Node } from '../../types';
 
 interface TransactionConfirmationPopupProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface TransactionConfirmationPopupProps {
   isLoading?: boolean;
   additionalInfo?: {
     intendedBondAmount?: string;
+    nodeInfo?: Node;
   };
 }
 
@@ -28,17 +30,31 @@ const TransactionConfirmationPopup: React.FC<TransactionConfirmationPopupProps> 
   additionalInfo
 }) => {
   const isMessageType = transactionType === 'message';
-  const initialCheckboxes = isMessageType 
-    ? { messagePermanent: false } 
-    : { trust: false, locked: false, responsibility: false };
+  const isStandbyNode = additionalInfo?.nodeInfo?.status === 'Standby';
+  const requiresStandbyWarning = isStandbyNode && (transactionType === 'bond' || transactionType === 'whitelist');
 
-  const [checkboxes, setCheckboxes] = useState(initialCheckboxes);
+  const getInitialCheckboxes = () => {
+    const initial: { [key: string]: boolean } = {};
+    if (isMessageType) {
+      initial.messagePermanent = false;
+    } else {
+      initial.trust = false;
+      initial.locked = false;
+      initial.responsibility = false;
+    }
+    if (requiresStandbyWarning) {
+      initial.standbyWarning = false;
+    }
+    return initial;
+  };
+
+  const [checkboxes, setCheckboxes] = useState(getInitialCheckboxes());
 
   useEffect(() => {
-    setCheckboxes(isMessageType 
-      ? { messagePermanent: false } 
-      : { trust: false, locked: false, responsibility: false });
-  }, [isOpen, transactionType, isMessageType]);
+    if (isOpen) {
+      setCheckboxes(getInitialCheckboxes());
+    }
+  }, [isOpen, transactionType, isMessageType, requiresStandbyWarning]);
 
   const handleCheckboxChange = (key: keyof typeof checkboxes) => {
     setCheckboxes(prev => ({
@@ -117,6 +133,33 @@ const TransactionConfirmationPopup: React.FC<TransactionConfirmationPopupProps> 
 
         <div className="bg-gray-50 p-4 rounded-md">
           <h3 className="text-sm font-medium text-gray-700 mb-2">Important Disclaimers</h3>
+          
+          {requiresStandbyWarning && (
+            <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-md mb-4">
+              <h4 className="text-sm font-medium text-yellow-800 mb-2">Standby Node Warning</h4>
+              <div className="flex items-start space-x-3">
+                <input
+                  type="checkbox"
+                  id="standbyWarning"
+                  checked={checkboxes.standbyWarning}
+                  onChange={() => handleCheckboxChange('standbyWarning')}
+                  className="mt-1 h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded"
+                />
+                <label htmlFor="standbyWarning" className="text-sm text-yellow-700">
+                  I understand I'm delegating to a <strong className="font-semibold">Standby</strong> node, which currently doesn't generate yield. Yield will only start once the node becomes <strong className="font-semibold">Active</strong>.{' '}
+                  <a 
+                    href="https://thorbond.gitbook.io/runebond/others/frequently-asked-questions-faqs#if-i-delegate-to-a-standby-node-will-i-earn-yield-when-does-a-standby-node-become-active" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="font-medium text-yellow-800 hover:underline"
+                  >
+                    Learn when a node becomes Active
+                  </a>
+                </label>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-4">
             {isMessageType ? (
               <div className="flex items-start space-x-3">

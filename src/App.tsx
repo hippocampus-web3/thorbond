@@ -9,13 +9,12 @@ import NodesPage from './pages/NodesPage';
 import OperatorDashboardPage from './pages/OperatorDashboardPage';
 import UserRequestsPage from './pages/UserRequestsPage';
 import NodeDetailsPageWrapper from './pages/NodeDetailsPageWrapper';
-import { Node, NodeOperatorFormData, WhitelistRequest, WhitelistRequestFormData, SendMessageParams } from './types';
+import { Node, NodeOperatorFormData, WhitelistRequest, WhitelistRequestFormData, SendMessageParams, Message } from './types';
 import { WalletProvider, WalletType, useWallet } from './contexts/WalletContext';
 import RuneBondEngine from './lib/runebondEngine/runebondEngine';
 import WalletConnectPopup from './components/wallet/WalletConnectPopup';
 import KeystoreUploadPopup from './components/wallet/KeystoreUploadPopup';
 import TransactionConfirmationPopup from './components/wallet/TransactionConfirmationPopup';
-import { Message } from './types';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import ScrollToTop from './components/ScrollToTop';
 import { assetAmount, assetToBase, BaseAmount } from '@xchainjs/xchain-util';
@@ -41,7 +40,11 @@ const AppContent: React.FC = () => {
   const [pendingTransaction, setPendingTransaction] = useState<{
     type: 'listing' | 'whitelist' | 'enableBond' | 'bond' | 'unbond' | 'message';
     data: any;
-    additionalInfo?: { nodeAddress?: string, intendedBondAmount?: string };
+    additionalInfo?: {
+      nodeAddress?: string,
+      intendedBondAmount?: string,
+      nodeInfo?: Node;
+    };
     callback: () => Promise<string>;
   } | null>(null);
   const [refreshWhitelistFlag, setRefreshWhitelistFlag] = useState(0);
@@ -286,10 +289,19 @@ const AppContent: React.FC = () => {
   const handleSubmitRequest = async (formData: WhitelistRequestFormData) => {
     if (!selectedNode || !address) return;
 
+    const nodeAddressToWhitelist = selectedNode.nodeAddress;
+
+    // Find the node info from listedNodes
+    const nodeToWhitelist = listedNodes.find(n => n.nodeAddress === nodeAddressToWhitelist);
+    if (!nodeToWhitelist) {
+      toast.error("Could not find node details to confirm whitelist request.");
+      return;
+    }
+
     try {
       const engine = RuneBondEngine.getInstance();
       const whitelistParams = {
-        nodeAddress: selectedNode.nodeAddress,
+        nodeAddress: nodeAddressToWhitelist,
         userAddress: formData.walletAddress,
         amount: Number(formData.intendedBondAmount)
       };
@@ -305,7 +317,8 @@ const AppContent: React.FC = () => {
         type: 'whitelist',
         data: transaction,
         additionalInfo: {
-          intendedBondAmount: assetToBase(assetAmount(formData.intendedBondAmount)).amount().toString()
+          intendedBondAmount: assetToBase(assetAmount(formData.intendedBondAmount)).amount().toString(),
+          nodeInfo: nodeToWhitelist
         },
         callback: async () => {
           const hash = await engine.sendWhitelistRequest(
@@ -358,6 +371,12 @@ const AppContent: React.FC = () => {
     amount: number
   ) => {
     try {
+      const nodeToBond = listedNodes.find(n => n.nodeAddress === nodeAddress);
+      if (!nodeToBond) {
+        toast.error("Could not find node details to confirm bond.");
+        return;
+      }
+
       const engine = RuneBondEngine.getInstance();
       const transaction = await engine.sendBondRequest(
         {
@@ -373,6 +392,9 @@ const AppContent: React.FC = () => {
       setPendingTransaction({
         type: 'bond',
         data: transaction,
+        additionalInfo: {
+          nodeInfo: nodeToBond
+        },
         callback: async () => {
           const hash = await engine.sendBondRequest(
             {

@@ -139,7 +139,7 @@ const NodeCard: React.FC<NodeCardProps> = ({
 
   if ((node.isHidden.hide || isFull || node.isYieldGuarded.hide) && !isVisible) {
     return (
-      <div className={`shadow rounded-lg p-4 hover:cursor-pointer min-h-[500px] flex flex-col ${stateStyles.bgColor} border-2 ${stateStyles.borderColor}`} onClick={handleCardClick}>
+      <div className={`shadow rounded-lg p-4 hover:cursor-pointer min-h-[470px] flex flex-col ${stateStyles.bgColor} border-2 ${stateStyles.borderColor}`} onClick={handleCardClick}>
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center space-x-2">
             {stateStyles.icon}
@@ -155,7 +155,7 @@ const NodeCard: React.FC<NodeCardProps> = ({
             Show Node
           </Button>
         </div>
-        <div className={`p-4 rounded-lg border ${stateStyles.bgColor} border-${stateStyles.borderColor.replace('border-', '')}`}>
+        <div className={`p-4 rounded-lg border ${stateStyles.bgColor} border-${stateStyles.borderColor.replace('border-', '')} flex-grow`}>
           <h4 className={`text-sm font-medium ${stateStyles.textColor} mb-2`}>
             {primaryState === 'hidden' ? "What are hidden nodes?" : stateStyles.title}
           </h4>
