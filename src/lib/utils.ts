@@ -19,9 +19,9 @@ export function formatRune(baseAmount: BaseAmount, showFullAmount: boolean = fal
   
   // Define thresholds and their corresponding suffixes and divisors
   const thresholds = [
-    { value: 1000000000000, suffix: 'T', decimals: 3, divisor: 1000000000000 },
-    { value: 1000000000, suffix: 'B', decimals: 1, divisor: 1000000000 },
-    { value: 1000000, suffix: 'M', decimals: 1, divisor: 1000000 },
+    { value: 1000000000000, suffix: 'T', decimals: 2, divisor: 1000000000000 },
+    { value: 1000000000, suffix: 'B', decimals: 2, divisor: 1000000000 },
+    { value: 1000000, suffix: 'M', decimals: 2, divisor: 1000000 },
     { value: 1000, suffix: 'K', decimals: 2, divisor: 1000 }
   ];
   

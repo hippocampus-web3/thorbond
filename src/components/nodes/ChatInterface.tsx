@@ -217,8 +217,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   );
 
   return (
-    <div className="relative">
-      <div className="bg-white shadow rounded-lg p-6">
+    <div className="relative h-full">
+      <div className="bg-white shadow rounded-lg p-6 h-full">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-medium text-gray-900">Public Node Chat</h2>
@@ -276,8 +276,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             <Maximize2 className="h-5 w-5" />
           </button>
         </div>
-        <div className="space-y-4">
-          <div className="h-[500px] bg-gray-50 rounded-lg p-4 flex flex-col">
+        <div className="space-y-4 h-[90%]">
+          <div className="min-h-full h-full bg-gray-50 rounded-lg p-4 flex flex-col">
             <div className="flex-1 overflow-y-auto space-y-4">
               {messages.length === 0 ? <EmptyChat /> : (
                 <>
