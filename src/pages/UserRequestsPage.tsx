@@ -10,8 +10,6 @@ interface UserRequestsPageProps {
   searchValue: string;
   isConnected: boolean;
   isLoading: boolean;
-  onBondRequest: (nodeAddress: string, userAddress: string, amount: number) => Promise<void>;
-  onUnbondRequest: (nodeAddress: string, userAddress: string, amount: number) => Promise<void>;
 }
 
 const UserRequestsPage: React.FC<UserRequestsPageProps> = ({
@@ -20,8 +18,6 @@ const UserRequestsPage: React.FC<UserRequestsPageProps> = ({
   searchValue,
   isConnected,
   isLoading,
-  onBondRequest,
-  onUnbondRequest
 }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [localSearchValue, setLocalSearchValue] = React.useState(searchParams.get('user') || '');
@@ -109,16 +105,6 @@ const UserRequestsPage: React.FC<UserRequestsPageProps> = ({
       <UserDashboard
         requests={requests}
         searchValue={searchValue}
-        onBondRequest={(request) => onBondRequest(
-          request.node.nodeAddress,
-          request.userAddress,
-          request.intendedBondAmount
-        )}
-        onUnbondRequest={(request) => onUnbondRequest(
-          request.node.nodeAddress,
-          request.userAddress,
-          request.realBond
-        )}
       />
     </div>
   );

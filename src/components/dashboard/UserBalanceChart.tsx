@@ -7,11 +7,12 @@ import {
   PointElement,
   LineElement,
   Title,
-  Tooltip,
+  Tooltip as ChartTooltip,
   Legend,
 } from 'chart.js';
 import axios from 'axios';
 import Dropdown from '../ui/Dropdown';
+import RangeSelector from '../ui/RangeSelector';
 
 ChartJS.register(
   CategoryScale,
@@ -19,12 +20,26 @@ ChartJS.register(
   PointElement,
   LineElement,
   Title,
-  Tooltip,
+  ChartTooltip,
   Legend
 );
 
 interface UserBalanceChartProps {
   address?: string;
+}
+
+interface RunePriceData {
+  meta: {
+    endRunePriceUSD: string;
+    endTime: string;
+    startRunePriceUSD: string;
+    startTime: string;
+  };
+  intervals: Array<{
+    endTime: string;
+    runePriceUSD: string;
+    startTime: string;
+  }>;
 }
 
 const RANGE_OPTIONS = [
@@ -37,6 +52,7 @@ const RANGE_OPTIONS = [
 ];
 
 const API_HISTORY_URL = 'https://history.runebond.com';
+const MIDGARD_API_URL = 'https://midgard.ninerealms.com/v2';
 
 const UserBalanceChart: React.FC<UserBalanceChartProps> = ({ address }) => {
   const [loading, setLoading] = useState(true);
@@ -45,6 +61,28 @@ const UserBalanceChart: React.FC<UserBalanceChartProps> = ({ address }) => {
   const [nodeOptions, setNodeOptions] = useState<{ label: string; value: string }[]>([]);
   const [selectedNode, setSelectedNode] = useState<string>('all');
   const [range, setRange] = useState(RANGE_OPTIONS[0].value);
+  const [runePrices, setRunePrices] = useState<RunePriceData | null>(null);
+
+  useEffect(() => {
+    const fetchRunePrices = async () => {
+      try {
+        const now = Math.floor(Date.now() / 1000);
+        const from = now - (range * 24 * 60 * 60);
+        const response = await axios.get(`${MIDGARD_API_URL}/history/rune`, {
+          params: {
+            interval: 'day',
+            from,
+            to: now
+          }
+        });
+        setRunePrices(response.data);
+      } catch (err) {
+        console.error('Error fetching rune prices:', err);
+      }
+    };
+
+    fetchRunePrices();
+  }, [range]);
 
   useEffect(() => {
     if (!address) {
@@ -165,6 +203,63 @@ const UserBalanceChart: React.FC<UserBalanceChartProps> = ({ address }) => {
     }
   }
 
+  const getRunePriceForDate = (date: Date) => {
+    if (!runePrices || !runePrices.intervals.length) return 0;
+    
+    const timestamp = Math.floor(date.getTime() / 1000);
+    
+    // Encontrar el intervalo más cercano
+    const closestInterval = runePrices.intervals.reduce((closest, current) => {
+      const currentStart = parseInt(current.startTime);
+      const currentEnd = parseInt(current.endTime);
+      const currentMid = (currentStart + currentEnd) / 2;
+      
+      const closestStart = parseInt(closest.startTime);
+      const closestEnd = parseInt(closest.endTime);
+      const closestMid = (closestStart + closestEnd) / 2;
+      
+      const currentDiff = Math.abs(timestamp - currentMid);
+      const closestDiff = Math.abs(timestamp - closestMid);
+      
+      return currentDiff < closestDiff ? current : closest;
+    });
+
+    // Si el timestamp está dentro del intervalo más cercano, usar ese precio
+    if (timestamp >= parseInt(closestInterval.startTime) && timestamp <= parseInt(closestInterval.endTime)) {
+      return parseFloat(closestInterval.runePriceUSD);
+    }
+    
+    // Si el timestamp es anterior al primer intervalo, usar el primer precio
+    if (timestamp < parseInt(runePrices.intervals[0].startTime)) {
+      return parseFloat(runePrices.intervals[0].runePriceUSD);
+    }
+    
+    // Si el timestamp es posterior al último intervalo, usar el último precio
+    if (timestamp > parseInt(runePrices.intervals[runePrices.intervals.length - 1].endTime)) {
+      return parseFloat(runePrices.intervals[runePrices.intervals.length - 1].runePriceUSD);
+    }
+    
+    // Si estamos entre intervalos, interpolar el precio
+    const nextInterval = runePrices.intervals.find(interval => 
+      parseInt(interval.startTime) > timestamp
+    );
+    
+    if (nextInterval) {
+      const prevInterval = runePrices.intervals[runePrices.intervals.indexOf(nextInterval) - 1];
+      const prevPrice = parseFloat(prevInterval.runePriceUSD);
+      const nextPrice = parseFloat(nextInterval.runePriceUSD);
+      const prevTime = parseInt(prevInterval.endTime);
+      const nextTime = parseInt(nextInterval.startTime);
+      
+      // Interpolación lineal
+      const timeRatio = (timestamp - prevTime) / (nextTime - prevTime);
+      return prevPrice + (nextPrice - prevPrice) * timeRatio;
+    }
+    
+    // Si todo falla, usar el último precio conocido
+    return parseFloat(runePrices.intervals[runePrices.intervals.length - 1].runePriceUSD);
+  };
+
   const data = {
     labels: filtered.map(item => 
       item.date.toLocaleDateString('en-US', { 
@@ -175,7 +270,7 @@ const UserBalanceChart: React.FC<UserBalanceChartProps> = ({ address }) => {
     ),
     datasets: [
       {
-        label: 'Bonded Balance',
+        label: 'Bonded Balance (RUNE)',
         data: filtered.map(item => item.bond_amount),
         borderColor: '#2563eb',
         backgroundColor: 'rgba(37,99,235,0.1)',
@@ -184,13 +279,30 @@ const UserBalanceChart: React.FC<UserBalanceChartProps> = ({ address }) => {
         pointRadius: 2,
         pointBackgroundColor: '#2563eb',
         borderWidth: 2,
+        yAxisID: 'y',
       },
+      {
+        label: 'Bonded Balance (USD)',
+        data: filtered.map(item => item.bond_amount * getRunePriceForDate(item.date)),
+        borderColor: '#10b981',
+        backgroundColor: 'rgba(16,185,129,0.1)',
+        tension: 0.4,
+        fill: true,
+        pointRadius: 2,
+        pointBackgroundColor: '#10b981',
+        borderWidth: 2,
+        yAxisID: 'y1',
+      }
     ],
   };
 
   const options = {
     responsive: true,
     maintainAspectRatio: false,
+    interaction: {
+      mode: 'index' as const,
+      intersect: false,
+    },
     plugins: {
       legend: { 
         position: 'top' as const,
@@ -198,12 +310,36 @@ const UserBalanceChart: React.FC<UserBalanceChartProps> = ({ address }) => {
           usePointStyle: true
         }
       },
-      tooltip: {},
+      tooltip: {
+        callbacks: {
+          label: (context: any) => {
+            const label = context.dataset.label || '';
+            const value = context.parsed.y;
+            if (label.includes('USD')) {
+              return `${label}: $${value.toFixed(2)}`;
+            }
+            return `${label}: ${value.toFixed(2)}`;
+          }
+        }
+      },
     },
     scales: {
       y: {
+        type: 'linear' as const,
+        display: true,
+        position: 'left' as const,
         title: { display: true, text: 'Bonded Balance (RUNE)' },
         grid: { display: false },
+      },
+      y1: {
+        type: 'linear' as const,
+        display: true,
+        position: 'right' as const,
+        title: { display: true, text: 'Bonded Balance (USD)' },
+        grid: { display: false },
+        ticks: {
+          callback: (value: any) => `$${value}`
+        }
       },
       x: {
         grid: { display: false },
@@ -220,29 +356,19 @@ const UserBalanceChart: React.FC<UserBalanceChartProps> = ({ address }) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-0">
         <Dropdown
           options={nodeOptions}
           value={selectedNode}
           onChange={setSelectedNode}
           placeholder="Select node"
-          className="w-64"
+          className="w-full sm:w-64"
         />
-        <div className="flex space-x-2">
-          {RANGE_OPTIONS.map(option => (
-            <button
-              key={option.label}
-              onClick={() => setRange(option.value)}
-              className={`px-3 py-1 rounded-md ${
-                range === option.value
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-200 text-gray-700'
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+        <RangeSelector
+          range={range}
+          onRangeChange={setRange}
+          options={RANGE_OPTIONS}
+        />
       </div>
       <div className="w-full" style={{ height: 300 }}>
         <Line options={options} data={data} />

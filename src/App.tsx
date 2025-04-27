@@ -631,8 +631,6 @@ const AppContent: React.FC = () => {
                   searchValue={searchUser}
                   isConnected={isConnected !== null}
                   isLoading={isLoadingNodes}
-                  onBondRequest={handleBondRequest}
-                  onUnbondRequest={handleUnbondRequest}
                 />
               )
             }

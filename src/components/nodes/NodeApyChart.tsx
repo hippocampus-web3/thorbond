@@ -12,6 +12,9 @@ import {
   Filler
 } from 'chart.js';
 import LoadingSpinner from '../ui/LoadingSpinner';
+import RangeSelector, { RangeOption } from '../ui/RangeSelector';
+import { Info } from 'lucide-react';
+import Tooltip from '../ui/Tooltip';
 
 ChartJS.register(
   CategoryScale,
@@ -24,7 +27,7 @@ ChartJS.register(
   Filler
 );
 
-const RANGE_OPTIONS = [
+const RANGE_OPTIONS: RangeOption[] = [
   { label: '1M', value: 30 },
   { label: '3M', value: 90 },
   { label: '6M', value: 180 },
@@ -155,22 +158,50 @@ const NodeApyChart: React.FC<NodeApyChartProps> = ({ apyLabels, apyValues, apyDa
   return (
     <div className="space-y-2 sm:space-y-4">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-1 sm:mb-2">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2 sm:mb-0">APY Evolution</h2>
-        <div className="flex justify-between space-x-1 sm:space-x-3">
-          {RANGE_OPTIONS.map(option => (
-            <button
-              key={option.label}
-              onClick={() => setRange(option.value)}
-              className={`flex-1 px-2 sm:px-4 py-1 text-xs sm:text-sm rounded-md ${
-                range === option.value
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-200 text-gray-700'
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-gray-900">Historical APY</h2>
+          <Tooltip
+            content={
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <p className="text-gray-700">
+                    This chart shows the historical APY (Annual Percentage Yield) of the node:
+                  </p>
+                  <div className="space-y-1">
+                    <p className="text-gray-700">
+                      • <strong>Churn-based calculation:</strong> Each point in the chart represents a <a href="https://docs.thorchain.org/frequently-asked-questions/node-operators#what-is-churning-and-how-does-it-affect-my-node" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">churn</a>. The APY is calculated using the earnings and bond values from the current churn, and the time elapsed since the previous churn.
+                    </p>
+                    <p className="text-gray-700">
+                      • <strong>Earnings/Bond ratio:</strong> The APY is based on the ratio between the earnings generated and the total bond in the node
+                    </p>
+                    <p className="text-gray-700">
+                      • <strong>Annualized return:</strong> The result is annualized to show the expected yearly return
+                    </p>
+                  </div>
+                  <p className="text-gray-700 mt-2">
+                    The APY is calculated as: (Earnings / Total Bond) * (365 / Days) * 100
+                  </p>
+                  <p className="text-gray-700">
+                    Where Days is the time elapsed since the previous churn.
+                  </p>
+                  <p className="text-gray-700 italic">
+                    <strong>Note:</strong> A 0% APY indicates that the node was not in active state during those churns and therefore did not generate any earnings.
+                  </p>
+                  <p className="text-gray-600 text-sm italic">
+                    APY can vary significantly over time based on node performance and network conditions.
+                  </p>
+                </div>
+              </div>
+            }
+          >
+            <Info className="h-5 w-5 text-gray-400 hover:text-gray-600 cursor-help" />
+          </Tooltip>
         </div>
+        <RangeSelector
+          range={range}
+          onRangeChange={setRange}
+          options={RANGE_OPTIONS}
+        />
       </div>
       <div className="h-72 sm:h-64 w-full flex items-center justify-center">
         {isLoading ? (
