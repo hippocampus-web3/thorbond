@@ -6,6 +6,7 @@ import {
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
   Title,
   Tooltip as ChartTooltip,
   Legend,
@@ -19,6 +20,7 @@ ChartJS.register(
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
   Title,
   ChartTooltip,
   Legend
