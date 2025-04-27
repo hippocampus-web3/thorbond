@@ -30,6 +30,7 @@ import axios from 'axios';
 import NodeApyChart from '../components/nodes/NodeApyChart';
 import NodeAddress from '../components/nodes/NodeAddress';
 import NodeRestrictionNotice from '../components/nodes/NodeRestrictionNotice';
+import '../lib/chartConfig';
 
 ChartJS.register(
   CategoryScale,

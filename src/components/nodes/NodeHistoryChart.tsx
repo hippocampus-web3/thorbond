@@ -17,18 +17,7 @@ import { baseAmount } from '@xchainjs/xchain-util';
 import RangeSelector, { RangeOption } from '../ui/RangeSelector';
 import { Info } from 'lucide-react';
 import Tooltip from '../ui/Tooltip';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  ChartTooltip,
-  Legend,
-  Filler
-);
+import '../../lib/chartConfig';
 
 interface NodeHistoryChartProps {
   history: any[];

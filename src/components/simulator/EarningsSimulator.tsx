@@ -20,6 +20,7 @@ import LoadingSpinner from '../ui/LoadingSpinner';
 import { calculateProjections } from '../../lib/projectionCalculator';
 import TooltipComponent from '../ui/Tooltip';
 import { generateAPYData } from '../../lib/apyCalculator';
+import '../../lib/chartConfig';
 
 ChartJS.register(
   CategoryScale,

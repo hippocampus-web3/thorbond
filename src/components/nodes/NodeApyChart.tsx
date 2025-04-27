@@ -15,6 +15,7 @@ import LoadingSpinner from '../ui/LoadingSpinner';
 import RangeSelector, { RangeOption } from '../ui/RangeSelector';
 import { Info } from 'lucide-react';
 import Tooltip from '../ui/Tooltip';
+import '../../lib/chartConfig';
 
 ChartJS.register(
   CategoryScale,

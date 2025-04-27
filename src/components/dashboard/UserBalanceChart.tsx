@@ -14,6 +14,7 @@ import {
 import axios from 'axios';
 import Dropdown from '../ui/Dropdown';
 import RangeSelector from '../ui/RangeSelector';
+import '../../lib/chartConfig';
 
 ChartJS.register(
   CategoryScale,
