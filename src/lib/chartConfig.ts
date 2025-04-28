@@ -8,7 +8,8 @@ import {
   Title,
   Tooltip as ChartTooltip,
   Legend,
-  Filler
+  Filler,
+  BarController
 } from 'chart.js';
 
 // Register all Chart.js components globally
@@ -21,7 +22,8 @@ ChartJS.register(
   Title,
   ChartTooltip,
   Legend,
-  Filler
+  Filler,
+  BarController
 );
 
 export default ChartJS; 

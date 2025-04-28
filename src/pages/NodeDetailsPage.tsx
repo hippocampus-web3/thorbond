@@ -24,7 +24,8 @@ import {
   Title,
   Tooltip as ChartTooltip,
   Legend,
-  Filler
+  Filler,
+  BarController
 } from 'chart.js';
 import axios from 'axios';
 import NodeApyChart from '../components/nodes/NodeApyChart';
@@ -41,7 +42,8 @@ ChartJS.register(
   Title,
   ChartTooltip,
   Legend,
-  Filler
+  Filler,
+  BarController
 );
 
 interface NodeDetailsPageProps {

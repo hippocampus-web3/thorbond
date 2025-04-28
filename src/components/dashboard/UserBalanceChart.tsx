@@ -10,6 +10,7 @@ import {
   Title,
   Tooltip as ChartTooltip,
   Legend,
+  BarController
 } from 'chart.js';
 import axios from 'axios';
 import Dropdown from '../ui/Dropdown';
@@ -23,6 +24,7 @@ ChartJS.register(
   LineElement,
   BarElement,
   Title,
+  BarController,
   ChartTooltip,
   Legend
 );

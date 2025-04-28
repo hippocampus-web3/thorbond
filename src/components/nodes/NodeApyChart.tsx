@@ -9,7 +9,8 @@ import {
   Title,
   Tooltip as ChartTooltip,
   Legend,
-  Filler
+  Filler,
+  BarController
 } from 'chart.js';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import RangeSelector, { RangeOption } from '../ui/RangeSelector';
@@ -25,7 +26,8 @@ ChartJS.register(
   Title,
   ChartTooltip,
   Legend,
-  Filler
+  Filler,
+  BarController
 );
 
 const RANGE_OPTIONS: RangeOption[] = [

@@ -11,6 +11,7 @@ import {
   Tooltip as ChartTooltip,
   Legend,
   Filler,
+  BarController
 } from 'chart.js';
 import { formatRune } from '../../lib/utils';
 import { ChevronDown, ChevronUp, Info } from 'lucide-react';
@@ -31,7 +32,8 @@ ChartJS.register(
   Title,
   ChartTooltip,
   Legend,
-  Filler
+  Filler,
+  BarController
 );
 
 const RANGE_OPTIONS = [
