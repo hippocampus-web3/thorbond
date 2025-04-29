@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Node, WhitelistRequestFormData, Message, WhitelistRequest } from '../types';
-import { formatRune, shortenAddress, getTimeAgo, getNodeExplorerUrl, formatDuration } from '../lib/utils';
+import { formatRune } from '../lib/utils';
 import { useWallet } from '../contexts/WalletContext';
 import { baseAmount } from "@xchainjs/xchain-util";
-import { ArrowLeft, Eye, Info, Trophy, Sparkles, ExternalLink, Copy, Check, EyeOff, Shield, Lock, Clock } from 'lucide-react';
+import { Info, Trophy, EyeOff, Shield, Lock, Clock, ArrowLeft, Sparkles } from 'lucide-react';
 import WhitelistRequestForm from '../components/nodes/WhitelistRequestForm';
 import Tooltip from '../components/ui/Tooltip';
 import ChatInterface from '../components/nodes/ChatInterface';
@@ -13,6 +13,12 @@ import NodeActionTabs from '../components/nodes/NodeActionTabs';
 import RuneBondEngine from '../lib/runebondEngine/runebondEngine';
 import { BaseAmount } from '@xchainjs/xchain-util';
 import { NodesResponse } from '@xchainjs/xchain-thornode';
+import NodeHistoryChart from '../components/nodes/NodeHistoryChart';
+import axios from 'axios';
+import NodeApyChart from '../components/nodes/NodeApyChart';
+import NodeAddress from '../components/nodes/NodeAddress';
+import NodeRestrictionNotice from '../components/nodes/NodeRestrictionNotice';
+import '../lib/chartConfig';
 
 interface NodeDetailsPageProps {
   nodes: Node[];
@@ -30,6 +36,8 @@ interface NodeDetailsPageProps {
   refreshWhitelistFlag: number;
   oficialNodes: NodesResponse;
 }
+
+const API_HISTORY_URL = 'https://history.runebond.com';
 
 const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
   nodes,
@@ -50,9 +58,11 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
   const { nodeAddress } = useParams<{ nodeAddress: string }>();
   const navigate = useNavigate();
   const { isConnected, address } = useWallet();
-  const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
   const [whitelistRequest, setWhitelistRequest] = useState<WhitelistRequest | null>(null);
   const [isLoadingWhitelist, setIsLoadingWhitelist] = useState(false);
+  const [nodeHistory, setNodeHistory] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(true);
+  const [errorHistory, setErrorHistory] = useState<string | null>(null);
 
   const node = nodes.find(n => n.nodeAddress === nodeAddress);
   const officialNode = oficialNodes.find(n => n.node_address === nodeAddress);
@@ -83,6 +93,32 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
       fetchWhitelistRequest();
     }
   }, [nodeAddress, address, refreshWhitelistFlag, fetchWhitelistRequest]);
+
+  useEffect(() => {
+    if (!nodeAddress) return;
+    setLoadingHistory(true);
+    setErrorHistory(null);
+    const fetchHistory = async () => {
+      try {
+        const { data } = await axios.get(
+          `${API_HISTORY_URL}/rest/v1/node`,
+          {
+            params: {
+              select: 'total_bond,earnings,snapshot(block_timestamp),node_address',
+              node_address: `eq.${nodeAddress}`
+            }
+          }
+        );
+        data.sort((a: any, b: any) => new Date(a.snapshot.block_timestamp).getTime() - new Date(b.snapshot.block_timestamp).getTime());
+        setNodeHistory(data);
+      } catch (err: any) {
+        setErrorHistory('Error loading data');
+      } finally {
+        setLoadingHistory(false);
+      }
+    };
+    fetchHistory();
+  }, [nodeAddress]);
 
   // Helper to format time to leave
   const formatTimeToLeave = (seconds: number): string => {
@@ -267,16 +303,6 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
     }
   };
 
-  const handleCopy = async (address: string) => {
-    try {
-      await navigator.clipboard.writeText(address);
-      setCopiedAddress(address);
-      setTimeout(() => setCopiedAddress(null), 2000);
-    } catch (err) {
-      console.error('Failed to copy address:', err);
-    }
-  };
-
   const handleBondSubmit = (amount: string) => {
     if (!node || !address) return;
     onBondRequest(node.nodeAddress, address, Number(amount));
@@ -286,64 +312,6 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
     if (!node || !address) return;
     onUnbondRequest(node.nodeAddress, address, Number(amount));
   };
-
-  const renderAddress = (address: string, isNode: boolean = false) => (
-    <div className="flex items-center space-x-2">
-      {isNode ? (
-        <div className="flex flex-col">
-          <span className="text-sm font-medium text-gray-500">Node Address</span>
-          <div className="flex items-center space-x-2 mt-1">
-            <span className="text-lg font-mono font-medium text-gray-900 break-all w-full sm:w-auto">
-              <span className="hidden sm:inline">{address}</span>
-              <span className="sm:hidden">{shortenAddress(address)}</span>
-            </span>
-            <button
-              onClick={() => window.open(getNodeExplorerUrl(address), '_blank')}
-              className="p-1 hover:bg-gray-100 rounded flex-shrink-0"
-              title="View in explorer"
-            >
-              <ExternalLink className="h-4 w-4 text-gray-400" />
-            </button>
-            <button
-              onClick={() => handleCopy(address)}
-              className="p-1 hover:bg-gray-100 rounded flex-shrink-0"
-              title="Copy address"
-            >
-              {copiedAddress === address ? (
-                <Check className="h-4 w-4 text-green-500" />
-              ) : (
-                <Copy className="h-4 w-4 text-gray-400" />
-              )}
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="flex items-center space-x-2">
-          <span className="text-gray-900">
-            {shortenAddress(address)}
-          </span>
-          <button
-            onClick={() => window.open(`https://thorchain.net/address/${address}`, '_blank')}
-            className="p-1 hover:bg-gray-100 rounded flex-shrink-0"
-            title="View in explorer"
-          >
-            <ExternalLink className="h-4 w-4 text-gray-400" />
-          </button>
-          <button
-            onClick={() => handleCopy(address)}
-            className="p-1 hover:bg-gray-100 rounded flex-shrink-0"
-            title="Copy address"
-          >
-            {copiedAddress === address ? (
-              <Check className="h-4 w-4 text-green-500" />
-            ) : (
-              <Copy className="h-4 w-4 text-gray-400" />
-            )}
-          </button>
-        </div>
-      )}
-    </div>
-  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -366,242 +334,244 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
           onCancel={onCancelRequest}
         />
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-          {/* Node Details Section */}
-          <div className="lg:col-span-3">
-            <div className={`shadow rounded-lg p-6 ${stateStyles.bgColor} border-2 ${stateStyles.borderColor}`}>
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Node Details</h1>
-                  {(node.isHidden.hide || isFull || node.isYieldGuarded.hide) && (
-                    <div className="flex items-center space-x-1 mt-2">
-                      {primaryState === 'full' ? (
-                        <>
-                          <Trophy className="h-4 w-4 text-emerald-600" />
-                          <Sparkles className="h-3 w-3 text-emerald-500" />
-                          <span className="text-sm font-medium text-emerald-600">Full Capacity Node 🎉</span>
-                        </>
-                      ) : primaryState === 'hidden' ? (
-                        <>
-                          <Eye className="h-4 w-4 text-yellow-600" />
-                          <span className="text-sm font-medium text-yellow-600">Hidden Node</span>
-                        </>
-                      ) : (
-                        <>
-                          <Shield className="h-4 w-4 text-purple-600" />
-                          <Lock className="h-3 w-3 text-purple-500" />
-                          <span className="text-sm font-medium text-purple-600">Yield Guard Active ⚡</span>
-                        </>
-                      )}
-                      <Tooltip
-                        content={
-                          <div className="flex items-start gap-2">
-                            <Info className={`h-5 w-5 ${
-                              primaryState === 'full' ? 'text-emerald-600' : 
-                              primaryState === 'hidden' ? 'text-yellow-600' : 
-                              'text-purple-600'
-                            } flex-shrink-0 mt-0.5`} />
-                            <div>
-                              <h3 className="font-medium text-gray-900 mb-2">
-                                {stateStyles.title}
-                              </h3>
-                              {primaryState === 'full' ? (
-                                <p className="text-sm text-gray-600">
-                                  {stateStyles.description}
-                                </p>
-                              ) : primaryState === 'hidden' ? (
-                                <>
-                                  {node.isHidden.reasons && node.isHidden.reasons.map((reason, index) => (
-                                    <p key={index} className="text-sm text-gray-600 mb-2">
-                                      • {reason}
-                                    </p>
-                                  ))}
-                                </>
-                              ) : (
-                                <>
-                                  {node.isYieldGuarded.reasons && node.isYieldGuarded.reasons.map((reason, index) => (
-                                    <p key={index} className="text-sm text-gray-600 mb-2">
-                                      • {reason}
-                                    </p>
-                                  ))}
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        }
-                      >
-                        <Info className={`h-4 w-4 ${
-                          primaryState === 'full' ? 'text-emerald-600' : 
-                          primaryState === 'hidden' ? 'text-yellow-600' : 
-                          'text-purple-600'
-                        } cursor-help`} />
-                      </Tooltip>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-stretch min-h-[420px]">
+            {/* Node Details Section */}
+            <div className="lg:col-span-3 h-full flex flex-col">
+              <div className={`shadow-md rounded-lg p-4 flex flex-col h-full ${stateStyles.bgColor}`}>
+                <div className="flex justify-between items-start mb-6">
+                  <div>
+                    <h1 className="text-2xl font-bold text-gray-900">Node Details</h1>
+                    {(node.isHidden.hide || isFull || node.isYieldGuarded.hide) && (
+                      <NodeRestrictionNotice primaryState={primaryState} stateStyles={stateStyles} node={node} />
+                    )}
+                    <div className="mt-4 bg-gray-50 p-4 rounded-lg">
+                      <NodeAddress address={node.nodeAddress} isNode={true} />
                     </div>
-                  )}
-                  <div className="mt-6 bg-gray-50 p-4 rounded-lg">
-                    {renderAddress(node.nodeAddress, true)}
-                  </div>
-                </div>
-                <span className="px-3 py-1 text-sm rounded-full bg-blue-100 text-blue-800">
-                  {node.status}
-                </span>
-              </div>
-
-              {(node.isHidden.hide || isFull || node.isYieldGuarded.hide) && (
-                <div className={`mb-6 p-4 rounded-lg border ${
-                  primaryState === 'full' ? 'bg-emerald-50 border-emerald-200' : 
-                  primaryState === 'hidden' ? 'bg-yellow-50 border-yellow-200' :
-                  'bg-purple-50 border-purple-200'
-                }`}>
-                  <h4 className={`text-sm font-medium ${
-                    primaryState === 'full' ? 'text-emerald-800' : 
-                    primaryState === 'hidden' ? 'text-yellow-800' :
-                    'text-purple-800'
-                  } mb-2`}>
-                    {stateStyles.title}
-                  </h4>
-                  <p className={`text-sm ${
-                    primaryState === 'full' ? 'text-emerald-700' : 
-                    primaryState === 'hidden' ? 'text-yellow-700' :
-                    'text-purple-700'
-                  }`}>
-                    {stateStyles.description}
-                  </p>
-                </div>
-              )}
-
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Operator Address</h3>
-                    <div className="mt-1">
-                      {renderAddress(node.operatorAddress)}
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Bonding Capacity</h3>
-                    <p className="mt-1 text-gray-900">{formatRune(baseAmount(node.maxRune))} RUNE</p>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Minimum Bond</h3>
-                    <p className="mt-1 text-gray-900">{formatRune(baseAmount(node.minRune))} RUNE</p>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Fee Percentage</h3>
-                    <p className="mt-1 text-gray-900">{node.feePercentage / 100}%</p>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Bond Providers</h3>
-                    <p className="mt-1 text-gray-900">{node.bondProvidersCount} / 100</p>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Slash Points</h3>
-                    <p className="mt-1 text-gray-900">{node.slashPoints}</p>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Total bond</h3>
-                    <p className="mt-1 text-gray-900">{formatRune(baseAmount(node.officialInfo.totalBond))}</p>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Maximum time to leave</h3>
-                    {node.maxTimeToLeave > 0 ? (
-                      <Tooltip
-                        content={
-                          <div className="max-w-xs text-sm">
-                            <div className="flex items-start gap-2">
-                              <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                              <div>
-                                <h4 className="font-medium text-gray-900 mb-1">Next Opportunity to unlock RUNE</h4>
-                                <p className="text-gray-600 mb-2">
-                                  Estimated maximum time before this node could leave the active set, giving you the next opportunity to unlock your bonded RUNE.
-                                </p>
-                                <p className="text-gray-600 mb-2">
-                                  This is a reference value, not a guarantee — actual timing may vary if the node requests to leave, or if older nodes exit voluntarily or are removed by the network.
-                                </p>
-                                <p className="text-gray-600 mt-1">
-                                  This estimate is stable, but currently in beta.
-                                </p>
-                                <a 
-                                  href="https://thorbond.gitbook.io/runebond/maximum-time-to-leave" 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                  className="text-blue-600 hover:text-blue-800 text-sm mt-2 inline-block"
-                                >
-                                  Learn more about time to leave
-                                </a>
-                              </div>
-                            </div>
-                          </div>
-                        }
-                        position="bottom"
-                      >
-                        <div className="flex items-center mt-1 cursor-pointer">
-                          <Clock className="h-4 w-4 mr-1 text-gray-500" />
-                          <span className="text-gray-900">
-                            {formatTimeToLeave(node.maxTimeToLeave)}
-                          </span>
-                          <span className="ml-1 text-xs text-gray-500">(estimate)</span>
-                        </div>
-                      </Tooltip>
-                    ) : (
-                      <p className="mt-1 text-gray-900">-</p>
+                    {(node.isHidden.hide || isFull || node.isYieldGuarded.hide) && (
+                      <div className={`mt-6 p-4 rounded-lg border ${
+                        primaryState === 'full' ? 'bg-emerald-50 border-emerald-200' : 
+                        primaryState === 'hidden' ? 'bg-yellow-50 border-yellow-200' :
+                        'bg-purple-50 border-purple-200'
+                      }`}>
+                        <h4 className={`text-sm font-medium ${
+                          primaryState === 'full' ? 'text-emerald-800' : 
+                          primaryState === 'hidden' ? 'text-yellow-800' :
+                          'text-purple-800'
+                        } mb-2`}>
+                          {stateStyles.title}
+                        </h4>
+                        <p className={`text-sm ${
+                          primaryState === 'full' ? 'text-emerald-700' : 
+                          primaryState === 'hidden' ? 'text-yellow-700' :
+                          'text-purple-700'
+                        }`}>
+                          {stateStyles.description}
+                        </p>
+                      </div>
                     )}
                   </div>
+                  <span className="px-3 py-1 text-sm rounded-full bg-blue-100 text-blue-800">
+                    {node.status}
+                  </span>
                 </div>
 
-                {node.description && (
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Description</h3>
-                    <p className="mt-1 text-gray-900">{node.description}</p>
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Operator Address</h3>
+                      <div className="mt-1">
+                        <NodeAddress address={node.operatorAddress} />
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Bonding Capacity</h3>
+                      <p className="mt-1 text-gray-900">{formatRune(baseAmount(node.maxRune))} RUNE</p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Minimum Bond</h3>
+                      <p className="mt-1 text-gray-900">{formatRune(baseAmount(node.minRune))} RUNE</p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Fee Percentage</h3>
+                      <p className="mt-1 text-gray-900">{node.feePercentage / 100}%</p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Bond Providers</h3>
+                      <p className="mt-1 text-gray-900">{node.bondProvidersCount} / 100</p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Slash Points</h3>
+                      <p className="mt-1 text-gray-900">{node.slashPoints}</p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Total bond</h3>
+                      <p className="mt-1 text-gray-900">{formatRune(baseAmount(node.officialInfo.totalBond))}</p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Maximum time to leave</h3>
+                      {node.maxTimeToLeave > 0 ? (
+                        <Tooltip
+                          content={
+                            <div className="max-w-xs text-sm">
+                              <div className="flex items-start gap-2">
+                                <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                                <div>
+                                  <h4 className="font-medium text-gray-900 mb-1">Next Opportunity to unlock RUNE</h4>
+                                  <p className="text-gray-600 mb-2">
+                                    Estimated maximum time before this node could leave the active set, giving you the next opportunity to unlock your bonded RUNE.
+                                  </p>
+                                  <p className="text-gray-600 mb-2">
+                                    This is a reference value, not a guarantee — actual timing may vary if the node requests to leave, or if older nodes exit voluntarily or are removed by the network.
+                                  </p>
+                                  <p className="text-gray-600 mt-1">
+                                    This estimate is stable, but currently in beta.
+                                  </p>
+                                  <a 
+                                    href="https://thorbond.gitbook.io/runebond/maximum-time-to-leave" 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:text-blue-800 text-sm mt-2 inline-block"
+                                  >
+                                    Learn more about time to leave
+                                  </a>
+                                </div>
+                              </div>
+                            </div>
+                          }
+                          position="bottom"
+                        >
+                          <div className="flex items-center mt-1 cursor-pointer">
+                            <Clock className="h-4 w-4 mr-1 text-gray-500" />
+                            <span className="text-gray-900">
+                              {formatTimeToLeave(node.maxTimeToLeave)}
+                            </span>
+                            <span className="ml-1 text-xs text-gray-500">(estimate)</span>
+                          </div>
+                        </Tooltip>
+                      ) : (
+                        <p className="mt-1 text-gray-900">-</p>
+                      )}
+                    </div>
                   </div>
-                )}
 
-                {node.contactInfo && (
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Contact Information</h3>
-                    <p className="mt-1 text-gray-900">{node.contactInfo}</p>
+                  {node.description && (
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Description</h3>
+                      <p className="mt-1 text-gray-900">{node.description}</p>
+                    </div>
+                  )}
+
+                  {node.contactInfo && (
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Contact Information</h3>
+                      <p className="mt-1 text-gray-900">{node.contactInfo}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* APY Evolution Chart Card */}
+              <div className="bg-white shadow-md rounded-lg p-6 mt-6">
+                {loadingHistory ? (
+                  <div style={{ width: '100%', height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <LoadingSpinner />
                   </div>
-                )}
+                ) : errorHistory ? (
+                  <div style={{ width: '100%', height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'red' }}>
+                    {errorHistory}
+                  </div>
+                ) : (() => {
+                  const apyLabels: string[] = [];
+                  const apyValues: number[] = [];
+                  const apyDates: string[] = [];
+                  for (let i = 1; i < nodeHistory.length; i++) {
+                    const prev = nodeHistory[i - 1];
+                    const curr = nodeHistory[i];
+                    const prevDate = new Date(prev.snapshot.block_timestamp);
+                    const currDate = new Date(curr.snapshot.block_timestamp);
+                    let days = (currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24);
+                    if (days <= 0) days = 3;
+                    const bond = Number(prev.total_bond) || 0;
+                    const earning = Number(curr.earnings) || 0;
+                    if (bond <= 0) continue;
+                    const periodsPerYear = 365 / days;
+                    const apy = (earning / bond) * periodsPerYear * 100;
+                    apyLabels.push(currDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+                    apyDates.push(currDate.toISOString());
+                    apyValues.push(Number(apy.toFixed(2)));
+                  }
 
-                <div className="pt-4">
-                  <p className="text-sm text-gray-500">
-                    Listed {getTimeAgo(node.timestamp)}
-                  </p>
+                  if (nodeHistory.length === 1) {
+                    const curr = nodeHistory[0];
+                    const bond = Number(curr.total_bond) || 0;
+                    const earning = Number(curr.earnings) || 0;
+                    if (bond > 0) {
+                      const periodsPerYear = 365 / 3;
+                      const apy = (earning / bond) * periodsPerYear * 100;
+                      const currDate = new Date(curr.snapshot.block_timestamp);
+                      apyLabels.push(currDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+                      apyDates.push(currDate.toISOString());
+                      apyValues.push(Number(apy.toFixed(2)));
+                    }
+                  }
+                  return <NodeApyChart 
+                    apyLabels={apyLabels} 
+                    apyValues={apyValues} 
+                    apyDates={apyDates}
+                  />;
+                })()}
+              </div>
+            </div>
+
+            {/* Action and Chat Section */}
+            <div className="lg:col-span-2 h-full flex flex-col">
+              <div className="flex flex-col h-full space-y-4">
+                {/* Action Tabs */}
+                <NodeActionTabs
+                  node={node}
+                  onRequestWhitelist={onRequestWhitelist}
+                  onBondSubmit={handleBondSubmit}
+                  onUnbondSubmit={handleUnbondSubmit}
+                  whitelistRequest={whitelistRequest}
+                  isLoadingWhitelist={isLoadingWhitelist}
+                  balance={balance}
+                  isLoadingBalance={isLoadingBalance}
+                  onRefreshBondAmount={fetchWhitelistRequest}
+                  isOperator={address === node.operatorAddress}
+                  officialNode={officialNode}
+                />
+
+                {/* Chat Interface */}
+                <div className="flex-1 flex flex-col h-full">
+                  {isLoadingMessages ? (
+                    <div className="bg-white shadow-md rounded-lg p-4 flex items-center justify-center h-full min-h-[300px]">
+                      <LoadingSpinner />
+                    </div>
+                  ) : (
+                    <ChatInterface 
+                      messages={messages} 
+                      onSendMessage={handleSendMessageForNode} 
+                      isDisabled={!isConnected}
+                      nodeAddress={node.nodeAddress}
+                    />
+                  )}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Action and Chat Section */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Action Tabs */}
-            <NodeActionTabs
-              node={node}
-              onRequestWhitelist={onRequestWhitelist}
-              onBondSubmit={handleBondSubmit}
-              onUnbondSubmit={handleUnbondSubmit}
-              whitelistRequest={whitelistRequest}
-              isLoadingWhitelist={isLoadingWhitelist}
-              balance={balance}
-              isLoadingBalance={isLoadingBalance}
-              onRefreshBondAmount={fetchWhitelistRequest}
-              isOperator={address === node.operatorAddress}
-              officialNode={officialNode}
-            />
-
-            {/* Chat Interface */}
-            {isLoadingMessages ? (
-              <div className="bg-white shadow rounded-lg p-6 flex items-center justify-center h-[600px]">
-                <LoadingSpinner />
-              </div>
-            ) : (
-              <ChatInterface 
-                messages={messages} 
-                onSendMessage={handleSendMessageForNode} 
-                isDisabled={!isConnected}
-                nodeAddress={node.nodeAddress}
-              />
-            )}
+          {/* Performance Analytics Card - Full Width */}
+          <div className="bg-white shadow-md rounded-lg p-6 mt-6">
+            <div className="w-full">
+              {loadingHistory ? (
+                <div style={{ width: '100%', height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><LoadingSpinner /></div>
+              ) : errorHistory ? (
+                <div style={{ width: '100%', height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'red' }}>{errorHistory}</div>
+              ) : (
+                <NodeHistoryChart history={nodeHistory} />
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -609,4 +579,4 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
   );
 };
 
-export default NodeDetailsPage; 
+export default NodeDetailsPage;

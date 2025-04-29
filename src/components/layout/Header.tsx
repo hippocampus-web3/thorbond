@@ -75,14 +75,14 @@ const Header: React.FC<HeaderProps> = ({
                 Nodes
               </Link>
               <Link
-                to="/operator-dashboard"
+                to="/earnings-simulator"
                 className={`${
-                  isActive('/operator-dashboard')
+                  isActive('/earnings-simulator')
                     ? 'border-blue-500 text-gray-900'
                     : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                 } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
               >
-                Operator Dashboard
+                Earnings Simulator
               </Link>
               <Link
                 to="/user-requests"
@@ -93,6 +93,16 @@ const Header: React.FC<HeaderProps> = ({
                 } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
               >
                 My Requests
+              </Link>
+              <Link
+                to="/operator-dashboard"
+                className={`${
+                  isActive('/operator-dashboard')
+                    ? 'border-blue-500 text-gray-900'
+                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+              >
+                Operator Dashboard
               </Link>
             </nav>
           </div>
@@ -174,14 +184,14 @@ const Header: React.FC<HeaderProps> = ({
             Nodes
           </Link>
           <Link
-            to="/operator-dashboard"
+            to="/earnings-simulator"
             className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
-              isActive('/operator-dashboard')
+              isActive('/earnings-simulator')
                 ? 'border-blue-500 text-gray-900'
                 : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'
             }`}
           >
-            Operator Dashboard
+            Earnings Simulator
           </Link>
           <Link
             to="/user-requests"
@@ -192,6 +202,16 @@ const Header: React.FC<HeaderProps> = ({
             }`}
           >
             My Requests
+          </Link>
+          <Link
+            to="/operator-dashboard"
+            className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
+              isActive('/operator-dashboard')
+                ? 'border-blue-500 text-gray-900'
+                : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'
+            }`}
+          >
+            Operator Dashboard
           </Link>
           <div className="pl-3 pr-4 py-2">
             {isAuthenticated ? (

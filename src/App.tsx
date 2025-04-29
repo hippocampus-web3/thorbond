@@ -20,6 +20,7 @@ import ScrollToTop from './components/ScrollToTop';
 import { assetAmount, assetToBase, BaseAmount } from '@xchainjs/xchain-util';
 import { useTransactionPolling } from './hooks/useTransactionPolling';
 import { NodesResponse } from '@xchainjs/xchain-thornode';
+import EarningsSimulatorPage from './pages/EarningsSimulatorPage';
 
 const AppContent: React.FC = () => {
   const [listedNodes, setListedNodes] = useState<Node[]>([]);
@@ -630,11 +631,13 @@ const AppContent: React.FC = () => {
                   searchValue={searchUser}
                   isConnected={isConnected !== null}
                   isLoading={isLoadingNodes}
-                  onBondRequest={handleBondRequest}
-                  onUnbondRequest={handleUnbondRequest}
                 />
               )
             }
+          />
+          <Route
+            path="/earnings-simulator"
+            element={<EarningsSimulatorPage />}
           />
         </Routes>
       </Layout>

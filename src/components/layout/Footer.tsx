@@ -79,6 +79,11 @@ const Footer: React.FC = () => {
                   My Requests
                 </Link>
               </li>
+              <li>
+                <Link to="/earnings-simulator" className="text-base text-gray-300 hover:text-white">
+                  Earnings Simulator
+                </Link>
+              </li>
             </ul>
           </div>
         </div>

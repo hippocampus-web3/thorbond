@@ -11,6 +11,7 @@ import RoadmapSection from '../components/roadmap/RoadmapSection';
 
 const HomePage: React.FC = () => {
   const [showFullProcess, setShowFullProcess] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState({
     totalNodes: 0,
     totalBonded: formatRune(baseAmount(0)),
@@ -21,6 +22,7 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
+        setIsLoading(true);
         const engine = RuneBondEngine.getInstance();
         const apiStats = await engine.getStats();
         
@@ -32,6 +34,8 @@ const HomePage: React.FC = () => {
         });
       } catch (error) {
         console.error('Error fetching stats:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -136,7 +140,11 @@ const HomePage: React.FC = () => {
                 }}
                 className="inline-block text-2xl font-bold"
               >
-                {(parseFloat(stats.bondingAPY) * 100).toFixed(2)}%
+                {isLoading ? (
+                  <span className="inline-block w-24 h-8 bg-gray-200 rounded animate-pulse" />
+                ) : (
+                  `${(parseFloat(stats.bondingAPY) * 100).toFixed(2)}%`
+                )}
               </motion.span>
               {' '}APY
             </motion.p>
