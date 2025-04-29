@@ -565,7 +565,7 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
           <div className="bg-white shadow-md rounded-lg p-6 mt-6">
             <div className="w-full">
               {loadingHistory ? (
-                <div style={{ width: '100%', height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading node history...</div>
+                <div style={{ width: '100%', height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><LoadingSpinner /></div>
               ) : errorHistory ? (
                 <div style={{ width: '100%', height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'red' }}>{errorHistory}</div>
               ) : (
@@ -579,4 +579,4 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
   );
 };
 
-export default NodeDetailsPage; 
+export default NodeDetailsPage;

@@ -33,6 +33,11 @@ const EarningsSimulator: React.FC = () => {
   const [errorNetworkData, setErrorNetworkData] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loadingProjection, setLoadingProjection] = useState(true);
+  const [projectionData, setProjectionData] = useState<any>({
+    conservative: [],
+    average: [],
+    optimistic: []
+  });
 
   useEffect(() => {
     const fetchNetworkData = async () => {
@@ -56,6 +61,54 @@ const EarningsSimulator: React.FC = () => {
     fetchNetworkData();
   }, []);
 
+  useEffect(() => {
+    if (networkData.length > 0) {
+      setLoadingProjection(true);
+      try {
+        const historicalAPYs = networkData.map((row, index) => {
+          const currentDate = new Date(row.block_timestamp);
+          const sevenDaysAgo = new Date(currentDate);
+          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+          let startIndex = index;
+          while (startIndex > 0 && new Date(networkData[startIndex - 1].block_timestamp) >= sevenDaysAgo) {
+            startIndex--;
+          }
+
+          if (startIndex === index) {
+            if (index < networkData.length - 1) {
+              const nextRow = networkData[index + 1];
+              const days = (new Date(nextRow.block_timestamp).getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24);
+              const bond = Number(row.total_active_bond) / 100_000_000;
+              const earnings = Number(nextRow.total_earnings) / 100_000_000;
+              if (bond <= 0) return 0;
+              const periodsPerYear = 365 / days;
+              return (earnings / bond) * periodsPerYear * 100;
+            }
+            return 0;
+          }
+
+          const startRow = networkData[startIndex];
+          const days = (currentDate.getTime() - new Date(startRow.block_timestamp).getTime()) / (1000 * 60 * 60 * 24);
+          const bond = Number(startRow.total_active_bond) / 100_000_000;
+          const earnings = Number(row.total_earnings) / 100_000_000;
+          if (bond <= 0) return 0;
+          const periodsPerYear = 365 / days;
+          return (earnings / bond) * periodsPerYear * 100;
+        }).filter(apy => apy > 0);
+
+        const newProjectionData = calculateProjections(
+          historicalAPYs,
+          parseFloat(investment) || 1000,
+          projectionRange / 30
+        );
+        setProjectionData(newProjectionData);
+      } finally {
+        setLoadingProjection(false);
+      }
+    }
+  }, [networkData, investment, projectionRange]);
+
   const handleInvestmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/[^0-9]/g, '');
     const numericValue = parseInt(value);
@@ -75,52 +128,7 @@ const EarningsSimulator: React.FC = () => {
       }
     }
   };
-  const generateProjectionChartData = () => {
-    setLoadingProjection(true);
-    try {
-      const historicalAPYs = networkData.map((row, index) => {
-        const currentDate = new Date(row.block_timestamp);
-        const sevenDaysAgo = new Date(currentDate);
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-        let startIndex = index;
-        while (startIndex > 0 && new Date(networkData[startIndex - 1].block_timestamp) >= sevenDaysAgo) {
-          startIndex--;
-        }
-
-        if (startIndex === index) {
-          if (index < networkData.length - 1) {
-            const nextRow = networkData[index + 1];
-            const days = (new Date(nextRow.block_timestamp).getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24);
-            const bond = Number(row.total_active_bond) / 100_000_000;
-            const earnings = Number(nextRow.total_earnings) / 100_000_000;
-            if (bond <= 0) return 0;
-            const periodsPerYear = 365 / days;
-            return (earnings / bond) * periodsPerYear * 100;
-          }
-          return 0;
-        }
-
-        const startRow = networkData[startIndex];
-        const days = (currentDate.getTime() - new Date(startRow.block_timestamp).getTime()) / (1000 * 60 * 60 * 24);
-        const bond = Number(startRow.total_active_bond) / 100_000_000;
-        const earnings = Number(row.total_earnings) / 100_000_000;
-        if (bond <= 0) return 0;
-        const periodsPerYear = 365 / days;
-        return (earnings / bond) * periodsPerYear * 100;
-      }).filter(apy => apy > 0);
-
-      return calculateProjections(
-        historicalAPYs,
-        parseFloat(investment) || 1000,
-        projectionRange / 30
-      );
-    } finally {
-      setLoadingProjection(false);
-    }
-  };
-
-  const projectionData = generateProjectionChartData();
   const initialInvestment = parseFloat(investment) || 0;
 
   const getProjectedValue = (values: number[]) => {
@@ -384,42 +392,50 @@ const EarningsSimulator: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 gap-4">
-              <div className="bg-red-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-600">Conservative</p>
-                <p className="text-xl font-bold text-red-600">
-                  {getProjectedValue(projectionData.conservative).toFixed(2)} RUNE
-                </p>
-                <p className="text-sm text-gray-500">
-                  {getReturnPercentage(getProjectedValue(projectionData.conservative)).toFixed(1)}% Return
-                </p>
-                <p className="text-xs text-gray-400">
-                  {getAPY(projectionData.conservative).toFixed(1)}% APY
-                </p>
-              </div>
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-600">Average</p>
-                <p className="text-xl font-bold text-blue-600">
-                  {getProjectedValue(projectionData.average).toFixed(2)} RUNE
-                </p>
-                <p className="text-sm text-gray-500">
-                  {getReturnPercentage(getProjectedValue(projectionData.average)).toFixed(1)}% Return
-                </p>
-                <p className="text-xs text-gray-400">
-                  {getAPY(projectionData.average).toFixed(1)}% APY
-                </p>
-              </div>
-              <div className="bg-green-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-600">Optimistic</p>
-                <p className="text-xl font-bold text-green-600">
-                  {getProjectedValue(projectionData.optimistic).toFixed(2)} RUNE
-                </p>
-                <p className="text-sm text-gray-500">
-                  {getReturnPercentage(getProjectedValue(projectionData.optimistic)).toFixed(1)}% Return
-                </p>
-                <p className="text-xs text-gray-400">
-                  {getAPY(projectionData.optimistic).toFixed(1)}% APY
-                </p>
-              </div>
+              {loadingProjection ? (
+                <div className="col-span-3 flex items-center justify-center h-48">
+                  <LoadingSpinner />
+                </div>
+              ) : (
+                <>
+                  <div className="bg-red-50 p-4 rounded-lg">
+                    <p className="text-sm text-gray-600">Conservative</p>
+                    <p className="text-xl font-bold text-red-600">
+                      {getProjectedValue(projectionData.conservative).toFixed(2)} RUNE
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {getReturnPercentage(getProjectedValue(projectionData.conservative)).toFixed(1)}% Return
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {getAPY(projectionData.conservative).toFixed(1)}% APY
+                    </p>
+                  </div>
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <p className="text-sm text-gray-600">Average</p>
+                    <p className="text-xl font-bold text-blue-600">
+                      {getProjectedValue(projectionData.average).toFixed(2)} RUNE
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {getReturnPercentage(getProjectedValue(projectionData.average)).toFixed(1)}% Return
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {getAPY(projectionData.average).toFixed(1)}% APY
+                    </p>
+                  </div>
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <p className="text-sm text-gray-600">Optimistic</p>
+                    <p className="text-xl font-bold text-green-600">
+                      {getProjectedValue(projectionData.optimistic).toFixed(2)} RUNE
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {getReturnPercentage(getProjectedValue(projectionData.optimistic)).toFixed(1)}% Return
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {getAPY(projectionData.optimistic).toFixed(1)}% APY
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -503,7 +519,7 @@ const EarningsSimulator: React.FC = () => {
                   <LoadingSpinner />
                 </div>
               ) : (
-                <Line options={projectionChartOptions} data={generateProjectionChartData()} />
+                <Line options={projectionChartOptions} data={projectionData} />
               )}
             </div>
 
