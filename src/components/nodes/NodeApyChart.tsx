@@ -1,34 +1,10 @@
 import React, { useState } from 'react';
 import { Line } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip as ChartTooltip,
-  Legend,
-  Filler,
-  BarController
-} from 'chart.js';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import RangeSelector, { RangeOption } from '../ui/RangeSelector';
 import { Info } from 'lucide-react';
 import Tooltip from '../ui/Tooltip';
 import '../../lib/chartConfig';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  ChartTooltip,
-  Legend,
-  Filler,
-  BarController
-);
 
 const RANGE_OPTIONS: RangeOption[] = [
   { label: '1M', value: 30 },
@@ -64,13 +40,12 @@ const NodeApyChart: React.FC<NodeApyChartProps> = ({ apyLabels, apyValues, apyDa
     const filtered = allPoints.filter(item => item.date >= minDate);
     filteredLabels = filtered.map(item => item.label);
     filteredValues = filtered.map(item => item.value);
-    // Solo rellenar con ceros si el primer dato real es el más antiguo disponible
+
     if (filtered.length > 0) {
       const firstFilteredDate = filtered[0].date.getTime();
       const firstAvailableDate = allPoints[0].date.getTime();
       if (firstFilteredDate === firstAvailableDate) {
-        // No hay datos previos, rellenar con ceros si faltan puntos
-        let missing = Math.max(0, Math.ceil(range / 3) - filtered.length); // asume 3 días por punto
+        let missing = Math.max(0, Math.ceil(range / 3) - filtered.length);
         const firstDate = new Date(filtered[0].date);
         let d = new Date(firstDate);
         const missingLabels = [];
@@ -84,7 +59,6 @@ const NodeApyChart: React.FC<NodeApyChartProps> = ({ apyLabels, apyValues, apyDa
         filteredValues = [...missingValues, ...filteredValues];
       }
     } else if (range > 0) {
-      // No datos reales, solo relleno
       let d = new Date(minDate);
       const missingLabels = [];
       const missingValues = [];
@@ -97,12 +71,10 @@ const NodeApyChart: React.FC<NodeApyChartProps> = ({ apyLabels, apyValues, apyDa
       filteredValues = missingValues;
     }
   } else if (apyLabels.length > 0 && apyValues.length > 0) {
-    // Fallback: últimos N puntos
     const total = apyLabels.length;
     const start = Math.max(0, total - range);
     filteredLabels = apyLabels.slice(start);
     filteredValues = apyValues.slice(start);
-    // Rellenar con ceros si faltan puntos
     if (filteredLabels.length < range) {
       const missing = range - filteredLabels.length;
       filteredLabels = [

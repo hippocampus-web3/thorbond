@@ -1,18 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Line, Chart } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip as ChartTooltip,
-  Legend,
-  Filler,
-  BarController
-} from 'chart.js';
 import { formatRune } from '../../lib/utils';
 import { ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { baseAmount } from '@xchainjs/xchain-util';
@@ -22,19 +9,6 @@ import { calculateProjections } from '../../lib/projectionCalculator';
 import TooltipComponent from '../ui/Tooltip';
 import { generateAPYData } from '../../lib/apyCalculator';
 import '../../lib/chartConfig';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  ChartTooltip,
-  Legend,
-  Filler,
-  BarController
-);
 
 const RANGE_OPTIONS = [
   { label: '1M', value: 30 },
@@ -50,7 +24,6 @@ const API_HISTORY_URL = 'https://history.runebond.com';
 
 const EarningsSimulator: React.FC = () => {
   const [investment, setInvestment] = useState<string>(DEFAULT_INVESTMENT);
-  const [showResults, setShowResults] = useState(true);
   const [showAdditionalStats, setShowAdditionalStats] = useState(false);
   const [networkRange, setNetworkRange] = useState(RANGE_OPTIONS[0].value);
   const [apyRange, setApyRange] = useState(RANGE_OPTIONS[0].value);
@@ -59,6 +32,7 @@ const EarningsSimulator: React.FC = () => {
   const [loadingNetworkData, setLoadingNetworkData] = useState(true);
   const [errorNetworkData, setErrorNetworkData] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [loadingProjection, setLoadingProjection] = useState(true);
 
   useEffect(() => {
     const fetchNetworkData = async () => {
@@ -102,47 +76,48 @@ const EarningsSimulator: React.FC = () => {
     }
   };
   const generateProjectionChartData = () => {
-    // Extraer los APYs históricos del networkData usando una ventana móvil de 7 días
-    const historicalAPYs = networkData.map((row, index) => {
-      const currentDate = new Date(row.block_timestamp);
-      const sevenDaysAgo = new Date(currentDate);
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    setLoadingProjection(true);
+    try {
+      const historicalAPYs = networkData.map((row, index) => {
+        const currentDate = new Date(row.block_timestamp);
+        const sevenDaysAgo = new Date(currentDate);
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-      // Encontrar el punto más cercano a 7 días atrás
-      let startIndex = index;
-      while (startIndex > 0 && new Date(networkData[startIndex - 1].block_timestamp) >= sevenDaysAgo) {
-        startIndex--;
-      }
-
-      if (startIndex === index) {
-        // Si no hay datos anteriores, intentar usar el siguiente punto
-        if (index < networkData.length - 1) {
-          const nextRow = networkData[index + 1];
-          const days = (new Date(nextRow.block_timestamp).getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24);
-          const bond = Number(row.total_active_bond) / 100_000_000;
-          const earnings = Number(nextRow.total_earnings) / 100_000_000;
-          if (bond <= 0) return 0;
-          const periodsPerYear = 365 / days;
-          return (earnings / bond) * periodsPerYear * 100;
+        let startIndex = index;
+        while (startIndex > 0 && new Date(networkData[startIndex - 1].block_timestamp) >= sevenDaysAgo) {
+          startIndex--;
         }
-        return 0;
-      }
 
-      const startRow = networkData[startIndex];
-      const days = (currentDate.getTime() - new Date(startRow.block_timestamp).getTime()) / (1000 * 60 * 60 * 24);
-      const bond = Number(startRow.total_active_bond) / 100_000_000;
-      const earnings = Number(row.total_earnings) / 100_000_000;
-      if (bond <= 0) return 0;
-      const periodsPerYear = 365 / days;
-      return (earnings / bond) * periodsPerYear * 100;
-    }).filter(apy => apy > 0);
+        if (startIndex === index) {
+          if (index < networkData.length - 1) {
+            const nextRow = networkData[index + 1];
+            const days = (new Date(nextRow.block_timestamp).getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24);
+            const bond = Number(row.total_active_bond) / 100_000_000;
+            const earnings = Number(nextRow.total_earnings) / 100_000_000;
+            if (bond <= 0) return 0;
+            const periodsPerYear = 365 / days;
+            return (earnings / bond) * periodsPerYear * 100;
+          }
+          return 0;
+        }
 
-    // Calcular las proyecciones usando la nueva lógica
-    return calculateProjections(
-      historicalAPYs,
-      parseFloat(investment) || 1000,
-      projectionRange / 30 // convertir días a meses
-    );
+        const startRow = networkData[startIndex];
+        const days = (currentDate.getTime() - new Date(startRow.block_timestamp).getTime()) / (1000 * 60 * 60 * 24);
+        const bond = Number(startRow.total_active_bond) / 100_000_000;
+        const earnings = Number(row.total_earnings) / 100_000_000;
+        if (bond <= 0) return 0;
+        const periodsPerYear = 365 / days;
+        return (earnings / bond) * periodsPerYear * 100;
+      }).filter(apy => apy > 0);
+
+      return calculateProjections(
+        historicalAPYs,
+        parseFloat(investment) || 1000,
+        projectionRange / 30
+      );
+    } finally {
+      setLoadingProjection(false);
+    }
   };
 
   const projectionData = generateProjectionChartData();
@@ -384,156 +359,160 @@ const EarningsSimulator: React.FC = () => {
         </p>
       </div>
 
-      {showResults && (
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            <div className="lg:col-span-1 space-y-4">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-500">Initial Investment</p>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={investment}
-                    onChange={handleInvestmentChange}
-                    onBlur={handleInvestmentBlur}
-                    className="w-full text-2xl font-bold text-gray-900 bg-white border border-gray-300 rounded-md px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    autoFocus
-                  />
-                ) : (
-                  <div 
-                    className="w-full text-2xl font-bold text-gray-900 bg-white border border-gray-300 rounded-md px-3 py-1 cursor-pointer hover:border-blue-500 hover:ring-1 hover:ring-blue-500"
-                    onClick={() => setIsEditing(true)}
-                  >
-                    {parseInt(investment)} RUNE
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 gap-4">
-                <div className="bg-red-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600">Conservative</p>
-                  <p className="text-xl font-bold text-red-600">
-                    {getProjectedValue(projectionData.conservative).toFixed(2)} RUNE
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {getReturnPercentage(getProjectedValue(projectionData.conservative)).toFixed(1)}% Return
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    {getAPY(projectionData.conservative).toFixed(1)}% APY
-                  </p>
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className="lg:col-span-1 space-y-4">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-500">Initial Investment</p>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={investment}
+                  onChange={handleInvestmentChange}
+                  onBlur={handleInvestmentBlur}
+                  className="w-full text-2xl font-bold text-gray-900 bg-white border border-gray-300 rounded-md px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  autoFocus
+                />
+              ) : (
+                <div 
+                  className="w-full text-2xl font-bold text-gray-900 bg-white border border-gray-300 rounded-md px-3 py-1 cursor-pointer hover:border-blue-500 hover:ring-1 hover:ring-blue-500"
+                  onClick={() => setIsEditing(true)}
+                >
+                  {parseInt(investment)} RUNE
                 </div>
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600">Average</p>
-                  <p className="text-xl font-bold text-blue-600">
-                    {getProjectedValue(projectionData.average).toFixed(2)} RUNE
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {getReturnPercentage(getProjectedValue(projectionData.average)).toFixed(1)}% Return
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    {getAPY(projectionData.average).toFixed(1)}% APY
-                  </p>
-                </div>
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600">Optimistic</p>
-                  <p className="text-xl font-bold text-green-600">
-                    {getProjectedValue(projectionData.optimistic).toFixed(2)} RUNE
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {getReturnPercentage(getProjectedValue(projectionData.optimistic)).toFixed(1)}% Return
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    {getAPY(projectionData.optimistic).toFixed(1)}% APY
-                  </p>
-                </div>
-              </div>
+              )}
             </div>
 
-            <div className="lg:col-span-2 space-y-4">
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
-                <div className="flex items-center gap-2">
-                  <TooltipComponent
-                    content={
-                      <div className="space-y-3">
-                        <div className="space-y-2">
-                          <p className="text-gray-700">This chart shows three potential scenarios for your investment:</p>
-                          <div className="space-y-1">
-                            <p className="text-gray-700">
-                              • <strong>Conservative (Red):</strong> Lower-end projection based on historical APY minus standard deviation
-                            </p>
-                            <p className="text-gray-700">
-                              • <strong>Average (Blue):</strong> Projection based on historical average APY
-                            </p>
-                            <p className="text-gray-700">
-                              • <strong>Optimistic (Green):</strong> Higher-end projection based on historical APY plus standard deviation
-                            </p>
-                          </div>
-                          <div className="mt-4 space-y-2">
-                            <p className="text-gray-700"><strong>How the standard deviation is calculated:</strong></p>
-                            <ol className="list-decimal list-inside text-gray-600 space-y-1">
-                              <li>Calculate the average (mean) of historical APYs</li>
-                              <li>Calculate the variance by finding the average of the squared differences from the mean</li>
-                              <li>Take the square root of the variance to get the standard deviation</li>
-                            </ol>
-                            <p className="text-gray-700 mt-2">
-                              The projections are calculated using historical APY data from each <a href="https://docs.thorchain.org/frequently-asked-questions/node-operators#what-is-churning-and-how-does-it-affect-my-node" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">churn</a> and assume compound interest every 3 days.
-                            </p>
-                          </div>
-                          <p className="text-gray-600 text-sm italic">
-                            Note: Past performance does not guarantee future results. These projections are estimates based on historical data.
-                          </p>
-                        </div>
-                      </div>
-                    }
-                  >
-                    <Info className="h-5 w-5 text-gray-400 hover:text-gray-600 cursor-help" />
-                  </TooltipComponent>
-                </div>
-                <div className="flex space-x-2">
-                  {RANGE_OPTIONS.map(option => (
-                    <TooltipComponent
-                      key={option.label}
-                      content={
-                        <div className="space-y-2">
-                          <p className="text-gray-700">
-                            {option.label === '1M' && '1 Month projection'}
-                            {option.label === '3M' && '3 Months projection'}
-                            {option.label === '6M' && '6 Months projection'}
-                            {option.label === '1A' && '1 Year projection'}
-                            {option.label === '3A' && '3 Years projection'}
-                          </p>
-                          <p className="text-gray-600 text-sm">
-                            Shows how your investment could grow over this period based on historical APY data.
-                          </p>
-                        </div>
-                      }
-                    >
-                      <button
-                        onClick={() => setProjectionRange(option.value)}
-                        className={`px-3 py-1 rounded-md ${
-                          projectionRange === option.value
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-gray-200 text-gray-700'
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    </TooltipComponent>
-                  ))}
-                </div>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="bg-red-50 p-4 rounded-lg">
+                <p className="text-sm text-gray-600">Conservative</p>
+                <p className="text-xl font-bold text-red-600">
+                  {getProjectedValue(projectionData.conservative).toFixed(2)} RUNE
+                </p>
+                <p className="text-sm text-gray-500">
+                  {getReturnPercentage(getProjectedValue(projectionData.conservative)).toFixed(1)}% Return
+                </p>
+                <p className="text-xs text-gray-400">
+                  {getAPY(projectionData.conservative).toFixed(1)}% APY
+                </p>
               </div>
-
-              <div className="h-[400px]">
-                <Line options={projectionChartOptions} data={generateProjectionChartData()} />
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <p className="text-sm text-gray-600">Average</p>
+                <p className="text-xl font-bold text-blue-600">
+                  {getProjectedValue(projectionData.average).toFixed(2)} RUNE
+                </p>
+                <p className="text-sm text-gray-500">
+                  {getReturnPercentage(getProjectedValue(projectionData.average)).toFixed(1)}% Return
+                </p>
+                <p className="text-xs text-gray-400">
+                  {getAPY(projectionData.average).toFixed(1)}% APY
+                </p>
               </div>
-
-              <div className="text-sm text-gray-500 text-center">
-                * Projections are based on historical APY data and assume compound interest every 3 days. Past performance does not guarantee future results.
+              <div className="bg-green-50 p-4 rounded-lg">
+                <p className="text-sm text-gray-600">Optimistic</p>
+                <p className="text-xl font-bold text-green-600">
+                  {getProjectedValue(projectionData.optimistic).toFixed(2)} RUNE
+                </p>
+                <p className="text-sm text-gray-500">
+                  {getReturnPercentage(getProjectedValue(projectionData.optimistic)).toFixed(1)}% Return
+                </p>
+                <p className="text-xs text-gray-400">
+                  {getAPY(projectionData.optimistic).toFixed(1)}% APY
+                </p>
               </div>
             </div>
           </div>
+
+          <div className="lg:col-span-2 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+              <div className="flex items-center gap-2">
+                <TooltipComponent
+                  content={
+                    <div className="space-y-3">
+                      <div className="space-y-2">
+                        <p className="text-gray-700">This chart shows three potential scenarios for your investment:</p>
+                        <div className="space-y-1">
+                          <p className="text-gray-700">
+                            • <strong>Conservative (Red):</strong> Lower-end projection based on historical APY minus standard deviation
+                          </p>
+                          <p className="text-gray-700">
+                            • <strong>Average (Blue):</strong> Projection based on historical average APY
+                          </p>
+                          <p className="text-gray-700">
+                            • <strong>Optimistic (Green):</strong> Higher-end projection based on historical APY plus standard deviation
+                          </p>
+                        </div>
+                        <div className="mt-4 space-y-2">
+                          <p className="text-gray-700"><strong>How the standard deviation is calculated:</strong></p>
+                          <ol className="list-decimal list-inside text-gray-600 space-y-1">
+                            <li>Calculate the average (mean) of historical APYs</li>
+                            <li>Calculate the variance by finding the average of the squared differences from the mean</li>
+                            <li>Take the square root of the variance to get the standard deviation</li>
+                          </ol>
+                          <p className="text-gray-700 mt-2">
+                            The projections are calculated using historical APY data from each <a href="https://docs.thorchain.org/frequently-asked-questions/node-operators#what-is-churning-and-how-does-it-affect-my-node" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">churn</a> and assume compound interest every 3 days.
+                          </p>
+                        </div>
+                        <p className="text-gray-600 text-sm italic">
+                          Note: Past performance does not guarantee future results. These projections are estimates based on historical data.
+                        </p>
+                      </div>
+                    </div>
+                  }
+                >
+                  <Info className="h-5 w-5 text-gray-400 hover:text-gray-600 cursor-help" />
+                </TooltipComponent>
+              </div>
+              <div className="flex space-x-2">
+                {RANGE_OPTIONS.map(option => (
+                  <TooltipComponent
+                    key={option.label}
+                    content={
+                      <div className="space-y-2">
+                        <p className="text-gray-700">
+                          {option.label === '1M' && '1 Month projection'}
+                          {option.label === '3M' && '3 Months projection'}
+                          {option.label === '6M' && '6 Months projection'}
+                          {option.label === '1A' && '1 Year projection'}
+                          {option.label === '3A' && '3 Years projection'}
+                        </p>
+                        <p className="text-gray-600 text-sm">
+                          Shows how your investment could grow over this period based on historical APY data.
+                        </p>
+                      </div>
+                    }
+                  >
+                    <button
+                      onClick={() => setProjectionRange(option.value)}
+                      className={`px-3 py-1 rounded-md ${
+                        projectionRange === option.value
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-200 text-gray-700'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  </TooltipComponent>
+                ))}
+              </div>
+            </div>
+
+            <div className="h-[400px]">
+              {loadingProjection ? (
+                <div className="h-full flex items-center justify-center">
+                  <LoadingSpinner />
+                </div>
+              ) : (
+                <Line options={projectionChartOptions} data={generateProjectionChartData()} />
+              )}
+            </div>
+
+            <div className="text-sm text-gray-500 text-center">
+              * Projections are based on historical APY data and assume compound interest every 3 days. Past performance does not guarantee future results.
+            </div>
+          </div>
         </div>
-      )}
+      </div>
 
       <div className="mt-8">
         <button

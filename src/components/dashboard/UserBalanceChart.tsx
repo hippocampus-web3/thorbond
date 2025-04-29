@@ -1,33 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Line } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip as ChartTooltip,
-  Legend,
-  BarController
-} from 'chart.js';
 import axios from 'axios';
 import Dropdown from '../ui/Dropdown';
 import RangeSelector from '../ui/RangeSelector';
 import '../../lib/chartConfig';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  BarController,
-  ChartTooltip,
-  Legend
-);
 
 interface UserBalanceChartProps {
   address?: string;
@@ -213,7 +189,6 @@ const UserBalanceChart: React.FC<UserBalanceChartProps> = ({ address }) => {
     
     const timestamp = Math.floor(date.getTime() / 1000);
     
-    // Encontrar el intervalo más cercano
     const closestInterval = runePrices.intervals.reduce((closest, current) => {
       const currentStart = parseInt(current.startTime);
       const currentEnd = parseInt(current.endTime);
@@ -229,22 +204,18 @@ const UserBalanceChart: React.FC<UserBalanceChartProps> = ({ address }) => {
       return currentDiff < closestDiff ? current : closest;
     });
 
-    // Si el timestamp está dentro del intervalo más cercano, usar ese precio
     if (timestamp >= parseInt(closestInterval.startTime) && timestamp <= parseInt(closestInterval.endTime)) {
       return parseFloat(closestInterval.runePriceUSD);
     }
     
-    // Si el timestamp es anterior al primer intervalo, usar el primer precio
     if (timestamp < parseInt(runePrices.intervals[0].startTime)) {
       return parseFloat(runePrices.intervals[0].runePriceUSD);
     }
     
-    // Si el timestamp es posterior al último intervalo, usar el último precio
     if (timestamp > parseInt(runePrices.intervals[runePrices.intervals.length - 1].endTime)) {
       return parseFloat(runePrices.intervals[runePrices.intervals.length - 1].runePriceUSD);
     }
     
-    // Si estamos entre intervalos, interpolar el precio
     const nextInterval = runePrices.intervals.find(interval => 
       parseInt(interval.startTime) > timestamp
     );
@@ -256,12 +227,10 @@ const UserBalanceChart: React.FC<UserBalanceChartProps> = ({ address }) => {
       const prevTime = parseInt(prevInterval.endTime);
       const nextTime = parseInt(nextInterval.startTime);
       
-      // Interpolación lineal
       const timeRatio = (timestamp - prevTime) / (nextTime - prevTime);
       return prevPrice + (nextPrice - prevPrice) * timeRatio;
     }
     
-    // Si todo falla, usar el último precio conocido
     return parseFloat(runePrices.intervals[runePrices.intervals.length - 1].runePriceUSD);
   };
 

@@ -14,37 +14,11 @@ import RuneBondEngine from '../lib/runebondEngine/runebondEngine';
 import { BaseAmount } from '@xchainjs/xchain-util';
 import { NodesResponse } from '@xchainjs/xchain-thornode';
 import NodeHistoryChart from '../components/nodes/NodeHistoryChart';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip as ChartTooltip,
-  Legend,
-  Filler,
-  BarController
-} from 'chart.js';
 import axios from 'axios';
 import NodeApyChart from '../components/nodes/NodeApyChart';
 import NodeAddress from '../components/nodes/NodeAddress';
 import NodeRestrictionNotice from '../components/nodes/NodeRestrictionNotice';
 import '../lib/chartConfig';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  ChartTooltip,
-  Legend,
-  Filler,
-  BarController
-);
 
 interface NodeDetailsPageProps {
   nodes: Node[];
@@ -508,7 +482,6 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
                     {errorHistory}
                   </div>
                 ) : (() => {
-                  // Calcular APY para cada punto
                   const apyLabels: string[] = [];
                   const apyValues: number[] = [];
                   const apyDates: string[] = [];
@@ -518,17 +491,17 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
                     const prevDate = new Date(prev.snapshot.block_timestamp);
                     const currDate = new Date(curr.snapshot.block_timestamp);
                     let days = (currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24);
-                    if (days <= 0) days = 3; // Si la diferencia es 0 o negativa, asume 3 días
+                    if (days <= 0) days = 3;
                     const bond = Number(prev.total_bond) || 0;
-                    const earning = Number(curr.earnings) || 0; // earning del snapshot actual (no acumulativo)
-                    if (bond <= 0) continue; // Solo omitir si el bond es 0
+                    const earning = Number(curr.earnings) || 0;
+                    if (bond <= 0) continue;
                     const periodsPerYear = 365 / days;
                     const apy = (earning / bond) * periodsPerYear * 100;
                     apyLabels.push(currDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
                     apyDates.push(currDate.toISOString());
                     apyValues.push(Number(apy.toFixed(2)));
                   }
-                  // Si solo hay un dato, calcula el APY asumiendo 3 días
+
                   if (nodeHistory.length === 1) {
                     const curr = nodeHistory[0];
                     const bond = Number(curr.total_bond) || 0;
