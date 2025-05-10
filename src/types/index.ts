@@ -22,6 +22,7 @@ export interface Node {
   description?: string;
   contactInfo?: string;
   maxTimeToLeave: number;
+  isDelisted: boolean;
   officialInfo: {
     currentFee: number;
     totalBond: number;

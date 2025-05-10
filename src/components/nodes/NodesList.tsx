@@ -52,6 +52,7 @@ const NodesList: React.FC<NodeListProps> = ({
   };
 
   const filteredNodes = nodes
+    .filter(node => node.isDelisted !== true)
     .filter((node) => {
       // Filter by search term
       if (searchTerm) {
