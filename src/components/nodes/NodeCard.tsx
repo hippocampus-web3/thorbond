@@ -7,9 +7,6 @@ import { baseAmount } from "@xchainjs/xchain-util";
 import { Copy, Check, Share2, Info, Eye, EyeOff, Trophy, Sparkles, Shield, Lock, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Tooltip from '../ui/Tooltip';
-
-const RUNEBOND_ADDRESS = import.meta.env.VITE_RUNEBOND_ADDRESS || "thor1xazgmh7sv0p393t9ntj6q9p52ahycc8jjlaap9";
-
 interface NodeCardProps {
   node: Node;
   onRequestWhitelist: (node: Node) => void;
@@ -25,8 +22,6 @@ const NodeCard: React.FC<NodeCardProps> = ({
   const [copiedNode, setCopiedNode] = useState(false);
   const [copiedOperator, setCopiedOperator] = useState(false);
   const [copiedShare, setCopiedShare] = useState(false);
-  const [copiedAddress, setCopiedAddress] = useState(false);
-  const [copiedWhitelistMemo, setCopiedWhitelistMemo] = useState(false);
   const isFull = node.maxRune < 0 || node.maxRune < node.minRune;
   const [isVisible, setIsVisible] = useState(!node.isHidden.hide && !isFull && !node.isYieldGuarded.hide);
   const navigate = useNavigate();
@@ -173,13 +168,6 @@ const NodeCard: React.FC<NodeCardProps> = ({
     } catch (err) {
       console.error('Failed to copy address:', err);
     }
-  };
-
-  const handleCopyWhitelistMemo = () => {
-    const memo = `TB:WHT:${node.nodeAddress}:<your_address>:<amount>`;
-    navigator.clipboard.writeText(memo);
-    setCopiedWhitelistMemo(true);
-    setTimeout(() => setCopiedWhitelistMemo(false), 2000);
   };
 
   const handleShare = async (e: React.MouseEvent) => {

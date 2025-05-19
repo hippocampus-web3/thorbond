@@ -12,7 +12,7 @@ interface TransactionConfirmationPopupProps {
   onClose: () => void;
   onConfirm: () => Promise<void>;
   transaction: ThorchainTransferParams;
-  transactionType: 'listing' | 'whitelist' | 'enableBond' | 'bond' | 'unbond' | 'message';
+  transactionType: 'listing' | 'whitelist' | 'enableBond' | 'bond' | 'unbond' | 'message' | 'subscription';
   isLoading?: boolean;
   additionalInfo?: {
     intendedBondAmount?: string;
@@ -30,6 +30,7 @@ const TransactionConfirmationPopup: React.FC<TransactionConfirmationPopupProps> 
   additionalInfo
 }) => {
   const isMessageType = transactionType === 'message';
+  const isSubscriptionType = transactionType === 'subscription';
   const isStandbyNode = additionalInfo?.nodeInfo?.status === 'Standby';
   const requiresStandbyWarning = isStandbyNode && (transactionType === 'bond' || transactionType === 'whitelist');
 
@@ -37,7 +38,7 @@ const TransactionConfirmationPopup: React.FC<TransactionConfirmationPopupProps> 
     const initial: { [key: string]: boolean } = {};
     if (isMessageType) {
       initial.messagePermanent = false;
-    } else {
+    } else if (!isSubscriptionType) {
       initial.trust = false;
       initial.locked = false;
       initial.responsibility = false;
@@ -131,93 +132,95 @@ const TransactionConfirmationPopup: React.FC<TransactionConfirmationPopupProps> 
           </div>
         </div>
 
-        <div className="bg-gray-50 p-4 rounded-md">
-          <h3 className="text-sm font-medium text-gray-700 mb-2">Important Disclaimers</h3>
-          
-          {requiresStandbyWarning && (
-            <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-md mb-4">
-              <h4 className="text-sm font-medium text-yellow-800 mb-2">Standby Node Warning</h4>
-              <div className="flex items-start space-x-3">
-                <input
-                  type="checkbox"
-                  id="standbyWarning"
-                  checked={checkboxes.standbyWarning}
-                  onChange={() => handleCheckboxChange('standbyWarning')}
-                  className="mt-1 h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded"
-                />
-                <label htmlFor="standbyWarning" className="text-sm text-yellow-700">
-                  I understand I'm delegating to a <strong className="font-semibold">Standby</strong> node, which currently doesn't generate yield. Yield will only start once the node becomes <strong className="font-semibold">Active</strong>.{' '}
-                  <a 
-                    href="https://thorbond.gitbook.io/runebond/others/frequently-asked-questions-faqs#if-i-delegate-to-a-standby-node-will-i-earn-yield-when-does-a-standby-node-become-active" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="font-medium text-yellow-800 hover:underline"
-                  >
-                    Learn when a node becomes Active
-                  </a>
-                </label>
+        {!isSubscriptionType && (
+          <div className="bg-gray-50 p-4 rounded-md">
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Important Disclaimers</h3>
+            
+            {requiresStandbyWarning && (
+              <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-md mb-4">
+                <h4 className="text-sm font-medium text-yellow-800 mb-2">Standby Node Warning</h4>
+                <div className="flex items-start space-x-3">
+                  <input
+                    type="checkbox"
+                    id="standbyWarning"
+                    checked={checkboxes.standbyWarning}
+                    onChange={() => handleCheckboxChange('standbyWarning')}
+                    className="mt-1 h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="standbyWarning" className="text-sm text-yellow-700">
+                    I understand I'm delegating to a <strong className="font-semibold">Standby</strong> node, which currently doesn't generate yield. Yield will only start once the node becomes <strong className="font-semibold">Active</strong>.{' '}
+                    <a 
+                      href="https://thorbond.gitbook.io/runebond/others/frequently-asked-questions-faqs#if-i-delegate-to-a-standby-node-will-i-earn-yield-when-does-a-standby-node-become-active" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="font-medium text-yellow-800 hover:underline"
+                    >
+                      Learn when a node becomes Active
+                    </a>
+                  </label>
+                </div>
               </div>
-            </div>
-          )}
-
-          <div className="space-y-4">
-            {isMessageType ? (
-              <div className="flex items-start space-x-3">
-                <input
-                  type="checkbox"
-                  id="messagePermanent"
-                  checked={checkboxes.messagePermanent}
-                  onChange={() => handleCheckboxChange('messagePermanent')}
-                  className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label htmlFor="messagePermanent" className="text-sm text-gray-700">
-                  I understand that this message will be permanently recorded on the THORChain blockchain and cannot be deleted or edited.
-                </label>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-start space-x-3">
-                  <input
-                    type="checkbox"
-                    id="trust"
-                    checked={checkboxes.trust}
-                    onChange={() => handleCheckboxChange('trust')}
-                    className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="trust" className="text-sm text-gray-700">
-                    By delegating, I am trusting a third party to act responsibly. If the operator misbehaves, I could lose part or all of my bonded RUNE.
-                  </label>
-                </div>
-
-                <div className="flex items-start space-x-3">
-                  <input
-                    type="checkbox"
-                    id="locked"
-                    checked={checkboxes.locked}
-                    onChange={() => handleCheckboxChange('locked')}
-                    className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="locked" className="text-sm text-gray-700">
-                    My RUNE may remain locked until the node exits the network or is forcefully.
-                  </label>
-                </div>
-
-                <div className="flex items-start space-x-3">
-                  <input
-                    type="checkbox"
-                    id="responsibility"
-                    checked={checkboxes.responsibility}
-                    onChange={() => handleCheckboxChange('responsibility')}
-                    className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="responsibility" className="text-sm text-gray-700">
-                    RUNEBond provides tools to help, but I take full responsibility for my choice of node.
-                  </label>
-                </div>
-              </>
             )}
+
+            <div className="space-y-4">
+              {isMessageType ? (
+                <div className="flex items-start space-x-3">
+                  <input
+                    type="checkbox"
+                    id="messagePermanent"
+                    checked={checkboxes.messagePermanent}
+                    onChange={() => handleCheckboxChange('messagePermanent')}
+                    className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="messagePermanent" className="text-sm text-gray-700">
+                    I understand that this message will be permanently recorded on the THORChain blockchain and cannot be deleted or edited.
+                  </label>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-start space-x-3">
+                    <input
+                      type="checkbox"
+                      id="trust"
+                      checked={checkboxes.trust}
+                      onChange={() => handleCheckboxChange('trust')}
+                      className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="trust" className="text-sm text-gray-700">
+                      By delegating, I am trusting a third party to act responsibly. If the operator misbehaves, I could lose part or all of my bonded RUNE.
+                    </label>
+                  </div>
+
+                  <div className="flex items-start space-x-3">
+                    <input
+                      type="checkbox"
+                      id="locked"
+                      checked={checkboxes.locked}
+                      onChange={() => handleCheckboxChange('locked')}
+                      className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="locked" className="text-sm text-gray-700">
+                      My RUNE may remain locked until the node exits the network or is forcefully.
+                    </label>
+                  </div>
+
+                  <div className="flex items-start space-x-3">
+                    <input
+                      type="checkbox"
+                      id="responsibility"
+                      checked={checkboxes.responsibility}
+                      onChange={() => handleCheckboxChange('responsibility')}
+                      className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="responsibility" className="text-sm text-gray-700">
+                      RUNEBond provides tools to help, but I take full responsibility for my choice of node.
+                    </label>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="flex justify-end space-x-4">
           <button
@@ -230,7 +233,7 @@ const TransactionConfirmationPopup: React.FC<TransactionConfirmationPopupProps> 
           <button
             onClick={onConfirm}
             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed relative"
-            disabled={isLoading || !allChecked}
+            disabled={isLoading || (!isSubscriptionType && !allChecked)}
           >
             {isLoading ? (
               <>

@@ -89,3 +89,18 @@ export interface Message {
   role: 'BP' | 'NO' | 'USER';
   txId: string;
 }
+
+export interface ThorchainTransferParams {
+  asset: {
+    chain: string;
+    symbol: string;
+    ticker: string;
+  };
+  from: string;
+  recipient?: string;
+  amount: {
+    amount: number;
+    decimals: number;
+  };
+  memo?: string;
+}
