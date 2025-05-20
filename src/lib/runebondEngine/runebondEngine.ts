@@ -25,6 +25,23 @@ import { WalletProvider, WalletType } from "../../contexts/WalletContext";
 import { ThorchainTransferParams } from "../../types/wallets";
 import { ThornodeClient } from '../thornode/client';
 import { NodesResponse } from "@xchainjs/xchain-thornode";
+import { MidgardClient } from '../midgard';
+
+interface SubscriptionResponse {
+  success: boolean;
+  data: {
+    user_id: string;
+    subscription_code: string;
+    memo: string;
+    email: string;
+    observable_address: string;
+    channel: string;
+    enabled: boolean;
+    subscribed_until: string;
+  };
+  is_new_subscription: boolean;
+  message: string;
+}
 
 class RuneBondEngine {
   private static instance: RuneBondEngine;
@@ -34,9 +51,11 @@ class RuneBondEngine {
     "thor1xazgmh7sv0p393t9ntj6q9p52ahycc8jjlaap9";
   private RUNE_DUST = 10000000;
   private thornodeClient: ThornodeClient;
+  private midgardClient: MidgardClient;
 
   private constructor() {
     this.thornodeClient = ThornodeClient.getInstance();
+    this.midgardClient = new MidgardClient();
   }
 
   public static getInstance(): RuneBondEngine {
@@ -377,11 +396,65 @@ class RuneBondEngine {
   }
 
   public async isTransactionConfirmed(txId: string): Promise<boolean> {
-    return this.thornodeClient.isTransactionConfirmed(txId);
+    return this.midgardClient.isTransactionConfirmed(txId);
   }
 
   public async getAddressBalance(address: string): Promise<BaseAmount> {
     return this.thornodeClient.getAddressBalance(address);
+  }
+
+  public async createSubscription(email: string, observableAddress: string): Promise<SubscriptionResponse> {
+    try {
+      const response = await axios.post(`${this.RUNEBOND_API_URL}/subscriptions`, {
+        email,
+        observable_address: observableAddress
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Failed to create subscription:", error);
+      throw new Error("Failed to create subscription");
+    }
+  }
+
+  public async sendSubscriptionPayment(
+    params: {
+      memo: string;
+      userAddress: string;
+      amount: number;
+    },
+    walletType?: WalletType,
+    walletProvider?: WalletProvider,
+    emulate?: boolean
+  ): Promise<string | ThorchainTransferParams> {
+    const transaction: ThorchainTransferParams = {
+      asset: {
+        chain: "THOR",
+        symbol: "RUNE",
+        ticker: "RUNE",
+      },
+      from: params.userAddress,
+      recipient: this.RUNEBOND_ADDRESS,
+      amount: {
+        amount: params.amount,
+        decimals: 8,
+      },
+      memo: params.memo,
+    };
+
+    if (emulate) {
+      return transaction;
+    }
+
+    if (!walletType || !walletProvider) {
+      throw new Error('Wallet type and provider are required when not emulating');
+    }
+
+    return sendTransaction(
+      transaction,
+      'transfer',
+      walletType,
+      walletProvider
+    );
   }
 }
 

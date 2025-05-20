@@ -21,6 +21,10 @@ interface NodeDetailsPageWrapperProps {
   onUnbondRequest: (nodeAddress: string, userAddress: string, amount: number) => Promise<void>;
   refreshWhitelistFlag: number;
   oficialNodes: NodesResponse;
+  onPaymentExecute: (memo: string, amount: number) => Promise<{ txId: string }>;
+  onConnectWallet: () => void;
+  txSubscriptionHash: string | null;
+  onClearTx: () => void;
 }
 
 const NodeDetailsPageWrapper: React.FC<NodeDetailsPageWrapperProps> = ({
@@ -38,7 +42,11 @@ const NodeDetailsPageWrapper: React.FC<NodeDetailsPageWrapperProps> = ({
   onBondRequest,
   onUnbondRequest,
   refreshWhitelistFlag,
-  oficialNodes
+  oficialNodes,
+  onPaymentExecute,
+  onConnectWallet,
+  txSubscriptionHash,
+  onClearTx
 }) => {
   const { nodeAddress } = useParams<{ nodeAddress: string }>();
 
@@ -66,6 +74,10 @@ const NodeDetailsPageWrapper: React.FC<NodeDetailsPageWrapperProps> = ({
       onUnbondRequest={onUnbondRequest}
       refreshWhitelistFlag={refreshWhitelistFlag}
       oficialNodes={oficialNodes}
+      onPaymentExecute={onPaymentExecute}
+      onConnectWallet={onConnectWallet}
+      txSubscriptionHash={txSubscriptionHash}
+      onClearTx={onClearTx}
     />
   );
 };

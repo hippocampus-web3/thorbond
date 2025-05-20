@@ -9,13 +9,16 @@ interface TransactionPollingState {
     currentTxId: string | null;
     toastId: string | number | null;
     address: string | null;
-    transactionType: 'listing' | 'whitelist' | 'enableBond' | 'bond' | 'unbond' | 'message' | null;
+    transactionType: 'listing' | 'whitelist' | 'enableBond' | 'bond' | 'unbond' | 'message' | 'subscription' | null;
     transactionData: any;
     nodeAddress: string | null;
 }
 
 interface UseTransactionPollingProps {
-    onTransactionConfirmed?: (type: TransactionPollingState['transactionType'], additionalInfo?: { nodeAddress?: string }) => void;
+    onTransactionConfirmed?: (type: TransactionPollingState['transactionType'], additionalInfo?: { 
+        nodeAddress?: string;
+        txId?: string;
+    }) => void;
 }
 
 export const useTransactionPolling = ({ onTransactionConfirmed }: UseTransactionPollingProps = {}) => {
@@ -90,28 +93,29 @@ export const useTransactionPolling = ({ onTransactionConfirmed }: UseTransaction
             case 'listing':
                 return listedNodes.some(node => node.txId === state.currentTxId);
 
-            case 'whitelist':
+            case 'whitelist': {
                 const isOperatorWhitelistConfirmed = requests.operator.some(req =>
                     req.txId === state.currentTxId
-                )
+                );
                 const isUserWhitelistConfirmed = requests.user.some(req =>
                     req.txId === state.currentTxId
-                )
+                );
                 return isOperatorWhitelistConfirmed || isUserWhitelistConfirmed;
+            }
 
-            case 'enableBond':
+            case 'enableBond': {
                 const isOperatorEnableBondConfirmed = requests.operator.some(req =>
                     req.txId === state.currentTxId
-                )
+                );
                 const isUserEnableBondConfirmed = requests.user.some(req =>
                     req.txId === state.currentTxId
-                )
+                );
                 return isOperatorEnableBondConfirmed || isUserEnableBondConfirmed;
+            }
 
             case 'bond':
-                return await engine.isTransactionConfirmed(state.currentTxId!);
-
             case 'unbond':
+            case 'subscription':
                 return await engine.isTransactionConfirmed(state.currentTxId!);
 
             case 'message':
@@ -148,7 +152,10 @@ export const useTransactionPolling = ({ onTransactionConfirmed }: UseTransaction
                         });
                         
                         if (onTransactionConfirmed && state.transactionType) {
-                            onTransactionConfirmed(state.transactionType, { nodeAddress: state.nodeAddress || undefined });
+                            onTransactionConfirmed(state.transactionType, { 
+                                nodeAddress: state.nodeAddress || undefined,
+                                txId: state.currentTxId || undefined
+                            });
                         }
                         
                         stopPolling();
@@ -164,7 +171,7 @@ export const useTransactionPolling = ({ onTransactionConfirmed }: UseTransaction
                 clearInterval(intervalId);
             }
         };
-    }, [state.isPolling, state.currentTxId, state.toastId, stopPolling, verifyTransaction, onTransactionConfirmed]);
+    }, [state.isPolling, state.currentTxId, state.toastId, stopPolling, verifyTransaction, onTransactionConfirmed, state.address, state.transactionType, state.nodeAddress]);
 
     return {
         startPolling,

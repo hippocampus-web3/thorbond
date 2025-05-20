@@ -39,7 +39,7 @@ const AppContent: React.FC = () => {
   const [balance, setBalance] = useState<BaseAmount | null>(null);
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
   const [pendingTransaction, setPendingTransaction] = useState<{
-    type: 'listing' | 'whitelist' | 'enableBond' | 'bond' | 'unbond' | 'message';
+    type: 'listing' | 'whitelist' | 'enableBond' | 'bond' | 'unbond' | 'message' | 'subscription';
     data: any;
     additionalInfo?: {
       nodeAddress?: string,
@@ -49,6 +49,7 @@ const AppContent: React.FC = () => {
     callback: () => Promise<string>;
   } | null>(null);
   const [refreshWhitelistFlag, setRefreshWhitelistFlag] = useState(0);
+  const [txSubscriptionHash, setTxSubscriptionHash] = useState<string | null>(null);
 
   const { address, isConnected, connect, disconnect, walletProvider } = useWallet();
   const addressTofilter = address || searchOperator || searchUser || import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR;
@@ -80,8 +81,13 @@ const AppContent: React.FC = () => {
         if (type === 'bond' || type === 'unbond') {
           setRefreshWhitelistFlag(Date.now());
         }
+
+        if (type === 'subscription' && additionalInfo?.txId) {
+          setTxSubscriptionHash(additionalInfo.txId);
+        }
       } catch (error) {
         console.error('Error updating state after transaction confirmation:', error);
+        toast.error('Error confirming transaction. Please check the status manually.');
       }
     }
   });
@@ -534,6 +540,51 @@ const AppContent: React.FC = () => {
     }
   };
 
+  const handlePaymentExecute = async (memo: string, amount: number): Promise<{ txId: string }> => {
+    try {
+      const engine = RuneBondEngine.getInstance();
+      const transaction = await engine.sendSubscriptionPayment(
+        {
+          memo,
+          userAddress: address || '',
+          amount
+        },
+        isConnected as WalletType,
+        walletProvider as WalletProvider,
+        true
+      );
+
+      setPendingTransaction({
+        type: 'subscription',
+        data: transaction,
+        callback: async () => {
+          const hash = await engine.sendSubscriptionPayment(
+            {
+              memo,
+              userAddress: address || '',
+              amount
+            },
+            isConnected as WalletType,
+            walletProvider as WalletProvider
+          );
+          if (!hash) {
+            throw new Error('Transaction failed to send. Please try again or check your network and wallet settings.');
+          }
+          return hash as string;
+        }
+      });
+      setShowTransactionConfirmation(true);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error processing subscription payment';
+      toast.error(errorMessage);
+      throw error;
+    }
+  };
+
+  const handleClearTx = () => {
+    setTxSubscriptionHash(null);
+  };
+
   const LoadingScreen = ({ message }: { message: string }) => (
     <div className="flex items-center justify-center min-h-screen">
       <div className="text-center">
@@ -595,6 +646,10 @@ const AppContent: React.FC = () => {
                   onUnbondRequest={handleUnbondRequest}
                   refreshWhitelistFlag={refreshWhitelistFlag}
                   oficialNodes={allNodes}
+                  onPaymentExecute={handlePaymentExecute}
+                  onConnectWallet={handleConnect}
+                  txSubscriptionHash={txSubscriptionHash}
+                  onClearTx={handleClearTx}
                 />
               )
             }
@@ -631,6 +686,10 @@ const AppContent: React.FC = () => {
                   searchValue={searchUser}
                   isConnected={isConnected !== null}
                   isLoading={isLoadingNodes}
+                  onPaymentExecute={handlePaymentExecute}
+                  onConnectWallet={handleConnect}
+                  txSubscriptionHash={txSubscriptionHash}
+                  onClearTx={handleClearTx}
                 />
               )
             }

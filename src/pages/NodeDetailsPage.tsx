@@ -4,7 +4,7 @@ import { Node, WhitelistRequestFormData, Message, WhitelistRequest } from '../ty
 import { formatRune } from '../lib/utils';
 import { useWallet } from '../contexts/WalletContext';
 import { baseAmount } from "@xchainjs/xchain-util";
-import { Info, Trophy, EyeOff, Shield, Lock, Clock, ArrowLeft, Sparkles } from 'lucide-react';
+import { Info, Trophy, EyeOff, Shield, Lock, Clock, ArrowLeft, Sparkles, Bell } from 'lucide-react';
 import WhitelistRequestForm from '../components/nodes/WhitelistRequestForm';
 import Tooltip from '../components/ui/Tooltip';
 import ChatInterface from '../components/nodes/ChatInterface';
@@ -19,6 +19,7 @@ import NodeApyChart from '../components/nodes/NodeApyChart';
 import NodeAddress from '../components/nodes/NodeAddress';
 import NodeRestrictionNotice from '../components/nodes/NodeRestrictionNotice';
 import '../lib/chartConfig';
+import SubscriptionModal from '../components/subscription/SubscriptionModal';
 
 interface NodeDetailsPageProps {
   nodes: Node[];
@@ -35,6 +36,10 @@ interface NodeDetailsPageProps {
   onUnbondRequest: (nodeAddress: string, userAddress: string, amount: number) => Promise<void>;
   refreshWhitelistFlag: number;
   oficialNodes: NodesResponse;
+  onPaymentExecute: (memo: string, amount: number) => Promise<{ txId: string }>;
+  onConnectWallet: () => void;
+  txSubscriptionHash: string | null;
+  onClearTx: () => void;
 }
 
 const API_HISTORY_URL = 'https://history.runebond.com';
@@ -53,7 +58,11 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
   onBondRequest,
   onUnbondRequest,
   refreshWhitelistFlag,
-  oficialNodes
+  oficialNodes,
+  onPaymentExecute,
+  onConnectWallet,
+  txSubscriptionHash,
+  onClearTx
 }) => {
   const { nodeAddress } = useParams<{ nodeAddress: string }>();
   const navigate = useNavigate();
@@ -63,6 +72,7 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
   const [nodeHistory, setNodeHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [errorHistory, setErrorHistory] = useState<string | null>(null);
+  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
 
   const node = nodes.find(n => n.nodeAddress === nodeAddress);
   const officialNode = oficialNodes.find(n => n.node_address === nodeAddress);
@@ -315,7 +325,7 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="mb-8">
+      <div className="mb-8 flex justify-between items-center">
         <button
           onClick={() => {
             navigate('/nodes')
@@ -324,6 +334,14 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
         >
           <ArrowLeft className="h-5 w-5 mr-2" />
           Back to Nodes
+        </button>
+
+        <button
+          onClick={() => setIsSubscriptionModalOpen(true)}
+          className="inline-flex items-center px-4 py-2 border-2 border-indigo-500 rounded-md shadow-sm text-sm font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform transition-all duration-200 hover:scale-105"
+        >
+          <Bell className="h-5 w-5 mr-2 text-indigo-500" />
+          Subscribe to Notifications
         </button>
       </div>
 
@@ -575,6 +593,16 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
           </div>
         </div>
       )}
+
+      <SubscriptionModal
+        isOpen={isSubscriptionModalOpen}
+        onClose={() => setIsSubscriptionModalOpen(false)}
+        nodeAddress={node.nodeAddress}
+        onPaymentExecute={onPaymentExecute}
+        onConnectWallet={onConnectWallet}
+        txSubscriptionHash={txSubscriptionHash}
+        onClearTx={onClearTx}
+      />
     </div>
   );
 };
