@@ -604,7 +604,7 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
       <SubscriptionModal
         isOpen={isSubscriptionModalOpen}
         onClose={() => setIsSubscriptionModalOpen(false)}
-        title="Subscribe to Node Notifications"
+        title="Subscribe to notifications"
         description={`Receive important updates directly in your email.`}
         price={1}
         nodeAddress={node.nodeAddress}

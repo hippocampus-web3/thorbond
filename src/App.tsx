@@ -686,6 +686,10 @@ const AppContent: React.FC = () => {
                   searchValue={searchUser}
                   isConnected={isConnected !== null}
                   isLoading={isLoadingNodes}
+                  onPaymentExecute={handlePaymentExecute}
+                  onConnectWallet={handleConnect}
+                  txSubscriptionHash={txSubscriptionHash}
+                  onClearTx={handleClearTx}
                 />
               )
             }

@@ -29,7 +29,7 @@ const EmailStep: React.FC<EmailStepProps> = ({
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold text-gray-900 mb-2">Subscribe to Node</h2>
+      <h2 className="text-2xl font-semibold text-gray-900 mb-2">Subscribe to notifications</h2>
       <p className="text-gray-600 mb-6">
         Enter your email address to receive notifications about this node.
       </p>
