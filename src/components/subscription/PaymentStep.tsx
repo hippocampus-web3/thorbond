@@ -127,10 +127,10 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
               <h4 className="text-sm font-medium text-gray-700 mb-2">Send Payment To</h4>
               <div className="flex items-center gap-2">
                 <code className="flex-1 text-sm text-gray-900 break-all font-mono bg-white p-2 rounded">
-                  thor1xazgmh7sv0p393t9ntj6q9p52ahycc8jjlaap9
+                  {import.meta.env.VITE_RUNEBOND_ADDRESS || "thor1xazgmh7sv0p393t9ntj6q9p52ahycc8jjlaap9"}
                 </code>
                 <button
-                  onClick={() => handleCopy('thor1xazgmh7sv0p393t9ntj6q9p52ahycc8jjlaap9', 'address')}
+                  onClick={() => handleCopy(import.meta.env.VITE_RUNEBOND_ADDRESS || "thor1xazgmh7sv0p393t9ntj6q9p52ahycc8jjlaap9", 'address')}
                   className="p-2 text-gray-500 hover:text-gray-700"
                 >
                   {copiedAddress ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}

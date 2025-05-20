@@ -24,7 +24,7 @@ const Footer: React.FC = () => {
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-white"
               >
-                <span className="sr-only">Twitter</span>
+                <span className="sr-only">X</span>
                 <Twitter className="h-6 w-6" />
               </a>
               <a 

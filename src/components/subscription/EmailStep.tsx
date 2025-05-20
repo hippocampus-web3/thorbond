@@ -90,9 +90,12 @@ const EmailStep: React.FC<EmailStepProps> = ({
                   <div className="space-y-2">
                     <p className="font-medium">Notifications:</p>
                     <ul className="list-disc pl-4 space-y-1">
-                      <li>Node chat messages</li>
+                      <li>Node status update</li>
+                      <li>Bond provider balance updated</li>
+                      <li>Node chat Message</li>
+                      <li>Whitelist request</li>
                       <li>Whitelist accepted</li>
-                      <li>Node status</li>
+                      <li>Whitelist rejected</li>
                     </ul>
                   </div>
                 }>

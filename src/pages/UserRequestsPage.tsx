@@ -53,7 +53,7 @@ const UserRequestsPage: React.FC<UserRequestsPageProps> = ({
     return () => {
       onSearchUser('')
     }
-  }, []);
+  }, [onSearchUser, searchParams]);
 
   const handleSearch = (address: string) => {
     setLocalSearchValue(address);
@@ -133,10 +133,7 @@ const UserRequestsPage: React.FC<UserRequestsPageProps> = ({
       <SubscriptionModal
         isOpen={isSubscriptionModalOpen}
         onClose={() => setIsSubscriptionModalOpen(false)}
-        title="Subscribe to User Notifications"
-        description={`Receive important updates directly in your email.`}
-        price={1}
-        nodeAddress={isConnected ? walletAddress : (searchValue || localSearchValue)}
+        nodeAddress={isConnected ? walletAddress || '' : (searchValue || localSearchValue)}
         onPaymentExecute={onPaymentExecute}
         onConnectWallet={onConnectWallet}
         txSubscriptionHash={txSubscriptionHash}

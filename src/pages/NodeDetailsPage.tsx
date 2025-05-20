@@ -323,13 +323,6 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
     onUnbondRequest(node.nodeAddress, address, Number(amount));
   };
 
-  const handleSubscribe = async (email: string) => {
-    return {
-      memo: `SUBSCRIBE:${node.nodeAddress}:${email}`,
-      address: 'thor1...'
-    };
-  };
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="mb-8 flex justify-between items-center">
@@ -604,11 +597,7 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
       <SubscriptionModal
         isOpen={isSubscriptionModalOpen}
         onClose={() => setIsSubscriptionModalOpen(false)}
-        title="Subscribe to notifications"
-        description={`Receive important updates directly in your email.`}
-        price={1}
         nodeAddress={node.nodeAddress}
-        onSubscribe={handleSubscribe}
         onPaymentExecute={onPaymentExecute}
         onConnectWallet={onConnectWallet}
         txSubscriptionHash={txSubscriptionHash}
