@@ -105,7 +105,12 @@ export async function buildAndSignTransaction(params: ThorchainTransferParams, p
   );
 
   const fee = {
-    amount: [],
+    amount: [
+      {
+        denom: "rune",
+        amount: "2000000", // 0.02 RUNE 
+      },
+    ],
     gas: "200000",
   };
 

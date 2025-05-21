@@ -62,8 +62,14 @@ export interface KeplrProvider {
   getOfflineSignerOnlyAmino: any
 }
 
+export interface LeapProvider {
+  enable: (chainId: string) => Promise<void>;
+  experimentalSuggestChain: any;
+  getOfflineSignerOnlyAmino: any
+}
+
 // Update WalletProvider type
-export type WalletProvider = ThorChainClient | VultisigThorchainProvider | ThorchainProvider | KeplrProvider;
+export type WalletProvider = ThorChainClient | VultisigThorchainProvider | ThorchainProvider | KeplrProvider | LeapProvider;
 
 // Global window interface
 declare global {
@@ -72,5 +78,6 @@ declare global {
     xfi?: XDEFIProvider;
     ctrlEthProviders?: Record<string, any>;
     keplr?: KeplrProvider;
+    leap?: LeapProvider;
   }
 } 
