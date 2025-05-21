@@ -3,6 +3,7 @@ import { Wallet } from 'lucide-react';
 import CtrlSVG from './Ctrl';
 import Vultisig from './Vultisig';
 import KeplrSVG from './Keplr';
+import LeapSVG from './Leap';
 import { WalletType } from '../../contexts/WalletContext';
 import Modal from '../ui/Modal';
 
@@ -39,6 +40,14 @@ const WalletConnectPopup: React.FC<WalletConnectPopupProps> = ({
       name: 'Keplr',
       description: 'Connect with Keplr Wallet',
       icon: <KeplrSVG className="h-6 w-6" />,
+      disabled: false,
+      tooltip: null
+    },
+    {
+      id: 'leap',
+      name: 'Leap',
+      description: 'Connect with Leap Wallet',
+      icon: <LeapSVG className="h-6 w-6" />,
       disabled: false,
       tooltip: null
     },

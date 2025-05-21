@@ -118,5 +118,21 @@ export const sendTransaction = async (
         }
     }
 
+    if (walletType === 'leap') {
+        if (walletProvider) {
+            const leap = walletProvider as KeplrProvider;
+
+            if (method === 'transfer') {
+                const hash = await buildAndSignTransaction(params, leap, 'transfer');
+                return hash;
+            }
+
+            if (method === 'deposit') {
+                const hash = await buildAndSignTransaction(params, leap, 'deposit');
+                return hash;
+            }
+        }
+    }
+
     throw new Error("No compatible wallet found. Please install Ctrl or Vultisig extension.");
 }; 

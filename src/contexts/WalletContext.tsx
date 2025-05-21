@@ -8,7 +8,7 @@ import {
 import { KeplrProvider, ThorchainProvider, VultisigThorchainProvider } from '../types/wallets';
 import { KeplrThorchainConfig } from '../lib/wallet/keplr';
 
-export type WalletType = 'xdefi' | 'vultisig' | 'keystore' | 'keplr';
+export type WalletType = 'xdefi' | 'vultisig' | 'keystore' | 'keplr' | 'leap';
 export type WalletProvider = ThorChainClient | VultisigThorchainProvider | ThorchainProvider | KeplrProvider;
 
 interface WalletContextType {
@@ -29,40 +29,39 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const connect = useCallback(async (walletType: string = 'vultisig', data?: { keystoreData: Keystore, password: string }) => {
     try {
       switch (walletType) {
-        case 'vultisig':
-          {
-            let accounts = [];
-            const vultisigEthProvider = window.vultisig?.thorchain;
-            if (!vultisigEthProvider) {
-              throw new Error('Vultisig provider not found');
-            }
-            const requestedAccounts = await vultisigEthProvider.request({
-              method: "get_accounts",
+        case 'vultisig': {
+          let accounts = [];
+          const vultisigEthProvider = window.vultisig?.thorchain;
+          if (!vultisigEthProvider) {
+            throw new Error('Vultisig provider not found');
+          }
+          const requestedAccounts = await vultisigEthProvider.request({
+            method: "get_accounts",
+          });
+          if (requestedAccounts && requestedAccounts.length > 0) {
+            accounts = requestedAccounts.filter(
+              (account: string | null) => account !== null,
+            );
+          }
+          if (!accounts || accounts.length <= 0) {
+            const connectedAcount = await vultisigEthProvider.request({
+              method: "request_accounts",
             });
-            if (requestedAccounts && requestedAccounts.length > 0) {
-              accounts = requestedAccounts.filter(
-                (account: string | null) => account !== null,
-              );
+            if (Array.isArray(connectedAcount)) {
+              accounts.push(connectedAcount[0]);
             }
-            if (!accounts || accounts.length <= 0) {
-              const connectedAcount = await vultisigEthProvider.request({
-                method: "request_accounts",
-              });
-              if (Array.isArray(connectedAcount)) {
-                accounts.push(connectedAcount[0]);
-              }
-            }
-
-            if (!accounts[0]) {
-              throw new Error('No account connected');
-            }
-
-            setWalletProvider(window.vultisig?.thorchain || null)
-            setAddress(accounts[0]);
-            break;
           }
 
-        case 'xdefi':
+          if (!accounts[0]) {
+            throw new Error('No account connected');
+          }
+
+          setWalletProvider(window.vultisig?.thorchain || null)
+          setAddress(accounts[0]);
+          break;
+        }
+
+        case 'xdefi': {
           if (!window.xfi?.thorchain) {
             throw new Error('Ctrl provider not found');
           }
@@ -88,11 +87,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
           setWalletProvider(window.xfi.thorchain);
           setAddress(accounts[0]);
-
           break;
+        }
 
-        case 'keystore':
-
+        case 'keystore': {
           if (!data?.keystoreData || !data?.password) {
             throw new Error('Keystore data and password are required');
           }
@@ -108,23 +106,22 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             const address = await thorchainClient.getAddressAsync();
 
             setWalletProvider(thorchainClient)
-
             setAddress(address)
           }
-
           break;
+        }
 
         case 'keplr': {
           if (!window.keplr) {
             throw new Error('Keplr extension not found');
           }
 
-          let offlineSigner = null
+          let offlineSigner = null;
 
           try {
             await window.keplr.enable('thorchain-1');
             offlineSigner = window.keplr.getOfflineSignerOnlyAmino('thorchain-1');
-          } catch (e) {
+          } catch {
             await window.keplr.experimentalSuggestChain(KeplrThorchainConfig);
           }
 
@@ -138,6 +135,34 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           }
 
           setWalletProvider(window.keplr);
+          setAddress(accounts[0].address);
+          break;
+        }
+
+        case 'leap': {
+          if (!window.leap) {
+            throw new Error('Leap extension not found');
+          }
+
+          let offlineSigner = null;
+
+          try {
+            await window.leap.enable('thorchain-1');
+            offlineSigner = window.leap.getOfflineSignerOnlyAmino('thorchain-1');
+          } catch {
+            await window.leap.experimentalSuggestChain(KeplrThorchainConfig);
+          }
+
+          if (!offlineSigner) {
+            throw new Error('Chain is not enabled');
+          }
+
+          const accounts = await offlineSigner.getAccounts();
+          if (!accounts[0]) {
+            throw new Error('No account connected');
+          }
+
+          setWalletProvider(window.leap);
           setAddress(accounts[0].address);
           break;
         }
