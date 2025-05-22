@@ -1,19 +1,80 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Node } from '../../types';
-import { mockNodeProfile } from '../../mocks/nodeProfileMock';
+import { Node, WhitelistRequestFormData, Message } from '../../types';
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadAll } from "@tsparticles/all";
-import type { Container } from "@tsparticles/engine";
+import NodeDetailsPage from '../../pages/NodeDetailsPage';
+import { BaseAmount } from '@xchainjs/xchain-util';
+import { NodesResponse } from '@xchainjs/xchain-thornode';
+import { useParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 interface NodeProfileLayoutProps {
-  children: React.ReactNode;
+  nodes: Node[];
+  onRequestWhitelist: (node: Node) => void;
+  selectedNode: Node | null;
+  onSubmitRequest: (formData: WhitelistRequestFormData) => Promise<void>;
+  onCancelRequest: () => void;
+  messages: Message[];
+  onSendMessage: (nodeAddress: string, message: string) => Promise<void>;
+  isLoadingMessages?: boolean;
+  balance: BaseAmount | null;
+  isLoadingBalance: boolean;
+  onBondRequest: (nodeAddress: string, userAddress: string, amount: number) => Promise<void>;
+  onUnbondRequest: (nodeAddress: string, userAddress: string, amount: number) => Promise<void>;
+  refreshWhitelistFlag: number;
+  oficialNodes: NodesResponse;
+  onPaymentExecute: (memo: string, amount: number) => Promise<{ txId: string }>;
+  onConnectWallet: () => void;
+  txSubscriptionHash: string | null;
+  onClearTx: () => void;
 }
 
-const NodeProfileLayout: React.FC<NodeProfileLayoutProps> = ({ children }) => {
-  const { address } = useParams<{ address: string }>();
-  const [node, setNode] = React.useState<Node | null>(null);
+const SlotMachine: React.FC<{ text: string }> = ({ text }) => {
+  const [displayText, setDisplayText] = useState<string[]>([]);
+
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+  useEffect(() => {
+    const finalText = text.split('');
+    const slots = finalText.map(() => '');
+    setDisplayText(slots);
+
+    const intervals = finalText.map((_, index) => {
+      let iterations = 0;
+      const maxIterations = 3 + index; // Solo 3 iteraciones base + 1 por posición
+
+      return setInterval(() => {
+        setDisplayText(prev => {
+          const newText = [...prev];
+          if (iterations < maxIterations) {
+            newText[index] = characters[Math.floor(Math.random() * characters.length)];
+            iterations++;
+          } else {
+            newText[index] = finalText[index];
+            clearInterval(intervals[index]);
+          }
+          return newText;
+        });
+      }, 10 + index * 2); // 10ms base + 2ms por posición
+    });
+
+    // Limpiar todos los intervalos cuando el componente se desmonte
+    return () => intervals.forEach(interval => clearInterval(interval));
+  }, [text]);
+
+  return (
+    <div className="relative">
+      <div className="text-lg md:text-xl mt-2 opacity-90 font-mono bg-black/20 px-4 py-2 rounded-lg inline-block">
+        <span className="text-white tracking-wider">{displayText.join('')}</span>
+      </div>
+    </div>
+  );
+};
+
+const NodeProfileLayout: React.FC<NodeProfileLayoutProps> = (props) => {
+  const { nodeAddress } = useParams<{ nodeAddress: string }>();
   const [init, setInit] = useState(false);
+  const node = props.nodes.find(n => n.nodeAddress === nodeAddress);
 
   useEffect(() => {
     console.log("Iniciando el motor de partículas...");
@@ -27,13 +88,6 @@ const NodeProfileLayout: React.FC<NodeProfileLayoutProps> = ({ children }) => {
     });
   }, []);
 
-  React.useEffect(() => {
-    setNode(mockNodeProfile);
-  }, [address]);
-
-  const particlesLoaded = async (container?: Container): Promise<void> => {
-    console.log("Partículas cargadas:", container);
-  };
 
   const particlesOptions = {
     particles: {
@@ -74,49 +128,179 @@ const NodeProfileLayout: React.FC<NodeProfileLayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen relative">
+      <style>{`
+        @keyframes blink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0; }
+        }
+        .animate-blink {
+          animation: blink 1s infinite;
+        }
+      `}</style>
       <div className="absolute inset-0" style={{ zIndex: 1 }}>
         {init && (
           <Particles
             id="tsparticles"
             className="absolute inset-0"
-            particlesLoaded={particlesLoaded}
             options={particlesOptions}
           />
         )}
       </div>
       <div className="relative" style={{ zIndex: 2 }}>
-        {/* Header Personalizado */}
-        <header className="bg-white/80 backdrop-blur-sm shadow-sm relative z-10">
+        {/* Custom Header */}
+        <motion.header 
+          initial={{ y: -100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="bg-white/80 backdrop-blur-sm shadow-sm relative z-10"
+        >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center space-x-4">
                 <img
-                  src={node.logo || '/default-node-logo.png'}
+                  src={node.logo || '/runebond-isologo.svg'}
                   alt={node.name}
                   className="h-10 w-10 rounded-full"
                 />
                 <div>
                   <h1 className="text-xl font-semibold text-gray-900">{node.name}</h1>
-                  <p className="text-sm text-gray-500">{node.address}</p>
+                  <p className="text-sm text-gray-500">{node.nodeAddress}</p>
                 </div>
               </div>
-              <nav className="flex space-x-8">
-                <a href="#about" className="text-gray-500 hover:text-gray-900">Sobre el Nodo</a>
-                <a href="#performance" className="text-gray-500 hover:text-gray-900">Rendimiento</a>
-                <a href="#philosophy" className="text-gray-500 hover:text-gray-900">Filosofía</a>
-                <a href="#contact" className="text-gray-500 hover:text-gray-900">Contacto</a>
-              </nav>
             </div>
           </div>
-        </header>
+        </motion.header>
 
-        {/* Contenido Principal */}
+        {/* Main Content */}
         <main className="flex-grow relative z-10">
-          {children}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.5 }}
+              className="relative h-64 md:h-96 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl mt-4"
+            >
+              <img
+                src={node.bannerImage || 'https://picsum.photos/200/300'}
+                alt="Node Banner"
+                className="w-full h-full object-cover opacity-50 rounded-xl"
+              />
+              <div className="absolute inset-0 bg-black bg-opacity-30 rounded-xl" />
+              <div className="absolute bottom-0 left-0 right-0 p-8">
+                <div className="flex items-end space-x-6">
+                  <div className="relative">
+                    <img
+                      src={node.logo || 'https://picsum.photos/100/300'}
+                      alt={node.name}
+                      className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-white shadow-lg"
+                    />
+                  </div>
+                  <div className="text-white">
+                    <h1 className="text-3xl md:text-4xl font-bold">{node.name || 'Node Name'}</h1>
+                    <SlotMachine text={node.nodeAddress} />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* About Section */}
+            <motion.div 
+              initial={{ y: 50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              id="about" 
+              className="mt-12 bg-white rounded-xl shadow-lg p-8"
+            >
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">About the Node</h2>
+              <div className="prose max-w-none">
+                <p className="text-gray-600 leading-relaxed">
+                  {node.description || 'This node does not have a detailed description yet.'}
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Philosophy Section */}
+            <motion.div 
+              initial={{ y: 50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              id="philosophy" 
+              className="mt-12 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl shadow-lg p-8"
+            >
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Our Philosophy</h2>
+              <div className="prose max-w-none">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <motion.div
+                    initial={{ x: -50, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.5, delay: 0.6 }}
+                  >
+                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Vision</h3>
+                    <p className="text-gray-600 leading-relaxed">
+                      {node.vision || 'Our vision for the future of THORChain and the DeFi ecosystem.'}
+                    </p>
+                  </motion.div>
+                  <motion.div
+                    initial={{ x: 50, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.5, delay: 0.8 }}
+                  >
+                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Values</h3>
+                    <ul className="space-y-3 text-gray-600">
+                      <motion.li 
+                        initial={{ x: 20, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ duration: 0.3, delay: 1 }}
+                        className="flex items-start"
+                      >
+                        <span className="text-indigo-600 mr-2">•</span>
+                        {node.values?.transparency || 'Transparency in all our operations'}
+                      </motion.li>
+                      <motion.li 
+                        initial={{ x: 20, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ duration: 0.3, delay: 1.2 }}
+                        className="flex items-start"
+                      >
+                        <span className="text-indigo-600 mr-2">•</span>
+                        {node.values?.security || 'Security as our absolute priority'}
+                      </motion.li>
+                      <motion.li 
+                        initial={{ x: 20, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ duration: 0.3, delay: 1.4 }}
+                        className="flex items-start"
+                      >
+                        <span className="text-indigo-600 mr-2">•</span>
+                        {node.values?.community || 'Commitment to the community'}
+                      </motion.li>
+                    </ul>
+                  </motion.div>
+                </div>
+                <motion.div 
+                  initial={{ y: 30, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 1.6 }}
+                  className="mt-8 bg-white rounded-lg p-6"
+                >
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">Operation Strategy</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    {node.operationStrategy || 'Our strategy for maintaining an efficient and reliable node.'}
+                  </p>
+                </motion.div>
+              </div>
+            </motion.div>
+          </div>
+          <NodeDetailsPage {...props} />
         </main>
 
         {/* Footer Personalizado */}
-        <footer className="bg-gray-900/95 backdrop-blur-sm text-white relative z-10">
+        <motion.footer 
+          initial={{ y: 100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 1.8 }}
+          className="bg-gray-900/95 backdrop-blur-sm text-white relative z-10"
+        >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div>
@@ -128,9 +312,9 @@ const NodeProfileLayout: React.FC<NodeProfileLayoutProps> = ({ children }) => {
               <div>
                 <h3 className="text-lg font-semibold mb-4">Estadísticas</h3>
                 <ul className="space-y-2 text-sm text-gray-400">
-                  <li>Bond Total: {node.totalBond || '0'} RUNE</li>
-                  <li>Uptime: {node.uptime || '0'}%</li>
-                  <li>Edad: {node.age || '0'} días</li>
+                  <li>Bond Total: {node.maxRune || '0'} RUNE</li>
+                  <li>Fee: {node.feePercentage / 100}%</li>
+                  <li>Bond Providers: {node.bondProvidersCount}</li>
                 </ul>
               </div>
               <div>
@@ -179,7 +363,7 @@ const NodeProfileLayout: React.FC<NodeProfileLayoutProps> = ({ children }) => {
               </div>
             </div>
           </div>
-        </footer>
+        </motion.footer>
       </div>
     </div>
   );

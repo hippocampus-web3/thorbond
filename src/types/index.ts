@@ -35,6 +35,16 @@ export interface Node {
   bannerImage?: string;
   philosophy?: string;
   contactInfo?: string;
+  experience?: string;
+  infrastructure?: string;
+  commitment?: string;
+  vision?: string;
+  values?: {
+    transparency?: string;
+    security?: string;
+    community?: string;
+  };
+  operationStrategy?: string;
   socialLinks?: {
     twitter?: string;
     telegram?: string;

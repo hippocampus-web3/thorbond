@@ -601,16 +601,31 @@ const AppContent: React.FC = () => {
       <ScrollToTop />
       <Routes>
         <Route
-          path="/profile/:address"
+          path="/profile/:nodeAddress"
           element={
             !allNodes || !listedNodes ? (
               <LoadingScreen message="Loading node profile..." />
             ) : (
-              <NodeProfileLayout>
-                <NodeProfilePage
-                  onRequestWhitelist={handleRequestWhitelist}
-                />
-              </NodeProfileLayout>
+              <NodeProfileLayout
+                nodes={listedNodes}
+                onRequestWhitelist={handleRequestWhitelist}
+                selectedNode={selectedNode}
+                onSubmitRequest={handleSubmitRequest}
+                onCancelRequest={handleCancelRequest}
+                messages={chatMessages}
+                onSendMessage={handleSendMessage}
+                isLoadingMessages={isLoadingMessages}
+                balance={balance}
+                isLoadingBalance={isLoadingBalance}
+                onBondRequest={handleBondRequest}
+                onUnbondRequest={handleUnbondRequest}
+                refreshWhitelistFlag={refreshWhitelistFlag}
+                oficialNodes={allNodes}
+                onPaymentExecute={handlePaymentExecute}
+                onConnectWallet={handleConnect}
+                txSubscriptionHash={txSubscriptionHash}
+                onClearTx={handleClearTx}
+              />
             )
           }
         />
@@ -706,36 +721,6 @@ const AppContent: React.FC = () => {
                         searchValue={searchUser}
                         isConnected={isConnected !== null}
                         isLoading={isLoadingNodes}
-                        onPaymentExecute={handlePaymentExecute}
-                        onConnectWallet={handleConnect}
-                        txSubscriptionHash={txSubscriptionHash}
-                        onClearTx={handleClearTx}
-                      />
-                    )
-                  }
-                />
-                <Route
-                  path="/node/:address"
-                  element={
-                    !allNodes || !listedNodes ? (
-                      <LoadingScreen message="Loading node details..." />
-                    ) : (
-                      <NodeDetailsPageWrapper 
-                        listedNodes={listedNodes}
-                        selectedNodeState={selectedNode}
-                        onRequestWhitelist={handleRequestWhitelist}
-                        onSubmitRequest={handleSubmitRequest}
-                        onCancelRequest={handleCancelRequest}
-                        messages={chatMessages}
-                        onSendMessage={handleSendMessage}
-                        loadChatMessages={loadChatMessages}
-                        isLoadingMessages={isLoadingMessages}
-                        balance={balance}
-                        isLoadingBalance={isLoadingBalance}
-                        onBondRequest={handleBondRequest}
-                        onUnbondRequest={handleUnbondRequest}
-                        refreshWhitelistFlag={refreshWhitelistFlag}
-                        oficialNodes={allNodes}
                         onPaymentExecute={handlePaymentExecute}
                         onConnectWallet={handleConnect}
                         txSubscriptionHash={txSubscriptionHash}

@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Node } from '../types';
-import { mockNodeProfile } from '../mocks/nodeProfileMock';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import RuneBondEngine from '../lib/runebondEngine/runebondEngine';
 
 interface NodeProfilePageProps {
   onRequestWhitelist: (node: Node) => void;
@@ -17,13 +17,17 @@ const NodeProfilePage: React.FC<NodeProfilePageProps> = ({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulamos una carga de datos
     const fetchNodeData = async () => {
+      if (!address) return;
+      
       try {
         setIsLoading(true);
-        // Simulamos un delay para mostrar el loading
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setNode(mockNodeProfile);
+        const engine = RuneBondEngine.getInstance();
+        const nodes = await engine.getListedNodes();
+        const foundNode = nodes.find(n => n.nodeAddress === address);
+        if (foundNode) {
+          setNode(foundNode);
+        }
       } catch (error) {
         console.error('Error fetching node data:', error);
       } finally {
