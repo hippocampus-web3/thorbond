@@ -456,6 +456,48 @@ class RuneBondEngine {
       walletProvider
     );
   }
+
+  public async getNodeDetails(nodeAddress: string): Promise<Node> {
+    try {
+      // Obtener datos básicos del nodo
+      const [listedNode, allNodes] = await Promise.all([
+        this.getListedNodes(),
+        this.getAllNodes()
+      ]);
+
+      // Buscar el nodo en la lista de nodos listados
+      const node = listedNode.find(n => n.nodeAddress === nodeAddress);
+      if (!node) {
+        throw new Error('Node not found');
+      }
+
+      // Buscar datos adicionales en la lista completa de nodos
+      const nodeDetails = allNodes.find(n => n.node_address === nodeAddress);
+      if (nodeDetails) {
+        // Calcular campos adicionales
+        const now = Date.now();
+        const nodeTimestamp = new Date(node.timestamp).getTime();
+        const ageInDays = Math.floor((now - nodeTimestamp) / (1000 * 60 * 60 * 24));
+
+        return {
+          ...node,
+          address: node.nodeAddress,
+          totalBond: nodeDetails.total_bond / 1e8, // Convertir de satoshis a RUNE
+          uptime: nodeDetails.status === 'active' ? 100 : 0, // Simplificado, idealmente debería calcularse con datos históricos
+          slashingEvents: node.slashPoints,
+          age: ageInDays
+        };
+      }
+
+      return {
+        ...node,
+        address: node.nodeAddress
+      };
+    } catch (error) {
+      console.error('Failed to fetch node details:', error);
+      throw new Error('Failed to fetch node details');
+    }
+  }
 }
 
 export default RuneBondEngine;

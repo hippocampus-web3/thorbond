@@ -6,10 +6,14 @@ export interface NodeOperatorFormData {
   description?: string;
   contactInfo?: string;
 }
+
 export interface Node {
-  operatorAddress: string;
   nodeAddress: string;
-  status?: string;
+  name: string;
+  address: string;
+  description: string;
+  operatorAddress: string;
+  status: string;
   maxRune: number;
   minRune: number;
   feePercentage: number;
@@ -19,22 +23,35 @@ export interface Node {
   slashPoints: number;
   activeTime: number;
   bondProvidersCount: number;
-  description?: string;
-  contactInfo?: string;
   maxTimeToLeave: number;
   isDelisted: boolean;
+  minimumBond: number;
+  totalBondTarget: number;
+  totalBond: number;
+  uptime: number;
+  slashingEvents: number;
+  age: number;
+  logo?: string;
+  bannerImage?: string;
+  philosophy?: string;
+  contactInfo?: string;
+  socialLinks?: {
+    twitter?: string;
+    telegram?: string;
+    discord?: string;
+  };
   officialInfo: {
     currentFee: number;
     totalBond: number;
-  },
+  };
   isHidden: {
-      hide: boolean,
-      reasons: null | string[]
-  }
+    hide: boolean;
+    reasons: null | string[];
+  };
   isYieldGuarded: {
-    hide: boolean,
-    reasons: null | string[]
-  }
+    hide: boolean;
+    reasons: null | string[];
+  };
 }
 
 export interface WhitelistRequest {
