@@ -179,14 +179,16 @@ const EarningsSimulator: React.FC = () => {
           callback: function(value: any) {
             const runeValue = value * 100_000_000;
             return formatRune(baseAmount(runeValue));
-          }
+          },
+          color: '#9ca3af'
         }
       },
       x: {
         display: false,
         grid: { display: false },
         ticks: {
-          display: false
+          display: false,
+          color: '#9ca3af'
         }
       },
     },
@@ -303,7 +305,8 @@ const EarningsSimulator: React.FC = () => {
         ticks: {
           callback: function(value: any) {
             return formatRune(baseAmount(value * 100_000_000));
-          }
+          },
+          color: '#9ca3af'
         }
       },
       y1: {
@@ -315,11 +318,15 @@ const EarningsSimulator: React.FC = () => {
         ticks: {
           callback: function(value: any) {
             return formatRune(baseAmount(value * 100_000_000));
-          }
+          },
+          color: '#9ca3af'
         }
       },
       x: {
         grid: { display: false },
+        ticks: {
+          color: '#9ca3af'
+        }
       },
     },
   };
@@ -347,11 +354,15 @@ const EarningsSimulator: React.FC = () => {
         ticks: {
           callback: function(value: any) {
             return value.toFixed(2) + '%';
-          }
+          },
+          color: '#9ca3af'
         }
       },
       x: {
         grid: { display: false },
+        ticks: {
+          color: '#9ca3af'
+        }
       },
     },
   };

@@ -304,6 +304,9 @@ const UserBalanceChart: React.FC<UserBalanceChartProps> = ({ address }) => {
         position: 'left' as const,
         title: { display: true, text: 'Bonded Balance (RUNE)' },
         grid: { display: false },
+        ticks: {
+          color: '#9ca3af'
+        }
       },
       y1: {
         type: 'linear' as const,
@@ -312,11 +315,15 @@ const UserBalanceChart: React.FC<UserBalanceChartProps> = ({ address }) => {
         title: { display: true, text: 'Bonded Balance (USD)' },
         grid: { display: false },
         ticks: {
+          color: '#9ca3af',
           callback: (value: any) => `$${value}`
         }
       },
       x: {
         grid: { display: false },
+        ticks: {
+          color: '#9ca3af'
+        }
       },
     },
   };

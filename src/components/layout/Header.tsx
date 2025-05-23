@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import Button from '../ui/Button';
 import { shortenAddress, formatRune } from '../../lib/utils';
-import { Copy, Check } from 'lucide-react';
+import { Copy, Check, Sun, Moon } from 'lucide-react';
 import { BaseAmount } from '@xchainjs/xchain-util';
+import { useDarkMode } from '../../hooks/useDarkMode';
 
 interface HeaderProps {
   isAuthenticated: boolean;
@@ -25,6 +26,7 @@ const Header: React.FC<HeaderProps> = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
   const location = useLocation();
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -107,8 +109,19 @@ const Header: React.FC<HeaderProps> = ({
             </nav>
           </div>
           <div className="hidden sm:ml-6 sm:flex sm:items-center">
+            <button
+              onClick={toggleDarkMode}
+              className="p-2 rounded-md text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+              title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {isDarkMode ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </button>
             {isAuthenticated ? (
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-4 ml-4">
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-2">
                     <span className="text-sm text-gray-500">
@@ -145,13 +158,24 @@ const Header: React.FC<HeaderProps> = ({
             ) : (
               <Button
                 onClick={handleConnect}
-                className="text-sm"
+                className="text-sm ml-4"
               >
                 Connect Wallet
               </Button>
             )}
           </div>
           <div className="-mr-2 flex items-center sm:hidden">
+            <button
+              onClick={toggleDarkMode}
+              className="p-2 rounded-md text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 mr-2"
+              title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {isDarkMode ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </button>
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"

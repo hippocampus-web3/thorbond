@@ -121,11 +121,15 @@ const NodeApyChart: React.FC<NodeApyChartProps> = ({ apyLabels, apyValues, apyDa
         title: { display: true, text: 'APY (%)' },
         grid: { display: false },
         ticks: {
-          callback: (value: any) => `${value}%`
+          callback: (value: any) => `${value}%`,
+          color: '#9ca3af'
         }
       },
       x: {
-        grid: { display: false }
+        grid: { display: false },
+        ticks: {
+          color: '#9ca3af'
+        }
       }
     }
   };

@@ -110,7 +110,7 @@ const NodeCard: React.FC<NodeCardProps> = ({
           title: "Hidden Node",
           description: "These are nodes flagged as potentially risky due to unusual behavior or missing information. They're hidden by default to protect users, but you can choose to view and delegate to them at your own risk.",
           buttonVariant: "outline" as const,
-          buttonClass: ""
+          buttonClass: "text-black"
         };
       case 'full':
         return {
@@ -126,7 +126,7 @@ const NodeCard: React.FC<NodeCardProps> = ({
           title: "Full Capacity Node 🎉",
           description: "This node has achieved an incredible milestone by reaching its maximum bonding capacity! This is a testament to its reliability and the trust it has earned from the community. While it's not currently accepting more liquidity, you can still request whitelist - the node operator may review your request and potentially make space for your delegation. Being part of a full capacity node is a prestigious achievement in the THORChain ecosystem! 🚀",
           buttonVariant: "primary" as const,
-          buttonClass: "bg-emerald-600 hover:bg-emerald-700 text-white"
+          buttonClass: "bg-emerald-600 hover:bg-emerald-700 text-white dark:text-black"
         };
       case 'yieldGuarded':
         return {
@@ -142,7 +142,7 @@ const NodeCard: React.FC<NodeCardProps> = ({
           title: "Yield Guard Active ⚡",
           description: "The Yield Guard system has identified that delegating RUNE to this node may not generate optimal returns at the current network state. This is a protective measure to help you maximize your earnings. You can still view and delegate to this node, but consider checking other nodes that might offer better yield opportunities at this time.",
           buttonVariant: "primary" as const,
-          buttonClass: "bg-purple-600 hover:bg-purple-700 text-white"
+          buttonClass: "bg-purple-600 hover:bg-purple-700 text-white dark:text-black"
         };
       default:
         return {
@@ -379,7 +379,7 @@ const NodeCard: React.FC<NodeCardProps> = ({
         <div className="flex justify-between items-center">
           <span className="text-gray-600">Node operator:</span>
           <div className="flex items-center">
-            <span className="font-medium">{shortenAddress(node.operatorAddress)}</span>
+            <span className="font-medium text-gray-900">{shortenAddress(node.operatorAddress)}</span>
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -399,32 +399,32 @@ const NodeCard: React.FC<NodeCardProps> = ({
 
         <div className="flex justify-between">
           <span className="text-gray-600">Bonding Capacity:</span>
-          <span className="font-medium">{formatRune(baseAmount(node.maxRune))} RUNE</span>
+          <span className="font-medium text-gray-900">{formatRune(baseAmount(node.maxRune))} RUNE</span>
         </div>
 
         <div className="flex justify-between">
           <span className="text-gray-600">Minimum Bond:</span>
-          <span className="font-medium">{formatRune(baseAmount(node.minRune))} RUNE</span>
+          <span className="font-medium text-gray-900">{formatRune(baseAmount(node.minRune))} RUNE</span>
         </div>
 
         <div className="flex justify-between">
           <span className="text-gray-600">Bond providers:</span>
-          <span className="font-medium">{node.bondProvidersCount} / 100</span>
+          <span className="font-medium text-gray-900">{node.bondProvidersCount} / 100</span>
         </div>
 
         <div className="flex justify-between">
           <span className="text-gray-600">Slash points:</span>
-          <span className="font-medium">{node.slashPoints}</span>
+          <span className="font-medium text-gray-900">{node.slashPoints}</span>
         </div>
 
         <div className="flex justify-between">
           <span className="text-gray-600">Fee Percentage:</span>
-          <span className="font-medium">{node.feePercentage / 100}%</span>
+          <span className="font-medium text-gray-900">{node.feePercentage / 100}%</span>
         </div>
 
         <div className="flex justify-between">
           <span className="text-gray-600">Total bond:</span>
-          <span className="font-medium">{formatRune(baseAmount(node.officialInfo.totalBond))}</span>
+          <span className="font-medium text-gray-900">{formatRune(baseAmount(node.officialInfo.totalBond))}</span>
         </div>
       </div>
 
