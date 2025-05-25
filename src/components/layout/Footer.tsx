@@ -4,7 +4,7 @@ import { Twitter } from 'lucide-react';
 
 const Footer: React.FC = () => {
   return (
-    <footer className="bg-gray-800 text-white">
+    <footer className="bg-gray-800 dark:bg-gray-100 text-white">
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
@@ -14,7 +14,7 @@ const Footer: React.FC = () => {
                 alt="RuneBond" 
               />
             </div>
-            <p className="mt-2 text-sm text-gray-300">
+            <p className="mt-2 text-sm text-gray-400">
               The comprehensive platform for THORChain node operators and users to connect for bonding opportunities.
             </p>
             <div className="mt-4 flex space-x-6">
@@ -22,7 +22,7 @@ const Footer: React.FC = () => {
                 href="https://x.com/RuneBondApp" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white"
+                className="text-gray-500 hover:text-white dark:hover:text-black"
               >
                 <span className="sr-only">X</span>
                 <Twitter className="h-6 w-6" />
@@ -31,7 +31,7 @@ const Footer: React.FC = () => {
                 href="https://t.me/RUNEBondApp" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white"
+                className="text-gray-500 hover:text-white dark:hover:text-black"
               >
                 <span className="sr-only">Telegram</span>
                 <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
@@ -41,14 +41,14 @@ const Footer: React.FC = () => {
             </div>
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-gray-400 tracking-wider uppercase">Resources</h3>
+            <h3 className="text-sm font-semibold text-gray-500 tracking-wider uppercase">Resources</h3>
             <ul className="mt-4 space-y-4">
               <li>
                 <a 
                   href="https://thorbond.gitbook.io/runebond" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-base text-gray-300 hover:text-white"
+                  className="text-base text-gray-400 hover:text-white dark:hover:text-black"
                 >
                   Documentation
                 </a>
@@ -58,7 +58,7 @@ const Footer: React.FC = () => {
                   href="https://thorchain.org/" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-base text-gray-300 hover:text-white"
+                  className="text-base text-gray-400 hover:text-white dark:hover:text-black"
                 >
                   THORChain Website
                 </a>
@@ -68,7 +68,7 @@ const Footer: React.FC = () => {
                   href="https://thorchain.net/" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-base text-gray-300 hover:text-white"
+                  className="text-base text-gray-400 hover:text-white dark:hover:text-black"
                 >
                   Network Stats
                 </a>
@@ -78,7 +78,7 @@ const Footer: React.FC = () => {
                   href="https://runebondapp.canny.io/" 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="text-base text-gray-300 hover:text-white"
+                  className="text-base text-gray-400 hover:text-white dark:hover:text-black"
                 >
                   Feedback & Suggestions
                 </a>
@@ -86,30 +86,30 @@ const Footer: React.FC = () => {
             </ul>
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-gray-400 tracking-wider uppercase">Navigation</h3>
+            <h3 className="text-sm font-semibold text-gray-500 tracking-wider uppercase">Navigation</h3>
             <ul className="mt-4 space-y-4">
               <li>
-                <Link to="/" className="text-base text-gray-300 hover:text-white">
+                <Link to="/" className="text-base text-gray-400 hover:text-white dark:hover:text-black">
                   Home
                 </Link>
               </li>
               <li>
-                <Link to="/nodes" className="text-base text-gray-300 hover:text-white">
+                <Link to="/nodes" className="text-base text-gray-400 hover:text-white dark:hover:text-black">
                   Nodes
                 </Link>
               </li>
               <li>
-                <Link to="/operator-dashboard" className="text-base text-gray-300 hover:text-white">
+                <Link to="/operator-dashboard" className="text-base text-gray-400 hover:text-white dark:hover:text-black">
                   Operator Dashboard
                 </Link>
               </li>
               <li>
-                <Link to="/user-requests" className="text-base text-gray-300 hover:text-white">
+                <Link to="/user-requests" className="text-base text-gray-400 hover:text-white dark:hover:text-black">
                   My Requests
                 </Link>
               </li>
               <li>
-                <Link to="/earnings-simulator" className="text-base text-gray-300 hover:text-white">
+                <Link to="/earnings-simulator" className="text-base text-gray-400 hover:text-white dark:hover:text-black">
                   Earnings Simulator
                 </Link>
               </li>
@@ -117,7 +117,7 @@ const Footer: React.FC = () => {
           </div>
         </div>
         <div className="mt-8 border-t border-gray-700 pt-8">
-          <p className="text-base text-gray-400 text-center">
+          <p className="text-base text-gray-500 text-center">
             &copy; {new Date().getFullYear()} RUNEBond. All rights reserved.
           </p>
         </div>

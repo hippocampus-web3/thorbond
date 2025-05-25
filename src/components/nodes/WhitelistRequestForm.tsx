@@ -87,19 +87,19 @@ const WhitelistRequestForm: React.FC<WhitelistRequestFormProps> = ({
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-gray-500">Address:</span>
-                <p className="font-medium">{node.nodeAddress.slice(0, 10)}...{node.nodeAddress.slice(-6)}</p>
+                <p className="font-medium text-gray-900">{node.nodeAddress.slice(0, 10)}...{node.nodeAddress.slice(-6)}</p>
               </div>
               <div>
                 <span className="text-gray-500">Minimum Bond:</span>
-                <p className="font-medium">{formatRune(baseAmount(node.minRune))} RUNE</p>
+                <p className="font-medium text-gray-900">{formatRune(baseAmount(node.minRune))} RUNE</p>
               </div>
               <div>
                 <span className="text-gray-500">Fee Percentage:</span>
-                <p className="font-medium">{node.feePercentage / 100}%</p>
+                <p className="font-medium text-gray-900">{node.feePercentage / 100}%</p>
               </div>
               <div>
                 <span className="text-gray-500">Available Capacity:</span>
-                <p className="font-medium">{formatRune(baseAmount(node.maxRune))} RUNE</p>
+                <p className="font-medium text-gray-900">{formatRune(baseAmount(node.maxRune))} RUNE</p>
               </div>
             </div>
           </div>

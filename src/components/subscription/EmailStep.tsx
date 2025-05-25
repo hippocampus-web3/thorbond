@@ -1,9 +1,10 @@
 import React from 'react';
-import { Mail, ChevronDown } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import Alert from '../ui/Alert';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Tooltip from '../ui/Tooltip';
+import Select from '../ui/Select';
 
 interface EmailStepProps {
   email: string;
@@ -15,6 +16,8 @@ interface EmailStepProps {
   onSubmit: (e: React.FormEvent) => void;
 }
 
+const monthOptions = [1, 3, 6, 12];
+
 const EmailStep: React.FC<EmailStepProps> = ({
   email,
   months,
@@ -24,8 +27,10 @@ const EmailStep: React.FC<EmailStepProps> = ({
   onMonthsChange,
   onSubmit,
 }) => {
-  const [isMonthsOpen, setIsMonthsOpen] = React.useState(false);
-  const monthOptions = [1, 3, 6, 12];
+  const selectOptions = monthOptions.map(months => ({
+    value: months.toString(),
+    label: `${months} ${months === 1 ? 'month' : 'months'}`
+  }));
 
   return (
     <div>
@@ -45,40 +50,13 @@ const EmailStep: React.FC<EmailStepProps> = ({
           icon={<Mail className="h-5 w-5 text-gray-400" />}
         />
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Subscription Duration
-          </label>
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setIsMonthsOpen(!isMonthsOpen)}
-              className="w-full flex items-center justify-between px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-left text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <span>{months} {months === 1 ? 'month' : 'months'}</span>
-              <ChevronDown className={`h-4 w-4 text-gray-400 transform transition-transform ${isMonthsOpen ? 'rotate-180' : ''}`} />
-            </button>
-            {isMonthsOpen && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
-                {monthOptions.map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    onClick={() => {
-                      onMonthsChange(option);
-                      setIsMonthsOpen(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 ${
-                      months === option ? 'bg-blue-50 text-blue-700' : 'text-gray-900'
-                    }`}
-                  >
-                    {option} {option === 1 ? 'month' : 'months'}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        <Select
+          label="Subscription Duration"
+          options={selectOptions}
+          value={months.toString()}
+          onChange={(value) => onMonthsChange(parseInt(value))}
+          fullWidth
+        />
 
         <Alert variant="info">
           <div className="flex items-start">

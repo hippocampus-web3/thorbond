@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import EmailStep from './EmailStep';
 import PaymentStep from './PaymentStep';
@@ -7,6 +6,7 @@ import ConfirmationStep from './ConfirmationStep';
 import RuneBondEngine from '../../lib/runebondEngine/runebondEngine';
 import { useWallet } from '../../contexts/WalletContext';
 import { assetAmount, assetToBase } from '@xchainjs/xchain-util';
+import Modal from '../ui/Modal';
 
 interface SubscriptionModalProps {
   isOpen: boolean;
@@ -106,66 +106,63 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
     }
   };
 
-  if (!isOpen) return null;
+  const getModalTitle = () => {
+    switch (step) {
+      case 'email':
+        return 'Subscribe to Node';
+      case 'payment':
+        return 'Payment Details';
+      case 'confirmation':
+        return 'Subscription Confirmed';
+      default:
+        return 'Subscribe to Node';
+    }
+  };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose} />
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={getModalTitle()}
+      size="lg"
+    >
+      <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
+        {step === 'email' && (
+          <EmailStep
+            email={email}
+            months={months}
+            emailError={emailError}
+            isLoading={isLoading}
+            onEmailChange={handleEmailChange}
+            onMonthsChange={handleMonthsChange}
+            onSubmit={handleEmailSubmit}
+          />
+        )}
 
-        <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
-          <div className="absolute right-0 top-0 pr-4 pt-4">
-            <button
-              type="button"
-              className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none"
-              onClick={onClose}
-            >
-              <span className="sr-only">Close</span>
-              <X className="h-6 w-6" />
-            </button>
-          </div>
+        {step === 'payment' && (
+          <PaymentStep
+            nodeAddress={nodeAddress}
+            email={email}
+            months={months}
+            memo={memo}
+            isLoading={isLoading}
+            isConnected={!!isConnected}
+            onBack={() => setStep('email')}
+            onWalletConnect={handleWalletConnect}
+            isNewSubscription={isNewSubscription}
+          />
+        )}
 
-          <div className="sm:flex sm:items-start">
-            <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
-              {step === 'email' && (
-                <EmailStep
-                  email={email}
-                  months={months}
-                  emailError={emailError}
-                  isLoading={isLoading}
-                  onEmailChange={handleEmailChange}
-                  onMonthsChange={handleMonthsChange}
-                  onSubmit={handleEmailSubmit}
-                />
-              )}
-
-              {step === 'payment' && (
-                <PaymentStep
-                  nodeAddress={nodeAddress}
-                  email={email}
-                  months={months}
-                  memo={memo}
-                  isLoading={isLoading}
-                  isConnected={!!isConnected}
-                  onBack={() => setStep('email')}
-                  onWalletConnect={handleWalletConnect}
-                  isNewSubscription={isNewSubscription}
-                />
-              )}
-
-              {step === 'confirmation' && (
-                <ConfirmationStep
-                  onClose={() => {
-                    onClearTx();
-                    onClose();
-                  }}
-                />
-              )}
-            </div>
-          </div>
-        </div>
+        {step === 'confirmation' && (
+          <ConfirmationStep
+            onClose={() => {
+              onClearTx();
+              onClose();
+            }}
+          />
+        )}
       </div>
-    </div>
+    </Modal>
   );
 };
 
