@@ -90,12 +90,12 @@ const TransactionConfirmationPopup: React.FC<TransactionConfirmationPopupProps> 
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-500">Amount:</span>
-              <span className="font-medium">{formatRune(baseAmount(transaction.amount.amount, transaction.amount.decimals), true)} RUNE</span>
+              <span className="font-medium text-gray-900">{formatRune(baseAmount(transaction.amount.amount, transaction.amount.decimals), true)} RUNE</span>
             </div>
             {transactionType === 'whitelist' && additionalInfo?.intendedBondAmount && (
               <div className="flex justify-between">
                 <span className="text-gray-500">Intended Bond Amount:</span>
-                <span className="font-medium">{formatRune(baseAmount(additionalInfo.intendedBondAmount, 8), true)} RUNE</span>
+                <span className="font-medium text-gray-900">{formatRune(baseAmount(additionalInfo.intendedBondAmount, 8), true)} RUNE</span>
               </div>
             )}
             {transaction.recipient && (
@@ -118,12 +118,12 @@ const TransactionConfirmationPopup: React.FC<TransactionConfirmationPopupProps> 
                 <span className="text-gray-500">Memo:</span>
                 <Tooltip 
                   content={
-                    <div className="max-w-[400px] break-words whitespace-pre-wrap">
+                    <div className="max-w-[400px] break-words text-gray-900 whitespace-pre-wrap">
                       {transaction.memo}
                     </div>
                   }
                 >
-                  <span className="font-medium break-all">
+                  <span className="font-medium break-all text-gray-900">
                     {truncateText(transaction.memo)}
                   </span>
                 </Tooltip>
@@ -148,7 +148,7 @@ const TransactionConfirmationPopup: React.FC<TransactionConfirmationPopupProps> 
                     className="mt-1 h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded"
                   />
                   <label htmlFor="standbyWarning" className="text-sm text-yellow-700">
-                    I understand I'm delegating to a <strong className="font-semibold">Standby</strong> node, which currently doesn't generate yield. Yield will only start once the node becomes <strong className="font-semibold">Active</strong>.{' '}
+                    I understand I'm delegating to a <strong className="font-semibold">Standby</strong> node, which currently doesn't generate yield. Yield will only start once the node becomes <strong className="font-semibold text-yellow-800">Active</strong>.{' '}
                     <a 
                       href="https://thorbond.gitbook.io/runebond/others/frequently-asked-questions-faqs#if-i-delegate-to-a-standby-node-will-i-earn-yield-when-does-a-standby-node-become-active" 
                       target="_blank" 
