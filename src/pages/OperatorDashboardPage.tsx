@@ -5,17 +5,18 @@ import Button from '../components/ui/Button';
 import NodeOperatorForm from '../components/nodes/NodeForm';
 import OperatorDashboard from '../components/dashboard/OperatorDashboard';
 import NodeOperatorSearch from '../components/nodes/NodeOperatorSearch';
-import { Node, NodeOperatorFormData, WhitelistRequest } from '../types';
+import { NodeOperatorFormData } from '../types';
 import { NodesResponse } from '@xchainjs/xchain-thornode';
+import { NodeListingDto, WhitelistRequestDto } from '@hippocampus-web3/runebond-client';
 
 interface OperatorDashboardPageProps {
-  nodes: Node[];
+  nodes: NodeListingDto[];
   availableNodes: NodesResponse;
-  requests: WhitelistRequest[];
+  requests: WhitelistRequestDto[];
   onCreateListing: (data: NodeOperatorFormData) => void;
   onDeleteListing: () => void;
-  onApproveRequest: (requestId: WhitelistRequest) => void;
-  onRejectRequest: (requestId: WhitelistRequest) => void;
+  onApproveRequest: (requestId: WhitelistRequestDto) => void;
+  onRejectRequest: (requestId: WhitelistRequestDto) => void;
   onSearchOperator: (address: string) => void;
   isLoading: boolean;
 }

@@ -38,7 +38,7 @@ export const calculateProjections = (
   const average = [];
   const optimistic = [];
   
-  let currentDate = new Date();
+  const currentDate = new Date();
   let conservativeValue = initialInvestment;
   let averageValue = initialInvestment;
   let optimisticValue = initialInvestment;

@@ -8,6 +8,7 @@ import Tooltip from '../ui/Tooltip';
 import '../../lib/chartConfig';
 
 interface NodeHistoryChartProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   history: any[];
 }
 

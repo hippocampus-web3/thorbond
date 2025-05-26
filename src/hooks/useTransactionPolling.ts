@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import RuneBondEngine from '../lib/runebondEngine/runebondEngine';
-import { Node, WhitelistRequest, Message } from '../types';
 import { getTransactionExplorerUrl } from '../lib/utils';
+import { ChatMessageDto, NodeListingDto, WhitelistRequestDto } from '@hippocampus-web3/runebond-client';
 
 interface TransactionPollingState {
     isPolling: boolean;
@@ -84,7 +84,7 @@ export const useTransactionPolling = ({ onTransactionConfirmed }: UseTransaction
         });
     }, [state.toastId]);
 
-    const verifyTransaction = useCallback(async (listedNodes: Node[], requests: { operator: WhitelistRequest[], user: WhitelistRequest[] }, messages: Message[]) => {
+    const verifyTransaction = useCallback(async (listedNodes: NodeListingDto[], requests: { operator: WhitelistRequestDto[], user: WhitelistRequestDto[] }, messages: ChatMessageDto[]) => {
         if (!state.transactionType || !state.transactionData) return false;
 
         const engine = RuneBondEngine.getInstance();
@@ -136,7 +136,7 @@ export const useTransactionPolling = ({ onTransactionConfirmed }: UseTransaction
                     const listedNodes = await engine.getListedNodes();
                     const requests = await engine.getWhitelistRequests(state.address || '');
                     
-                    let messages: Message[] = [];
+                    let messages: ChatMessageDto[] = [];
                     if (state.transactionType === 'message' && state.nodeAddress) {
                         messages = await engine.getChatMessages(state.nodeAddress);
                     }

@@ -1,17 +1,18 @@
 import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Node, WhitelistRequestFormData, Message } from '../types';
+import { WhitelistRequestFormData } from '../types';
 import NodeDetailsPage from './NodeDetailsPage';
 import { BaseAmount } from '@xchainjs/xchain-util';
 import { NodesResponse } from '@xchainjs/xchain-thornode';
+import { ChatMessageDto, NodeListingDto } from '@hippocampus-web3/runebond-client';
 
 interface NodeDetailsPageWrapperProps {
-  listedNodes: Node[];
-  selectedNodeState: Node | null;
-  onRequestWhitelist: (node: Node) => void;
+  listedNodes: NodeListingDto[];
+  selectedNodeState: NodeListingDto | null;
+  onRequestWhitelist: (node: NodeListingDto) => void;
   onSubmitRequest: (formData: WhitelistRequestFormData) => Promise<void>;
   onCancelRequest: () => void;
-  messages: Message[];
+  messages: ChatMessageDto[];
   onSendMessage: (nodeAddress: string, message: string) => Promise<void>;
   loadChatMessages: (nodeAddr: string) => Promise<void>;
   isLoadingMessages: boolean;
@@ -21,7 +22,7 @@ interface NodeDetailsPageWrapperProps {
   onUnbondRequest: (nodeAddress: string, userAddress: string, amount: number) => Promise<void>;
   refreshWhitelistFlag: number;
   oficialNodes: NodesResponse;
-  onPaymentExecute: (memo: string, amount: number) => Promise<{ txId: string }>;
+  onPaymentExecute: (memo: string, amount: number) => Promise<void>;
   onConnectWallet: () => void;
   txSubscriptionHash: string | null;
   onClearTx: () => void;
@@ -56,7 +57,7 @@ const NodeDetailsPageWrapper: React.FC<NodeDetailsPageWrapperProps> = ({
     }
   }, [nodeAddress, loadChatMessages]);
 
-  const selectedNodeForForm = listedNodes.find((n: Node) => n.nodeAddress === selectedNodeState?.nodeAddress);
+  const selectedNodeForForm = listedNodes.find((n: NodeListingDto) => n.nodeAddress === selectedNodeState?.nodeAddress);
 
   return (
     <NodeDetailsPage

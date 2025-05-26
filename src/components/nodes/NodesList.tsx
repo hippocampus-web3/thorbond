@@ -4,22 +4,22 @@ import NodeCard from './NodeCard';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
 import Tooltip from '../ui/Tooltip';
-import { Node } from '../../types';
 import { baseAmount, baseToAsset } from '@xchainjs/xchain-util';
+import { NodeListingDto } from '@hippocampus-web3/runebond-client';
 
 const RUNEBOND_ADDRESS = import.meta.env.VITE_RUNEBOND_ADDRESS || "thor1xazgmh7sv0p393t9ntj6q9p52ahycc8jjlaap9";
 
 interface NodeListProps {
-  nodes: Node[];
-  onRequestWhitelist: (node: Node) => void;
+  nodes: NodeListingDto[];
+  onRequestWhitelist: (node: NodeListingDto) => void;
   isLoading?: boolean;
 }
 
 // Helper function to determine restriction priority (lower number = higher priority in sorting)
-const getNodeRestrictionPriority = (node: Node): number => {
-  if (node.isHidden.hide) return 3; // Hidden is the most restrictive, appears last (highest number)
-  if (node.maxRune < 0 || node.maxRune < node.minRune) return 2; // Full is next
-  if (node.isYieldGuarded.hide) return 1; // Yield guarded is least restrictive, appears first (lowest number)
+const getNodeRestrictionPriority = (node: NodeListingDto): number => {
+  if (node?.isHidden?.hide) return 3; // Hidden is the most restrictive, appears last (highest number)
+  if (node?.maxRune && node.maxRune < 0 || node?.maxRune && node.maxRune < node.minRune) return 2; // Full is next
+  if (node?.isYieldGuarded?.hide) return 1; // Yield guarded is least restrictive, appears first (lowest number)
   return 0; // Should not happen for restricted nodes
 };
 
@@ -58,9 +58,7 @@ const NodesList: React.FC<NodeListProps> = ({
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
         return (
-          node.nodeAddress.toLowerCase().includes(searchLower) ||
-          (node.description && node.description.toLowerCase().includes(searchLower)) ||
-          (node.contactInfo && node.contactInfo.toLowerCase().includes(searchLower))
+          node.nodeAddress.toLowerCase().includes(searchLower)
         );
       }
       return true;
@@ -74,8 +72,8 @@ const NodesList: React.FC<NodeListProps> = ({
     })
     .sort((a, b) => {
       // First, check if nodes have any restrictions
-      const aHasRestrictions = a.isYieldGuarded.hide || a.isHidden.hide || (a.maxRune < 0 || a.maxRune < a.minRune);
-      const bHasRestrictions = b.isYieldGuarded.hide || b.isHidden.hide || (b.maxRune < 0 || b.maxRune < b.minRune);
+      const aHasRestrictions = a?.isYieldGuarded?.hide || a?.isHidden?.hide || (a?.maxRune && a.maxRune < 0 || a?.maxRune && a.maxRune < a.minRune);
+      const bHasRestrictions = b?.isYieldGuarded?.hide || b?.isHidden?.hide || (b?.maxRune && b.maxRune < 0 || b?.maxRune && b.maxRune < b.minRune);
 
       // Nodes without restrictions come first
       if (aHasRestrictions !== bHasRestrictions) {
@@ -102,7 +100,7 @@ const NodesList: React.FC<NodeListProps> = ({
       // Finally, sort by the selected criteria if priorities are the same
       switch (sortBy) {
         case 'bondingCapacity':
-          return b.maxRune - a.maxRune;
+          return b?.maxRune && a?.maxRune ? b.maxRune - a.maxRune : 0;
         case 'minimumBond':
           return a.minRune - b.minRune;
         case 'feePercentage':

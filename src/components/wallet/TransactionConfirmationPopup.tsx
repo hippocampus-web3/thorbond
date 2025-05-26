@@ -5,7 +5,7 @@ import { formatRune } from '../../lib/utils';
 import { baseAmount } from '@xchainjs/xchain-util';
 import Tooltip from '../ui/Tooltip';
 import Modal from '../ui/Modal';
-import { Node } from '../../types';
+import { NodeListingDto } from '@hippocampus-web3/runebond-client';
 
 interface TransactionConfirmationPopupProps {
   isOpen: boolean;
@@ -16,7 +16,7 @@ interface TransactionConfirmationPopupProps {
   isLoading?: boolean;
   additionalInfo?: {
     intendedBondAmount?: string;
-    nodeInfo?: Node;
+    nodeInfo?: NodeListingDto;
   };
 }
 
@@ -134,11 +134,11 @@ const TransactionConfirmationPopup: React.FC<TransactionConfirmationPopupProps> 
 
         {!isSubscriptionType && (
           <div className="bg-gray-50 p-4 rounded-md">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Important Disclaimers</h3>
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Important disclaimers</h3>
             
             {requiresStandbyWarning && (
               <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-md mb-4">
-                <h4 className="text-sm font-medium text-yellow-800 mb-2">Standby Node Warning</h4>
+                <h4 className="text-sm font-medium text-yellow-800 mb-2">Standby node warning</h4>
                 <div className="flex items-start space-x-3">
                   <input
                     type="checkbox"

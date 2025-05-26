@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, X } from 'lucide-react';
+import { Upload } from 'lucide-react';
 import Modal from '../ui/Modal';
 import Input from '../ui/Input';
 import { toast } from 'react-toastify';

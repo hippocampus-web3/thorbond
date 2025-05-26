@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import UserDashboard from '../components/dashboard/UserDashboard';
-import { WhitelistRequest } from '../types';
 import NodeOperatorSearch from '../components/nodes/NodeOperatorSearch';
 import { Bell } from 'lucide-react';
 import SubscriptionModal from '../components/subscription/SubscriptionModal';
 import { useWallet } from '../contexts/WalletContext';
+import { WhitelistRequestDto } from '@hippocampus-web3/runebond-client';
 
 interface UserRequestsPageProps {
-  requests: WhitelistRequest[];
+  requests: WhitelistRequestDto[];
   onSearchUser: (value: string) => void;
   searchValue: string;
   isConnected: boolean;
   isLoading: boolean;
-  onPaymentExecute: (memo: string, amount: number) => Promise<{ txId: string }>;
+  onPaymentExecute: (memo: string, amount: number) => Promise<void>;
   onConnectWallet: () => void;
   txSubscriptionHash: string | null;
   onClearTx: () => void;

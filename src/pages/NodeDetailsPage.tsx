@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Node, WhitelistRequestFormData, Message, WhitelistRequest } from '../types';
+import { WhitelistRequestFormData } from '../types';
 import { formatRune } from '../lib/utils';
 import { useWallet } from '../contexts/WalletContext';
 import { baseAmount } from "@xchainjs/xchain-util";
@@ -20,14 +20,15 @@ import NodeAddress from '../components/nodes/NodeAddress';
 import NodeRestrictionNotice from '../components/nodes/NodeRestrictionNotice';
 import '../lib/chartConfig';
 import SubscriptionModal from '../components/subscription/SubscriptionModal';
+import { ChatMessageDto, NodeListingDto, WhitelistRequestDto } from '@hippocampus-web3/runebond-client';
 
 interface NodeDetailsPageProps {
-  nodes: Node[];
-  onRequestWhitelist: (node: Node) => void;
-  selectedNode: Node | null;
+  nodes: NodeListingDto[];
+  onRequestWhitelist: (node: NodeListingDto) => void;
+  selectedNode: NodeListingDto | null;
   onSubmitRequest: (formData: WhitelistRequestFormData) => Promise<void>;
   onCancelRequest: () => void;
-  messages: Message[];
+  messages: ChatMessageDto[];
   onSendMessage: (nodeAddress: string, message: string) => Promise<void>;
   isLoadingMessages?: boolean;
   balance: BaseAmount | null;
@@ -36,7 +37,7 @@ interface NodeDetailsPageProps {
   onUnbondRequest: (nodeAddress: string, userAddress: string, amount: number) => Promise<void>;
   refreshWhitelistFlag: number;
   oficialNodes: NodesResponse;
-  onPaymentExecute: (memo: string, amount: number) => Promise<{ txId: string }>;
+  onPaymentExecute: (memo: string, amount: number) => Promise<void>;
   onConnectWallet: () => void;
   txSubscriptionHash: string | null;
   onClearTx: () => void;
@@ -67,7 +68,7 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
   const { nodeAddress } = useParams<{ nodeAddress: string }>();
   const navigate = useNavigate();
   const { isConnected, address } = useWallet();
-  const [whitelistRequest, setWhitelistRequest] = useState<WhitelistRequest | null>(null);
+  const [whitelistRequest, setWhitelistRequest] = useState<WhitelistRequestDto | null>(null);
   const [isLoadingWhitelist, setIsLoadingWhitelist] = useState(false);
   const [nodeHistory, setNodeHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
@@ -242,13 +243,13 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
     );
   }
 
-  const isFull = node.maxRune < 0 || node.maxRune < node.minRune;
+  const isFull = node.maxRune && node.maxRune < 0 || node.maxRune && node.maxRune < node.minRune;
 
   // Determine the primary state to display
   const getPrimaryState = () => {
-    if (node.isHidden.hide) return 'hidden';
+    if (node.isHidden && node.isHidden.hide) return 'hidden';
     if (isFull) return 'full';
-    if (node.isYieldGuarded.hide) return 'yieldGuarded';
+    if (node.isYieldGuarded && node.isYieldGuarded.hide) return 'yieldGuarded';
     return 'normal';
   };
 
@@ -360,13 +361,13 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
                 <div className="flex justify-between items-start mb-6">
                   <div>
                     <h1 className="text-2xl font-bold text-gray-900">Node Details</h1>
-                    {(node.isHidden.hide || isFull || node.isYieldGuarded.hide) && (
+                    {(node.isHidden && node.isHidden.hide || isFull || node.isYieldGuarded && node.isYieldGuarded.hide) && (
                       <NodeRestrictionNotice primaryState={primaryState} stateStyles={stateStyles} node={node} />
                     )}
                     <div className="mt-4 bg-gray-50 p-4 rounded-lg">
                       <NodeAddress address={node.nodeAddress} isNode={true} />
                     </div>
-                    {(node.isHidden.hide || isFull || node.isYieldGuarded.hide) && (
+                    {(node.isHidden && node.isHidden.hide || isFull || node.isYieldGuarded && node.isYieldGuarded.hide) && (
                       <div className={`mt-6 p-4 rounded-lg border ${
                         primaryState === 'full' ? 'bg-emerald-50 border-emerald-200' : 
                         primaryState === 'hidden' ? 'bg-yellow-50 border-yellow-200' :
@@ -472,20 +473,6 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
                       )}
                     </div>
                   </div>
-
-                  {node.description && (
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500">Description</h3>
-                      <p className="mt-1 text-gray-900">{node.description}</p>
-                    </div>
-                  )}
-
-                  {node.contactInfo && (
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500">Contact Information</h3>
-                      <p className="mt-1 text-gray-900">{node.contactInfo}</p>
-                    </div>
-                  )}
                 </div>
               </div>
 

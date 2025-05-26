@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Node } from '../../types';
 import Button from '../ui/Button';
 import { formatRune, shortenAddress, getNodeExplorerUrl } from '../../lib/utils';
 import { useWallet } from '../../contexts/WalletContext';
@@ -7,9 +6,10 @@ import { baseAmount } from "@xchainjs/xchain-util";
 import { Copy, Check, Share2, Info, Eye, EyeOff, Trophy, Sparkles, Shield, Lock, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Tooltip from '../ui/Tooltip';
+import { NodeListingDto } from '@hippocampus-web3/runebond-client';
 interface NodeCardProps {
-  node: Node;
-  onRequestWhitelist: (node: Node) => void;
+  node: NodeListingDto;
+  onRequestWhitelist: (node: NodeListingDto) => void;
 }
 
 const NodeCard: React.FC<NodeCardProps> = ({
@@ -22,8 +22,8 @@ const NodeCard: React.FC<NodeCardProps> = ({
   const [copiedNode, setCopiedNode] = useState(false);
   const [copiedOperator, setCopiedOperator] = useState(false);
   const [copiedShare, setCopiedShare] = useState(false);
-  const isFull = node.maxRune < 0 || node.maxRune < node.minRune;
-  const [isVisible, setIsVisible] = useState(!node.isHidden.hide && !isFull && !node.isYieldGuarded.hide);
+  const isFull = node?.maxRune && node.maxRune < 0 || node?.maxRune && node.maxRune < node.minRune;
+  const [isVisible, setIsVisible] = useState(!node?.isHidden?.hide && !isFull && !node?.isYieldGuarded?.hide);
   const navigate = useNavigate();
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
@@ -54,7 +54,6 @@ const NodeCard: React.FC<NodeCardProps> = ({
 
   // Helper to format countdown time
   const formatCountdown = (seconds: number): string => {
-    const weekThreshold = 7 * 24 * 3600;
     const monthSeconds = 30 * 24 * 3600; // Approximation
     const weekSeconds = 7 * 24 * 3600;
     const daySeconds = 24 * 3600;
@@ -91,9 +90,9 @@ const NodeCard: React.FC<NodeCardProps> = ({
 
   // Determine the primary state to display
   const getPrimaryState = () => {
-    if (node.isHidden.hide) return 'hidden';
+    if (node?.isHidden?.hide) return 'hidden';
     if (isFull) return 'full';
-    if (node.isYieldGuarded.hide) return 'yieldGuarded';
+    if (node?.isYieldGuarded?.hide) return 'yieldGuarded';
     return 'normal';
   };
 
@@ -188,7 +187,7 @@ const NodeCard: React.FC<NodeCardProps> = ({
     navigate(`/nodes/${node.nodeAddress}`);
   };
 
-  if ((node.isHidden.hide || isFull || node.isYieldGuarded.hide) && !isVisible) {
+  if ((node?.isHidden?.hide || isFull || node?.isYieldGuarded?.hide) && !isVisible) {
     return (
       <div className={`shadow rounded-lg p-4 hover:cursor-pointer min-h-[450px] flex flex-col ${stateStyles.bgColor} border-2 ${stateStyles.borderColor}`} onClick={handleCardClick}>
         <div className="flex justify-between items-center mb-4">
@@ -236,7 +235,7 @@ const NodeCard: React.FC<NodeCardProps> = ({
                     <Info className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
                     <div>
                       <h3 className="font-medium text-gray-900 mb-2">Hidden Node</h3>
-                      {node.isHidden.reasons && node.isHidden.reasons.map((reason, index) => (
+                      {node?.isHidden?.reasons && node?.isHidden?.reasons.map((reason, index) => (
                         <p key={index} className="text-sm text-gray-600 mb-2">
                           • {reason}
                         </p>
@@ -276,7 +275,7 @@ const NodeCard: React.FC<NodeCardProps> = ({
                   <div className="flex items-start gap-2">
                     <div>
                       <h3 className="font-medium text-gray-900 mb-2">Yield Guard Active</h3>
-                      {node.isYieldGuarded.reasons && node.isYieldGuarded.reasons.map((reason, index) => (
+                      {node?.isYieldGuarded?.reasons && node?.isYieldGuarded?.reasons.map((reason, index) => (
                         <p key={index} className="text-sm text-gray-600 mb-2">
                           • {reason}
                         </p>
@@ -427,18 +426,6 @@ const NodeCard: React.FC<NodeCardProps> = ({
           <span className="font-medium text-gray-900">{formatRune(baseAmount(node.officialInfo.totalBond))}</span>
         </div>
       </div>
-
-      {node.description && (
-        <p className="mt-4 text-sm text-gray-600">
-          {node.description}
-        </p>
-      )}
-
-      {node.contactInfo && (
-        <p className="mt-2 text-sm text-gray-600">
-          {node.contactInfo}
-        </p>
-      )}
 
       <div className="mt-auto pt-4">
         {isOperator ? (

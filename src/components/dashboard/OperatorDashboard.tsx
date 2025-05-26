@@ -5,18 +5,18 @@ import Tabs from "../ui/Tabs";
 import StatCard from "./StatCard";
 import RequestList from "../requests/RequestList";
 import Button from "../ui/Button";
-import { Node, WhitelistRequest } from "../../types";
 import { formatRune, shortenAddress } from "../../lib/utils";
 import Dropdown from "../ui/Dropdown";
 import { baseAmount } from "@xchainjs/xchain-util";
 import { useWallet } from "../../contexts/WalletContext";
 import { useWindowSize } from "../../hooks/useWindowSize";
+import { NodeListingDto, WhitelistRequestDto } from "@hippocampus-web3/runebond-client";
 
 interface OperatorDashboardProps {
-  nodes: Node[];
-  requests: WhitelistRequest[];
-  onApproveRequest: (request: WhitelistRequest) => void;
-  onRejectRequest: (request: WhitelistRequest) => void;
+  nodes: NodeListingDto[];
+  requests: WhitelistRequestDto[];
+  onApproveRequest: (request: WhitelistRequestDto) => void;
+  onRejectRequest: (request: WhitelistRequestDto) => void;
   onEditListing: () => void;
   onDeleteListing: () => void;
   selectedNode?: string;

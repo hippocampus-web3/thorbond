@@ -12,7 +12,7 @@ interface SubscriptionModalProps {
   isOpen: boolean;
   onClose: () => void;
   nodeAddress: string;
-  onPaymentExecute: (memo: string, amount: number) => Promise<{ txId: string }>;
+  onPaymentExecute: (memo: string, amount: number) => Promise<void>;
   onConnectWallet: () => void;
   txSubscriptionHash: string | null;
   onClearTx: () => void;
@@ -78,8 +78,8 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
       setIsLoading(true);
       const engine = RuneBondEngine.getInstance();
       const response = await engine.createSubscription(email, nodeAddress);
-      setMemo(response.data.memo);
-      setIsNewSubscription(response.is_new_subscription);
+      setMemo(response.memo);
+      setIsNewSubscription(!!response.is_new_subscription);
       setStep('payment');
     } catch (error) {
       console.error('Error creating subscription:', error);
