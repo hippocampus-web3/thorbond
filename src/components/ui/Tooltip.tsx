@@ -73,7 +73,7 @@ const Tooltip: React.FC<TooltipProps> = ({
       {isVisible && createPortal(
         <div 
           ref={tooltipRef}
-          className={`absolute ${width} bg-white shadow-lg rounded-lg p-4 z-[9999]`}
+          className={`absolute ${width} bg-white shadow-lg rounded-lg p-4 z-[9999] text-gray-900`}
           style={{
             position: 'fixed',
             top: coords.top,
