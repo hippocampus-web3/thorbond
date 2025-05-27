@@ -4,19 +4,19 @@ import { Copy, Check, ExternalLink } from 'lucide-react';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
 import Tooltip from '../ui/Tooltip';
-import { WhitelistRequest } from '../../types';
 import { formatRune, shortenAddress, getNodeExplorerUrl } from '../../lib/utils';
 import { baseAmount } from '@xchainjs/xchain-util';
 import { Link } from 'react-router-dom';
+import { WhitelistRequestDto } from '@hippocampus-web3/runebond-client';
 
 interface RequestRowProps {
-  request: WhitelistRequest;
+  request: WhitelistRequestDto;
   actionList?: { 
     title: string, 
     type: 'primary' | 'danger' | 'outline', 
-    isDisabled?: (request: WhitelistRequest) => boolean,
-    tooltip?: (request: WhitelistRequest) => string | undefined,
-    action: (request: WhitelistRequest) => void 
+    isDisabled?: (request: WhitelistRequestDto) => boolean,
+    tooltip?: (request: WhitelistRequestDto) => string | undefined,
+    action: (request: WhitelistRequestDto) => void 
   }[];
   timeRemaining?: string;
 }
@@ -139,11 +139,6 @@ const RequestRow: React.FC<RequestRowProps> = ({ request, actionList = [], timeR
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         {getStatusBadge()}
-        {request.status === 'rejected' && request.rejectionReason && (
-          <div className="mt-1 text-xs text-gray-500">
-            Reason: {request.rejectionReason}
-          </div>
-        )}
       </td>
       {actionList.length ? (
         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

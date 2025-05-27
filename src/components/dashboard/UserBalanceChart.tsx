@@ -304,6 +304,9 @@ const UserBalanceChart: React.FC<UserBalanceChartProps> = ({ address }) => {
         position: 'left' as const,
         title: { display: true, text: 'Bonded Balance (RUNE)' },
         grid: { display: false },
+        ticks: {
+          color: '#9ca3af'
+        }
       },
       y1: {
         type: 'linear' as const,
@@ -312,20 +315,24 @@ const UserBalanceChart: React.FC<UserBalanceChartProps> = ({ address }) => {
         title: { display: true, text: 'Bonded Balance (USD)' },
         grid: { display: false },
         ticks: {
+          color: '#9ca3af',
           callback: (value: any) => `$${value}`
         }
       },
       x: {
         grid: { display: false },
+        ticks: {
+          color: '#9ca3af'
+        }
       },
     },
   };
 
   if (loading) {
-    return <div style={{ width: '100%', height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading bonded balance...</div>;
+    return <div className="w-full h-[300px] flex items-center justify-center text-gray-900">Loading bonded balance...</div>;
   }
   if (error) {
-    return <div style={{ width: '100%', height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'red' }}>{error}</div>;
+    return <div className="w-full h-[300px] flex items-center justify-center text-red-500">{error}</div>;
   }
 
   return (

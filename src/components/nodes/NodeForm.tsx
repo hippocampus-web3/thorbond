@@ -6,6 +6,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Dropdown from '../ui/Dropdown';
+import { NodesResponse } from '@xchainjs/xchain-thornode';
+import { NodeListingDto } from '@hippocampus-web3/runebond-client';
 
 interface FormData {
   address: string;
@@ -22,8 +24,8 @@ const validationSchema = z.object({
 });
 
 interface NodeFormProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  availableNodes: any[]; // TODO: Fix types
+  availableNodes: NodesResponse; 
+  alreadyListed: NodeListingDto[];
   onSubmit: (data: FormData) => void;
   onCancel: () => void;
   initialData?: FormData;
@@ -31,6 +33,7 @@ interface NodeFormProps {
 
 const NodeForm: React.FC<NodeFormProps> = ({
   availableNodes,
+  alreadyListed,
   onSubmit,
   onCancel,
   initialData,
@@ -64,6 +67,13 @@ const NodeForm: React.FC<NodeFormProps> = ({
     onSubmit(data);
   };
 
+  const options = [
+    ...new Set([
+      ...availableNodes.map(node => node.node_address),
+      ...alreadyListed.map(node => node.nodeAddress)
+    ])
+  ].map(address => ({ value: address, label: address }));
+
   const isValid = formData.address && 
                  formData.totalBondTarget && 
                  formData.minimumBond && 
@@ -86,24 +96,12 @@ const NodeForm: React.FC<NodeFormProps> = ({
         <form onSubmit={handleSubmit(handleSubmitForm)} className="space-y-6">
           <div className="grid grid-cols-1 gap-6">
 
-            {
-              import.meta.env.VITE_FEATURE_FLAG_ENFORCE_NODE_OPERATOR === 'true' ?
-              <Dropdown
-                options={availableNodes.map(node => ({ value: node.node_address, label: node.node_address }))}
-                value={formData.address}
-                onChange={(value) => handleInputChange('address', value)}
-                placeholder="Choose your node"
-              /> : 
-              <Input
-                label="Node address"
-                placeholder="thor..."
-                name="address"
-                value={formData.address}
-                onChange={({target}: React.ChangeEvent<HTMLInputElement>) => handleInputChange(target.name, target.value)}
-                error={errors.address?.message}
-                fullWidth
-              />
-            }
+            <Dropdown
+              options={options}
+              value={formData.address}
+              onChange={(value) => handleInputChange('address', value)}
+              placeholder="Choose your node"
+            />
             
             <Input
               label="Total bond target (RUNE)"

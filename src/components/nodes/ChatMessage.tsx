@@ -2,17 +2,17 @@ import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { Shield, Star, User, ExternalLink } from 'lucide-react';
 import { getAddressExplorerUrl, shortenAddress } from '../../lib/utils';
-import { Message } from '../../types';
+import { ChatMessageDto } from '@hippocampus-web3/runebond-client';
 
 interface ChatMessageProps {
   message: string;
   senderAddress: string;
   timestamp: Date;
-  role: Message['role'];
+  role: ChatMessageDto['role'];
   roleIcon: typeof Shield | typeof Star | typeof User;
 }
 
-const getRoleMessage = (role: Message['role']) => {
+const getRoleMessage = (role: ChatMessageDto['role']) => {
   switch (role) {
     case 'NO':
       return 'Node operator';

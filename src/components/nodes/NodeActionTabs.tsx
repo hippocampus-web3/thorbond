@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Node, WhitelistRequest } from '../../types';
 import Button from '../ui/Button';
 import { formatRune } from '../../lib/utils';
 import { assetAmount, assetToBase, baseAmount, BaseAmount } from '@xchainjs/xchain-util';
@@ -10,13 +9,14 @@ import LoadingSpinner from '../ui/LoadingSpinner';
 import Alert from '../ui/Alert';
 import { Link } from 'react-router-dom';
 import { Node as OfficialNode } from '@xchainjs/xchain-thornode';
+import { NodeListingDto, WhitelistRequestDto } from '@hippocampus-web3/runebond-client';
 
 interface NodeActionTabsProps {
-  node: Node;
-  onRequestWhitelist: (node: Node) => void;
+  node: NodeListingDto;
+  onRequestWhitelist: (node: NodeListingDto) => void;
   onBondSubmit: (amount: string) => void;
   onUnbondSubmit: (amount: string) => void;
-  whitelistRequest: WhitelistRequest | null;
+  whitelistRequest: WhitelistRequestDto | null;
   isLoadingWhitelist: boolean;
   balance: BaseAmount | null;
   isLoadingBalance: boolean;

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Node, WhitelistRequestFormData, Message } from '../../types';
+import { WhitelistRequestFormData } from '../../types';
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadAll } from "@tsparticles/all";
 import NodeDetailsPage from '../../pages/NodeDetailsPage';
@@ -7,14 +7,15 @@ import { BaseAmount } from '@xchainjs/xchain-util';
 import { NodesResponse } from '@xchainjs/xchain-thornode';
 import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { ChatMessageDto, NodeListingDto } from '@hippocampus-web3/runebond-client';
 
 interface NodeProfileLayoutProps {
-  nodes: Node[];
-  onRequestWhitelist: (node: Node) => void;
-  selectedNode: Node | null;
+  nodes: NodeListingDto[];
+  onRequestWhitelist: (node: NodeListingDto) => void;
+  selectedNode: NodeListingDto | null;
   onSubmitRequest: (formData: WhitelistRequestFormData) => Promise<void>;
   onCancelRequest: () => void;
-  messages: Message[];
+  messages: ChatMessageDto[];
   onSendMessage: (nodeAddress: string, message: string) => Promise<void>;
   isLoadingMessages?: boolean;
   balance: BaseAmount | null;
@@ -23,7 +24,7 @@ interface NodeProfileLayoutProps {
   onUnbondRequest: (nodeAddress: string, userAddress: string, amount: number) => Promise<void>;
   refreshWhitelistFlag: number;
   oficialNodes: NodesResponse;
-  onPaymentExecute: (memo: string, amount: number) => Promise<{ txId: string }>;
+  onPaymentExecute: (memo: string, amount: number) => Promise<void>;
   onConnectWallet: () => void;
   txSubscriptionHash: string | null;
   onClearTx: () => void;
@@ -158,12 +159,12 @@ const NodeProfileLayout: React.FC<NodeProfileLayoutProps> = (props) => {
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center space-x-4">
                 <img
-                  src={node.logo || '/runebond-isologo.svg'}
-                  alt={node.name}
+                  src={(node as any).logo || '/runebond-isologo.svg'}
+                  alt={(node as any).name}
                   className="h-10 w-10 rounded-full"
                 />
                 <div>
-                  <h1 className="text-xl font-semibold text-gray-900">{node.name}</h1>
+                  <h1 className="text-xl font-semibold text-gray-900">{(node as any).name}</h1>
                   <p className="text-sm text-gray-500">{node.nodeAddress}</p>
                 </div>
               </div>
@@ -181,7 +182,7 @@ const NodeProfileLayout: React.FC<NodeProfileLayoutProps> = (props) => {
               className="relative h-64 md:h-96 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl mt-4"
             >
               <img
-                src={node.bannerImage || 'https://picsum.photos/200/300'}
+                src={(node as any).bannerImage || 'https://picsum.photos/200/300'}
                 alt="Node Banner"
                 className="w-full h-full object-cover opacity-50 rounded-xl"
               />
@@ -190,13 +191,13 @@ const NodeProfileLayout: React.FC<NodeProfileLayoutProps> = (props) => {
                 <div className="flex items-end space-x-6">
                   <div className="relative">
                     <img
-                      src={node.logo || 'https://picsum.photos/100/300'}
-                      alt={node.name}
+                      src={(node as any).logo || 'https://picsum.photos/100/300'}
+                      alt={(node as any).name}
                       className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-white shadow-lg"
                     />
                   </div>
                   <div className="text-white">
-                    <h1 className="text-3xl md:text-4xl font-bold">{node.name || 'Node Name'}</h1>
+                    <h1 className="text-3xl md:text-4xl font-bold">{(node as any).name || 'Node Name'}</h1>
                     <SlotMachine text={node.nodeAddress} />
                   </div>
                 </div>
@@ -214,7 +215,7 @@ const NodeProfileLayout: React.FC<NodeProfileLayoutProps> = (props) => {
               <h2 className="text-2xl font-bold text-gray-900 mb-6">About the Node</h2>
               <div className="prose max-w-none">
                 <p className="text-gray-600 leading-relaxed">
-                  {node.description || 'This node does not have a detailed description yet.'}
+                  {(node as any).description || 'This node does not have a detailed description yet.'}
                 </p>
               </div>
             </motion.div>
@@ -237,7 +238,7 @@ const NodeProfileLayout: React.FC<NodeProfileLayoutProps> = (props) => {
                   >
                     <h3 className="text-xl font-semibold text-gray-900 mb-4">Vision</h3>
                     <p className="text-gray-600 leading-relaxed">
-                      {node.vision || 'Our vision for the future of THORChain and the DeFi ecosystem.'}
+                      {(node as any).vision || 'Our vision for the future of THORChain and the DeFi ecosystem.'}
                     </p>
                   </motion.div>
                   <motion.div
@@ -254,7 +255,7 @@ const NodeProfileLayout: React.FC<NodeProfileLayoutProps> = (props) => {
                         className="flex items-start"
                       >
                         <span className="text-indigo-600 mr-2">•</span>
-                        {node.values?.transparency || 'Transparency in all our operations'}
+                        {(node as any).values?.transparency || 'Transparency in all our operations'}
                       </motion.li>
                       <motion.li 
                         initial={{ x: 20, opacity: 0 }}
@@ -263,7 +264,7 @@ const NodeProfileLayout: React.FC<NodeProfileLayoutProps> = (props) => {
                         className="flex items-start"
                       >
                         <span className="text-indigo-600 mr-2">•</span>
-                        {node.values?.security || 'Security as our absolute priority'}
+                        {(node as any).values?.security || 'Security as our absolute priority'}
                       </motion.li>
                       <motion.li 
                         initial={{ x: 20, opacity: 0 }}
@@ -272,7 +273,7 @@ const NodeProfileLayout: React.FC<NodeProfileLayoutProps> = (props) => {
                         className="flex items-start"
                       >
                         <span className="text-indigo-600 mr-2">•</span>
-                        {node.values?.community || 'Commitment to the community'}
+                        {(node as any).values?.community || 'Commitment to the community'}
                       </motion.li>
                     </ul>
                   </motion.div>
@@ -285,7 +286,7 @@ const NodeProfileLayout: React.FC<NodeProfileLayoutProps> = (props) => {
                 >
                   <h3 className="text-xl font-semibold text-gray-900 mb-4">Operation Strategy</h3>
                   <p className="text-gray-600 leading-relaxed">
-                    {node.operationStrategy || 'Our strategy for maintaining an efficient and reliable node.'}
+                    {(node as any).operationStrategy || 'Our strategy for maintaining an efficient and reliable node.'}
                   </p>
                 </motion.div>
               </div>
@@ -304,9 +305,9 @@ const NodeProfileLayout: React.FC<NodeProfileLayoutProps> = (props) => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div>
-                <h3 className="text-lg font-semibold mb-4">Sobre {node.name}</h3>
+                <h3 className="text-lg font-semibold mb-4">Sobre {(node as any).name}</h3>
                 <p className="text-gray-400 text-sm">
-                  {node.description?.substring(0, 150)}...
+                  {(node as any).description?.substring(0, 150)}...
                 </p>
               </div>
               <div>
@@ -320,9 +321,9 @@ const NodeProfileLayout: React.FC<NodeProfileLayoutProps> = (props) => {
               <div>
                 <h3 className="text-lg font-semibold mb-4">Redes Sociales</h3>
                 <div className="space-y-2">
-                  {node.socialLinks?.twitter && (
+                  {(node as any).socialLinks?.twitter && (
                     <a
-                      href={node.socialLinks.twitter}
+                      href={(node as any).socialLinks.twitter}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center space-x-2 text-gray-400 hover:text-white"
@@ -333,9 +334,9 @@ const NodeProfileLayout: React.FC<NodeProfileLayoutProps> = (props) => {
                       <span>Twitter</span>
                     </a>
                   )}
-                  {node.socialLinks?.telegram && (
+                  {(node as any).socialLinks?.telegram && (
                     <a
-                      href={node.socialLinks.telegram}
+                      href={(node as any).socialLinks.telegram}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center space-x-2 text-gray-400 hover:text-white"
@@ -346,9 +347,9 @@ const NodeProfileLayout: React.FC<NodeProfileLayoutProps> = (props) => {
                       <span>Telegram</span>
                     </a>
                   )}
-                  {node.socialLinks?.discord && (
+                  {(node as any).socialLinks?.discord && (
                     <a
-                      href={node.socialLinks.discord}
+                      href={(node as any).socialLinks.discord}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center space-x-2 text-gray-400 hover:text-white"

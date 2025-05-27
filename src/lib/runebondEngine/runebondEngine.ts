@@ -1,17 +1,14 @@
-import axios from "axios";
 import {
   ListingParams,
-  Node,
-  WhitelistRequest,
   WhitelistRequestParams,
   SendMessageParams,
-  Message,
 } from "../../types";
 import {
   assetToBase,
   assetAmount,
   BaseAmount,
 } from "@xchainjs/xchain-util";
+import { NodeListingDto, WhitelistService, NodesService, OpenAPI, WhitelistRequestDto, ChatService, ChatMessageDto, StatsService, StatsResponseDto, SubscriptionsService, SubscriptionResponseDto } from '@hippocampus-web3/runebond-client';
 import {
   createBondMemo,
   createEnableBondMemo,
@@ -27,25 +24,8 @@ import { ThornodeClient } from '../thornode/client';
 import { NodesResponse } from "@xchainjs/xchain-thornode";
 import { MidgardClient } from '../midgard';
 
-interface SubscriptionResponse {
-  success: boolean;
-  data: {
-    user_id: string;
-    subscription_code: string;
-    memo: string;
-    email: string;
-    observable_address: string;
-    channel: string;
-    enabled: boolean;
-    subscribed_until: string;
-  };
-  is_new_subscription: boolean;
-  message: string;
-}
-
 class RuneBondEngine {
   private static instance: RuneBondEngine;
-  private readonly RUNEBOND_API_URL = import.meta.env.VITE_RUNEBOND_API_URL;
   private readonly RUNEBOND_ADDRESS =
     import.meta.env.VITE_RUNEBOND_ADDRESS ||
     "thor1xazgmh7sv0p393t9ntj6q9p52ahycc8jjlaap9";
@@ -56,6 +36,7 @@ class RuneBondEngine {
   private constructor() {
     this.thornodeClient = ThornodeClient.getInstance();
     this.midgardClient = new MidgardClient();
+    OpenAPI.BASE = import.meta.env.VITE_RUNEBOND_API_URL
   }
 
   public static getInstance(): RuneBondEngine {
@@ -74,12 +55,13 @@ class RuneBondEngine {
     }
   }
 
-  public async getListedNodes(): Promise<Node[]> {
+  public async getListedNodes(): Promise<NodeListingDto[]> {
     try {
-      const responseNodes = await axios.get(`${this.RUNEBOND_API_URL}/nodes`, {
-        params: {},
-      });
-      return responseNodes.data.data || [];
+      const nodes = await NodesService.getNodes()
+      if (!nodes.data) {
+        throw Error(nodes?.errors?.[0] || "Failed to fetch nodes")
+      }
+      return nodes.data
     } catch (error) {
       console.error("Failed to fetch listed nodes:", error);
       throw new Error("Failed to fetch listed nodes");
@@ -89,21 +71,16 @@ class RuneBondEngine {
   public async getWhitelistRequests(
     connectedAddress: string,
     nodeAddress?: string
-  ): Promise<{ operator: WhitelistRequest[]; user: WhitelistRequest[] }> {
+  ): Promise<{ operator: WhitelistRequestDto[]; user: WhitelistRequestDto[] }> {
     try {
-      const responseNodes = await axios.get(
-        `${this.RUNEBOND_API_URL}/whitelist`,
-        {
-          params: {
-            address: connectedAddress,
-            ...(nodeAddress && { nodeAddress })
-          },
-        }
-      );
-      const requests: WhitelistRequest[] = responseNodes.data.data || [];
+      const responseWhitelists = await WhitelistService.getWhitelistRequests(1, 100, connectedAddress, nodeAddress)
+      if (!responseWhitelists.data) {
+        throw Error(responseWhitelists?.errors?.[0] || "Failed to fetch whitelists")
+      }
+      const requests = responseWhitelists.data
 
-      const requestsUser: WhitelistRequest[] = [];
-      const requestsOperator: WhitelistRequest[] = [];
+      const requestsUser: WhitelistRequestDto[] = [];
+      const requestsOperator: WhitelistRequestDto[] = [];
 
       for (const request of requests) {
         if (request.userAddress === connectedAddress) {
@@ -125,14 +102,17 @@ class RuneBondEngine {
     }
   }
 
-  public async getChatMessages(nodeAddress: string): Promise<Message[]> {
+  public async getChatMessages(nodeAddress: string): Promise<ChatMessageDto[]> {
     if (!nodeAddress.startsWith("thor1")) {
       throw new Error("Invalid node address format for fetching messages");
     }
 
     try {
-      const response = await axios.get(`${this.RUNEBOND_API_URL}/chat/${nodeAddress}`);
-      return response.data.data || [];
+      const responseChat = await ChatService.getNodeChatHistory(nodeAddress)
+      if (!responseChat.data) {
+        throw Error(responseChat?.errors?.[0] || "Failed to fetch messages")
+      }
+      return responseChat.data
     } catch (error) {
       console.error(`Failed to fetch chat messages for ${nodeAddress}:`, error);
       return [];
@@ -298,7 +278,7 @@ class RuneBondEngine {
   }
 
   public async sendEnableBondRequest(
-    params: WhitelistRequest,
+    params: WhitelistRequestDto,
     walletType?: WalletType,
     walletProvider?: WalletProvider,
     emulate?: boolean
@@ -378,17 +358,13 @@ class RuneBondEngine {
     );
   }
 
-  public async getStats(): Promise<{
-    totalNodes: number;
-    completedWhitelists: number;
-    totalBondRune: string;
-    networkStats: {
-      bondingAPY: string;
-    };
-  }> {
+  public async getStats(): Promise<StatsResponseDto> {
     try {
-      const response = await axios.get(`${this.RUNEBOND_API_URL}/stats`);
-      return response.data;
+      const responseStats = await StatsService.getStats()
+      if (!responseStats.data) {
+        throw Error(responseStats?.errors?.[0] || "Failed to fetch stats")
+      }
+      return responseStats.data;
     } catch (error) {
       console.error("Failed to fetch stats:", error);
       throw new Error("Failed to fetch stats");
@@ -403,13 +379,13 @@ class RuneBondEngine {
     return this.thornodeClient.getAddressBalance(address);
   }
 
-  public async createSubscription(email: string, observableAddress: string): Promise<SubscriptionResponse> {
+  public async createSubscription(email: string, observableAddress: string): Promise<SubscriptionResponseDto> {
     try {
-      const response = await axios.post(`${this.RUNEBOND_API_URL}/subscriptions`, {
-        email,
-        observable_address: observableAddress
-      });
-      return response.data;
+      const responseSubscriptions = await SubscriptionsService.createSubscription({ email,  observable_address: observableAddress })
+      if (!responseSubscriptions.data) {
+        throw Error(responseSubscriptions?.errors?.[0] || "Failed to fetch subscription")
+      }
+      return responseSubscriptions.data;
     } catch (error) {
       console.error("Failed to create subscription:", error);
       throw new Error("Failed to create subscription");

@@ -7,74 +7,6 @@ export interface NodeOperatorFormData {
   contactInfo?: string;
 }
 
-export interface Node {
-  nodeAddress: string;
-  name: string;
-  address: string;
-  description: string;
-  operatorAddress: string;
-  status: string;
-  maxRune: number;
-  minRune: number;
-  feePercentage: number;
-  txId: string;
-  height: number;
-  timestamp: string;
-  slashPoints: number;
-  activeTime: number;
-  bondProvidersCount: number;
-  maxTimeToLeave: number;
-  isDelisted: boolean;
-  minimumBond: number;
-  totalBondTarget: number;
-  totalBond: number;
-  uptime: number;
-  slashingEvents: number;
-  age: number;
-  logo?: string;
-  bannerImage?: string;
-  philosophy?: string;
-  contactInfo?: string;
-  experience?: string;
-  infrastructure?: string;
-  commitment?: string;
-  vision?: string;
-  values?: {
-    transparency?: string;
-    security?: string;
-    community?: string;
-  };
-  operationStrategy?: string;
-  socialLinks?: {
-    twitter?: string;
-    telegram?: string;
-    discord?: string;
-  };
-  officialInfo: {
-    currentFee: number;
-    totalBond: number;
-  };
-  isHidden: {
-    hide: boolean;
-    reasons: null | string[];
-  };
-  isYieldGuarded: {
-    hide: boolean;
-    reasons: null | string[];
-  };
-}
-
-export interface WhitelistRequest {
-  node: Node;
-  userAddress: string;
-  intendedBondAmount: number;
-  realBond: number,
-  status: 'pending' | 'approved' | 'rejected' | 'bonded';
-  rejectionReason?: string;
-  timestamp: string;
-  txId: string;
-}
-
 export interface WhitelistRequestFormData {
   walletAddress: string;
   intendedBondAmount: string;
@@ -106,15 +38,6 @@ export interface SendMessageParams {
   senderAddress: string;
   message: string;
   role: 'USER' | 'BP' | 'NO';
-}
-
-export interface Message {
-  message: string;
-  userAddress: string;
-  nodeAddress: string;
-  timestamp: Date;
-  role: 'BP' | 'NO' | 'USER';
-  txId: string;
 }
 
 export interface ThorchainTransferParams {

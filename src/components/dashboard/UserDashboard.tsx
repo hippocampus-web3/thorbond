@@ -3,13 +3,13 @@ import { Clock, CheckCircle, XCircle, Info } from 'lucide-react';
 import { Card, CardHeader, CardContent } from '../ui/Card';
 import Tabs from '../ui/Tabs';
 import RequestList from '../requests/RequestList';
-import { WhitelistRequest } from '../../types';
 import { useWallet } from '../../contexts/WalletContext';
 import UserBalanceChart from './UserBalanceChart';
 import Tooltip from '../ui/Tooltip';
+import { WhitelistRequestDto } from '@hippocampus-web3/runebond-client';
 
 interface UserDashboardProps {
-  requests: WhitelistRequest[];
+  requests: WhitelistRequestDto[];
   searchValue?: string;
 }
 

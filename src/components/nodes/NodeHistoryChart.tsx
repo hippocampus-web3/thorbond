@@ -1,16 +1,4 @@
 import React, { useState } from 'react';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip as ChartTooltip,
-  Legend,
-  Filler,
-} from 'chart.js';
 import { Chart } from 'react-chartjs-2';
 import { formatRune } from '../../lib/utils';
 import { baseAmount } from '@xchainjs/xchain-util';
@@ -20,6 +8,7 @@ import Tooltip from '../ui/Tooltip';
 import '../../lib/chartConfig';
 
 interface NodeHistoryChartProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   history: any[];
 }
 
@@ -120,6 +109,7 @@ const NodeHistoryChart: React.FC<NodeHistoryChartProps> = ({ history }) => {
         grid: { display: false },
         ticks: {
           callback: function(value: any) { return formatRune(baseAmount(value)); },
+          color: '#9ca3af'
         },
       },
       y1: {
@@ -130,10 +120,14 @@ const NodeHistoryChart: React.FC<NodeHistoryChartProps> = ({ history }) => {
         grid: { display: false },
         ticks: {
           callback: function(value: any) { return formatRune(baseAmount(value)); },
+          color: '#9ca3af'
         },
       },
       x: {
         grid: { display: false },
+        ticks: {
+          color: '#9ca3af'
+        },
       },
     },
   };

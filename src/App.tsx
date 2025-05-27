@@ -9,8 +9,7 @@ import NodesPage from './pages/NodesPage';
 import OperatorDashboardPage from './pages/OperatorDashboardPage';
 import UserRequestsPage from './pages/UserRequestsPage';
 import NodeDetailsPageWrapper from './pages/NodeDetailsPageWrapper';
-import NodeProfilePage from './pages/NodeProfilePage';
-import { Node, NodeOperatorFormData, WhitelistRequest, WhitelistRequestFormData, SendMessageParams, Message } from './types';
+import { NodeOperatorFormData, WhitelistRequestFormData, SendMessageParams } from './types';
 import { WalletProvider, WalletType, useWallet } from './contexts/WalletContext';
 import RuneBondEngine from './lib/runebondEngine/runebondEngine';
 import WalletConnectPopup from './components/wallet/WalletConnectPopup';
@@ -23,17 +22,18 @@ import { useTransactionPolling } from './hooks/useTransactionPolling';
 import { NodesResponse } from '@xchainjs/xchain-thornode';
 import EarningsSimulatorPage from './pages/EarningsSimulatorPage';
 import NodeProfileLayout from './components/layout/NodeProfileLayout';
+import { ChatMessageDto, NodeListingDto, WhitelistRequestDto } from '@hippocampus-web3/runebond-client';
 
 const AppContent: React.FC = () => {
-  const [listedNodes, setListedNodes] = useState<Node[]>([]);
+  const [listedNodes, setListedNodes] = useState<NodeListingDto[]>([]);
   const [allNodes, setAllNodes] = useState<NodesResponse>([]);
-  const [witheListsRequests, setWhitelistRequests] = useState<{ operator: WhitelistRequest[], user: WhitelistRequest[] }>({ operator: [], user: [] });
+  const [witheListsRequests, setWhitelistRequests] = useState<{ operator: WhitelistRequestDto[], user: WhitelistRequestDto[] }>({ operator: [], user: [] });
   const [searchOperator, setSearchOperator] = useState<string>('');
   const [searchUser, setSearchUser] = useState<string>('');
   const [isLoadingNodes, setIsLoadingNodes] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
-  const [chatMessages, setChatMessages] = useState<Message[]>([]);
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [chatMessages, setChatMessages] = useState<ChatMessageDto[]>([]);
+  const [selectedNode, setSelectedNode] = useState<NodeListingDto | null>(null);
   const [isWalletPopupOpen, setIsWalletPopupOpen] = useState(false);
   const [isKeystorePopupOpen, setIsKeystorePopupOpen] = useState(false);
   const [showTransactionConfirmation, setShowTransactionConfirmation] = useState(false);
@@ -42,11 +42,12 @@ const AppContent: React.FC = () => {
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
   const [pendingTransaction, setPendingTransaction] = useState<{
     type: 'listing' | 'whitelist' | 'enableBond' | 'bond' | 'unbond' | 'message' | 'subscription';
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data: any;
     additionalInfo?: {
       nodeAddress?: string,
       intendedBondAmount?: string,
-      nodeInfo?: Node;
+      nodeInfo?: NodeListingDto;
     };
     callback: () => Promise<string>;
   } | null>(null);
@@ -54,7 +55,7 @@ const AppContent: React.FC = () => {
   const [txSubscriptionHash, setTxSubscriptionHash] = useState<string | null>(null);
 
   const { address, isConnected, connect, disconnect, walletProvider } = useWallet();
-  const addressTofilter = address || searchOperator || searchUser || import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR;
+  const addressTofilter = address || searchOperator || searchUser;
 
   const { startPolling, stopPolling } = useTransactionPolling({
     onTransactionConfirmed: async (type, additionalInfo) => {
@@ -243,11 +244,7 @@ const AppContent: React.FC = () => {
     }
   };
 
-  const handleDeleteListing = () => {
-    // TODO: Implement logic
-  };
-
-  const handleApproveRequest = async (request: WhitelistRequest) => {
+  const handleApproveRequest = async (request: WhitelistRequestDto) => {
     try {
       const engine = RuneBondEngine.getInstance();
       const transaction = await engine.sendEnableBondRequest(
@@ -279,11 +276,11 @@ const AppContent: React.FC = () => {
     }
   };
 
-  const handleRejectRequest = (_request: WhitelistRequest) => {
+  const handleRejectRequest = (_request: WhitelistRequestDto) => {
     // TODO: Implement logic
   };
 
-  const handleRequestWhitelist = (node: Node) => {
+  const handleRequestWhitelist = (node: NodeListingDto) => {
     if (!isConnected) {
       toast.error('Please connect your wallet to request whitelisting.');
       return;
@@ -485,7 +482,7 @@ const AppContent: React.FC = () => {
       const engine = RuneBondEngine.getInstance();
       
       const nodeData = await engine.getAllNodes();
-      const node = nodeData.find((n: any) => n.node_address === nodeAddress);
+      const node = nodeData.find((n) => n.node_address === nodeAddress);
       if (!node) {
         throw new Error("Node not found");
       }
@@ -496,7 +493,7 @@ const AppContent: React.FC = () => {
         role = 'NO';
       } else {
         const isBondProvider = node.bond_providers?.providers?.some(
-          (provider: any) => provider.bond_address === address && provider.bond > 0
+          (provider) => provider.bond_address === address && provider?.bond || -1 > 0
         );
         if (isBondProvider) {
           role = 'BP';
@@ -542,7 +539,7 @@ const AppContent: React.FC = () => {
     }
   };
 
-  const handlePaymentExecute = async (memo: string, amount: number): Promise<{ txId: string }> => {
+  const handlePaymentExecute = async (memo: string, amount: number) => {
     try {
       const engine = RuneBondEngine.getInstance();
       const transaction = await engine.sendSubscriptionPayment(
@@ -700,7 +697,6 @@ const AppContent: React.FC = () => {
                         availableNodes={allNodes.filter(node => import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR ? node.node_operator_address === import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR : node.node_operator_address === addressTofilter)}
                         requests={witheListsRequests.operator}
                         onCreateListing={handleCreateListing}
-                        onDeleteListing={handleDeleteListing}
                         onApproveRequest={handleApproveRequest}
                         onRejectRequest={handleRejectRequest}
                         onSearchOperator={setSearchOperator}
