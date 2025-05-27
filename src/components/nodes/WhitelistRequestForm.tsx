@@ -7,9 +7,9 @@ import Input from '../ui/Input';
 import Button from '../ui/Button';
 import Alert from '../ui/Alert';
 import { formatRune, validateThorAddress } from '../../lib/utils';
-import { Node } from '../../types';
 import { useWallet } from '../../contexts/WalletContext';
 import { baseAmount, baseToAsset } from '@xchainjs/xchain-util';
+import { NodeListingDto } from '@hippocampus-web3/runebond-client';
 
 // Form validation schema
 const requestSchema = z.object({
@@ -27,7 +27,7 @@ const requestSchema = z.object({
 type RequestFormData = z.infer<typeof requestSchema>;
 
 interface WhitelistRequestFormProps {
-  node: Node;
+  node: NodeListingDto;
   onSubmit: (data: RequestFormData) => void;
   onCancel: () => void;
 }

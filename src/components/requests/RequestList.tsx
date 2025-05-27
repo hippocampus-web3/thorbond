@@ -1,22 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { format } from 'date-fns';
-import { Copy, Check } from 'lucide-react';
-import Badge from '../ui/Badge';
-import Button from '../ui/Button';
-import Tooltip from '../ui/Tooltip';
-import { WhitelistRequest } from '../../types';
-import { formatRune, shortenAddress, getNodeExplorerUrl } from '../../lib/utils';
-import { baseAmount } from '@xchainjs/xchain-util';
 import RequestRow from './RequestRow';
+import { WhitelistRequestDto } from '@hippocampus-web3/runebond-client';
 
 interface RequestListProps {
-  requests: WhitelistRequest[];
+  requests: WhitelistRequestDto[];
   actionList?: { 
     title: string, 
     type: 'primary' | 'danger' | 'outline', 
-    isDisabled?: (request: WhitelistRequest) => boolean,
-    tooltip?: (request: WhitelistRequest) => string | undefined,
-    action: (request: WhitelistRequest) => void 
+    isDisabled?: (request: WhitelistRequestDto) => boolean,
+    tooltip?: (request: WhitelistRequestDto) => string | undefined,
+    action: (request: WhitelistRequestDto) => void 
   }[];
 }
 

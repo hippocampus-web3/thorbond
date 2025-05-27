@@ -16,6 +16,7 @@ const NodeAddress: React.FC<NodeAddressProps> = ({ address, isNode = false }) =>
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
+      console.error(err);
     }
   };
 

@@ -3,19 +3,19 @@ import ChatMessage from './ChatMessage';
 import { Info, Shield, Star, User, Maximize2, MessageCircle, Copy, Check } from 'lucide-react';
 import Tooltip from '../ui/Tooltip';
 import Modal from '../ui/Modal';
-import { Message } from '../../types';
 import { createMessageMemo } from '../../lib/runebondEngine/memoBuilder';
+import { ChatMessageDto } from '@hippocampus-web3/runebond-client';
 
 const RUNEBOND_ADDRESS = import.meta.env.VITE_RUNEBOND_ADDRESS || "thor1xazgmh7sv0p393t9ntj6q9p52ahycc8jjlaap9";
 
 interface ChatInterfaceProps {
   isDisabled?: boolean;
-  messages?: Message[];
+  messages?: ChatMessageDto[];
   onSendMessage: (message: string) => void;
   nodeAddress: string;
 }
 
-const getRoleIcon = (role: Message['role']) => {
+const getRoleIcon = (role: ChatMessageDto['role']) => {
   switch (role) {
     case 'NO':
       return Shield;
@@ -24,6 +24,7 @@ const getRoleIcon = (role: Message['role']) => {
     case 'USER':
       return User;
   }
+  return User;
 }
 
 const EmptyChat = () => (
@@ -78,6 +79,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         nodeAddress,
         message: message.trim()
       });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       return null;
     }
@@ -286,7 +288,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       key={index}
                       message={msg.message}
                       senderAddress={msg.userAddress}
-                      timestamp={msg.timestamp}
+                      timestamp={new Date(msg.timestamp)}
                       role={msg.role}
                       roleIcon={getRoleIcon(msg.role)}
                     />
@@ -317,7 +319,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                         key={index}
                         message={msg.message}
                         senderAddress={msg.userAddress}
-                        timestamp={msg.timestamp}
+                        timestamp={new Date(msg.timestamp)}
                         role={msg.role}
                         roleIcon={getRoleIcon(msg.role)}
                       />

@@ -30,7 +30,7 @@ const HomePage: React.FC = () => {
           totalNodes: apiStats.totalNodes,
           totalBonded: formatRune(baseAmount(apiStats.totalBondRune)),
           completedWhitelists: apiStats.completedWhitelists,
-          bondingAPY: apiStats.networkStats.bondingAPY
+          bondingAPY: apiStats.networkStats.bondingAPY.toString()
         });
       } catch (error) {
         console.error('Error fetching stats:', error);

@@ -1,9 +1,9 @@
 import { assetAmount, assetToBase } from "@xchainjs/xchain-util";
 import {
   ListingParams,
-  WhitelistRequest,
   WhitelistRequestParams,
 } from "../../types";
+import { WhitelistRequestDto } from "@hippocampus-web3/runebond-client";
 
 export function createWhitelistRequestMemo(
   params: WhitelistRequestParams
@@ -32,7 +32,7 @@ export function createBondMemo(nodeAddress: string): string {
   return `BOND:${nodeAddress}`;
 }
 
-export function createEnableBondMemo(params: WhitelistRequest): string {
+export function createEnableBondMemo(params: WhitelistRequestDto): string {
   if (!params.node.nodeAddress.startsWith("thor1")) {
     throw new Error("Invalid node address format");
   }

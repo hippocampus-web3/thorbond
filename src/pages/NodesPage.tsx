@@ -1,14 +1,15 @@
 import React, {useEffect} from 'react';
 import NodesList from '../components/nodes/NodesList';
 import WhitelistRequestForm from '../components/nodes/WhitelistRequestForm';
-import { Node, WhitelistRequestFormData } from '../types';
+import { WhitelistRequestFormData } from '../types';
 import { ArrowLeft } from 'lucide-react';
+import { NodeListingDto } from '@hippocampus-web3/runebond-client';
 
 interface NodesPageProps {
-  nodes: Node[];
+  nodes: NodeListingDto[];
   isLoading: boolean;
-  selectedNode: Node | null;
-  onRequestWhitelist: (node: Node) => void;
+  selectedNode: NodeListingDto | null;
+  onRequestWhitelist: (node: NodeListingDto) => void;
   onSubmitRequest: (formData: WhitelistRequestFormData) => Promise<void>;
   onCancelRequest: () => void;
 }
@@ -24,7 +25,7 @@ const NodesPage: React.FC<NodesPageProps> = ({
 
   useEffect(() => {
     onCancelRequest()
-  }, [])
+  }, [onCancelRequest])
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
