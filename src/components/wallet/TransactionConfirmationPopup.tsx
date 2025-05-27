@@ -31,6 +31,7 @@ const TransactionConfirmationPopup: React.FC<TransactionConfirmationPopupProps> 
 }) => {
   const isMessageType = transactionType === 'message';
   const isSubscriptionType = transactionType === 'subscription';
+  const isListingType = transactionType === 'listing';
   const isStandbyNode = additionalInfo?.nodeInfo?.status === 'Standby';
   const requiresStandbyWarning = isStandbyNode && (transactionType === 'bond' || transactionType === 'whitelist');
 
@@ -132,7 +133,7 @@ const TransactionConfirmationPopup: React.FC<TransactionConfirmationPopupProps> 
           </div>
         </div>
 
-        {!isSubscriptionType && (
+        {!isSubscriptionType && !isListingType && (
           <div className="bg-gray-50 p-4 rounded-md">
             <h3 className="text-sm font-medium text-gray-700 mb-2">Important disclaimers</h3>
             
@@ -233,7 +234,7 @@ const TransactionConfirmationPopup: React.FC<TransactionConfirmationPopupProps> 
           <button
             onClick={onConfirm}
             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed relative"
-            disabled={isLoading || (!isSubscriptionType && !allChecked)}
+            disabled={isLoading || (!isSubscriptionType && !isListingType && !allChecked)}
           >
             {isLoading ? (
               <>

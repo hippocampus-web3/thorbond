@@ -18,7 +18,6 @@ interface OperatorDashboardProps {
   onApproveRequest: (request: WhitelistRequestDto) => void;
   onRejectRequest: (request: WhitelistRequestDto) => void;
   onEditListing: () => void;
-  onDeleteListing: () => void;
   selectedNode?: string;
   onNodeChange: (nodeAddress: string) => void;
 }
@@ -29,7 +28,6 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
   onApproveRequest,
   onRejectRequest,
   onEditListing,
-  onDeleteListing,
   selectedNode: initialSelectedNode,
   onNodeChange,
 }) => {
@@ -93,7 +91,7 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
         <p className="text-gray-600 mb-8">
           Create a listing to start accepting bonding requests from users.
         </p>
-        {<Button onClick={onEditListing}>Create New Listing</Button>}
+        {<Button onClick={onEditListing}>Create Listing</Button>}
       </div>
     );
   }
@@ -127,13 +125,10 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
               placeholder="Choose a node"
             />
           </div>
-          {address === selectedNode?.operatorAddress && (
-            <div className="flex flex-col md:flex-row gap-4">
-              <Button variant="outline" onClick={onEditListing}>
+          {(address === selectedNode?.operatorAddress || selectedNode?.moderators.find(mod => mod.moderatorAddress === address)) && (
+            <div className="flex flex-col md:flex-row gap-4 items-end">
+              <Button onClick={onEditListing}>
                 New Listing
-              </Button>
-              <Button variant="danger" onClick={onDeleteListing} disabled>
-                Delete Listing
               </Button>
             </div>
           )}

@@ -54,7 +54,7 @@ const AppContent: React.FC = () => {
   const [txSubscriptionHash, setTxSubscriptionHash] = useState<string | null>(null);
 
   const { address, isConnected, connect, disconnect, walletProvider } = useWallet();
-  const addressTofilter = address || searchOperator || searchUser || import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR;
+  const addressTofilter = address || searchOperator || searchUser;
 
   const { startPolling, stopPolling } = useTransactionPolling({
     onTransactionConfirmed: async (type, additionalInfo) => {
@@ -241,10 +241,6 @@ const AppContent: React.FC = () => {
       const errorMessage = error instanceof Error ? error.message : 'Error creating listing';
       toast.error(errorMessage);
     }
-  };
-
-  const handleDeleteListing = () => {
-    // TODO: Implement logic
   };
 
   const handleApproveRequest = async (request: WhitelistRequestDto) => {
@@ -663,11 +659,10 @@ const AppContent: React.FC = () => {
                 <LoadingScreen message="Loading operator dashboard..." />
               ) : (
                 <OperatorDashboardPage
-                  nodes={listedNodes.filter(op => op.operatorAddress === addressTofilter)}
-                  availableNodes={allNodes.filter(node => import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR ? node.node_operator_address === import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR : node.node_operator_address === addressTofilter)}
+                  nodes={listedNodes.filter(op => op.operatorAddress === addressTofilter || op.moderators.find(mod => mod.moderatorAddress === addressTofilter))}
+                  availableNodes={allNodes.filter(node => node.node_operator_address === addressTofilter)}
                   requests={witheListsRequests.operator}
                   onCreateListing={handleCreateListing}
-                  onDeleteListing={handleDeleteListing}
                   onApproveRequest={handleApproveRequest}
                   onRejectRequest={handleRejectRequest}
                   onSearchOperator={setSearchOperator}

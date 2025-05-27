@@ -14,7 +14,6 @@ interface OperatorDashboardPageProps {
   availableNodes: NodesResponse;
   requests: WhitelistRequestDto[];
   onCreateListing: (data: NodeOperatorFormData) => void;
-  onDeleteListing: () => void;
   onApproveRequest: (requestId: WhitelistRequestDto) => void;
   onRejectRequest: (requestId: WhitelistRequestDto) => void;
   onSearchOperator: (address: string) => void;
@@ -26,7 +25,6 @@ const OperatorDashboardPage: React.FC<OperatorDashboardPageProps> = ({
   availableNodes,
   requests,
   onCreateListing,
-  onDeleteListing,
   onApproveRequest,
   onRejectRequest,
   onSearchOperator,
@@ -101,6 +99,7 @@ const OperatorDashboardPage: React.FC<OperatorDashboardPageProps> = ({
           </div>
           <NodeOperatorForm
             availableNodes={availableNodes}
+            alreadyListed={nodes}
             onSubmit={onCreateListing}
             onCancel={() => setIsEditing(false)}
           />
@@ -109,7 +108,7 @@ const OperatorDashboardPage: React.FC<OperatorDashboardPageProps> = ({
     );
   }
 
-  if (isConnected && availableNodes.length === 0) {
+  if (isConnected && nodes.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="space-y-8">
@@ -170,7 +169,6 @@ const OperatorDashboardPage: React.FC<OperatorDashboardPageProps> = ({
         onApproveRequest={onApproveRequest}
         onRejectRequest={onRejectRequest}
         onEditListing={() => setIsEditing(true)}
-        onDeleteListing={onDeleteListing}
         selectedNode={selectedNode}
         onNodeChange={handleNodeChange}
       />

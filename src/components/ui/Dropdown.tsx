@@ -54,7 +54,7 @@ const Dropdown: React.FC<DropdownProps> = ({
   const selectedOption = options.find(option => option.value === value);
 
   return (
-    <div className={`relative w-full sm:w-[400px] ${className}`} ref={dropdownRef}>
+    <div className={`relative md:w-full w-auto ${className}`} ref={dropdownRef}>
       {label && (
         <label className="block text-sm font-medium text-gray-700 mb-1">
           {label}
