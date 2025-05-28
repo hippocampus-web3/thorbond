@@ -53,7 +53,6 @@ const AppContent: React.FC = () => {
   } | null>(null);
   const [refreshWhitelistFlag, setRefreshWhitelistFlag] = useState(0);
   const [txSubscriptionHash, setTxSubscriptionHash] = useState<string | null>(null);
-  const [nodeAddress, setNodeAddress] = useState<string | null>(null);
 
   const { address, isConnected, connect, disconnect, walletProvider } = useWallet();
   const addressTofilter = address || searchOperator || searchUser;
@@ -151,20 +150,6 @@ const AppContent: React.FC = () => {
 
     fetchBalance();
   }, [address]);
-
-  useEffect(() => {
-    const host = window.location.host;
-    const subdomain = host.split('.')[0];
-    
-    // Verificar si estamos en un subdominio válido
-    if (subdomain && subdomain !== 'www' && subdomain !== 'runebond') {
-      // Verificar si el subdominio corresponde a un nodo válido
-      const isValidNode = listedNodes.some(node => node.nodeAddress === subdomain);
-      if (isValidNode) {
-        setNodeAddress(subdomain);
-      }
-    }
-  }, [listedNodes]);
 
   const loadChatMessages = useCallback(async (nodeAddr: string) => {
     if (!nodeAddr) return;

@@ -67,7 +67,7 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
   onClearTx,
   hideHeaderButtons = false
 }) => {
-  const { nodeAddress } = useParams<{ nodeAddress: string }>();
+  const { nodeAddress: urlNodeAddress } = useParams<{ nodeAddress: string }>();
   const navigate = useNavigate();
   const { isConnected, address } = useWallet();
   const [whitelistRequest, setWhitelistRequest] = useState<WhitelistRequestDto | null>(null);
@@ -76,6 +76,18 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [errorHistory, setErrorHistory] = useState<string | null>(null);
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
+  
+  const getSubdomainNodeAddress = () => {
+    const host = window.location.host;
+    const subdomain = host.split('.')[0];
+    if (subdomain && subdomain !== 'www' && subdomain !== 'runebond') {
+      return subdomain;
+    }
+    return null;
+  };
+
+  const subdomainNodeAddress = getSubdomainNodeAddress();
+  const nodeAddress = subdomainNodeAddress || urlNodeAddress;
 
   const node = nodes.find(n => n.nodeAddress === nodeAddress);
   const officialNode = oficialNodes.find(n => n.node_address === nodeAddress);

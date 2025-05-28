@@ -40,7 +40,6 @@ const NodeProfileLayout: React.FC<NodeProfileLayoutProps> = (props) => {
   const [init, setInit] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  // Obtener la dirección del nodo del subdominio
   const getSubdomainNodeAddress = () => {
     const host = window.location.host;
     const subdomain = host.split('.')[0];
@@ -50,8 +49,14 @@ const NodeProfileLayout: React.FC<NodeProfileLayoutProps> = (props) => {
     return null;
   };
 
-  // Usar la dirección del nodo del subdominio o de la URL
   const nodeAddress = getSubdomainNodeAddress() || urlNodeAddress;
+  
+  useEffect(() => {
+    if (getSubdomainNodeAddress() && !props.nodes.some(n => n.nodeAddress === getSubdomainNodeAddress())) {
+      window.location.href = import.meta.env.VITE_RUNEBOND_URL || 'https://runebond.com';
+    }
+  }, [props.nodes]);
+
   const node = props.nodes.find(n => n.nodeAddress === nodeAddress);
 
   const toggleDarkMode = () => {
