@@ -45,7 +45,7 @@ const NodeProfileLayout: React.FC<NodeProfileLayoutProps> = (props) => {
   const getSubdomainNodeAddress = () => {
     const host = window.location.host;
     const subdomain = host.split('.')[0];
-    if (subdomain && subdomain !== 'www' && subdomain !== 'runebond') {
+    if (subdomain && subdomain !== 'www' && !subdomain.includes('deploy-') && subdomain !== 'runebond') {
       return subdomain;
     }
     return null;
