@@ -2,7 +2,14 @@
 FROM node:22.11.0-alpine as builder
 
 # Instalar dependencias necesarias para compilar módulos nativos
-RUN apk add --no-cache python3 make g++
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    pkgconfig \
+    libusb-dev \
+    eudev-dev \
+    linux-headers
 
 WORKDIR /app
 
