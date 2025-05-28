@@ -21,6 +21,7 @@ import { assetAmount, assetToBase, BaseAmount } from '@xchainjs/xchain-util';
 import { useTransactionPolling } from './hooks/useTransactionPolling';
 import { NodesResponse } from '@xchainjs/xchain-thornode';
 import EarningsSimulatorPage from './pages/EarningsSimulatorPage';
+import NodeProfileLayout from './components/layout/NodeProfileLayout';
 import { ChatMessageDto, NodeListingDto, WhitelistRequestDto } from '@hippocampus-web3/runebond-client';
 
 const AppContent: React.FC = () => {
@@ -592,51 +593,42 @@ const AppContent: React.FC = () => {
     </div>
   );
 
+  const getSubdomainNodeAddress = () => {
+    const host = window.location.host;
+    const subdomain = host.split('.')[0];
+    if (subdomain && subdomain !== 'www' && !subdomain.includes('deploy-') && subdomain !== 'runebond') {
+      return subdomain;
+    }
+    return null;
+  };
+
+  const subdomainNodeAddress = getSubdomainNodeAddress();
+
+  if (isLoadingNodes && subdomainNodeAddress) {
+    return <LoadingScreen message="Loading node profile..." />;
+  }
+
   return (
     <Router>
       <ScrollToTop />
-      <Layout
-        isAuthenticated={isConnected !== null}
-        onConnect={handleConnect}
-        onDisconnect={handleDisconnect}
-        walletAddress={address}
-        balance={balance}
-        isLoadingBalance={isLoadingBalance}
-      >
-        <Routes>
-          <Route path="/" element={<HomePage />} />
+      <Routes>
+        {subdomainNodeAddress ? (
           <Route
-            path="/nodes"
+            path="/*"
             element={
               !allNodes || !listedNodes ? (
-                <LoadingScreen message="Loading nodes..." />
+                <LoadingScreen message="Loading node profile..." />
               ) : (
-                <NodesPage
+                <NodeProfileLayout
                   nodes={listedNodes}
-                  isLoading={isLoadingNodes}
+                  onDisconnect={handleDisconnect}
+                  onRequestWhitelist={handleRequestWhitelist}
                   selectedNode={selectedNode}
-                  onRequestWhitelist={handleRequestWhitelist}
                   onSubmitRequest={handleSubmitRequest}
                   onCancelRequest={handleCancelRequest}
-                />
-              )
-            }
-          />
-          <Route
-            path="/nodes/:nodeAddress"
-            element={
-              !allNodes || !listedNodes ? (
-                <LoadingScreen message="Loading node details..." />
-              ) : (
-                <NodeDetailsPageWrapper 
-                  listedNodes={listedNodes}
-                  selectedNodeState={selectedNode}
-                  onRequestWhitelist={handleRequestWhitelist}
-                  onSubmitRequest={handleSubmitRequest}
-                  onCancelRequest={handleCancelRequest}
+                  loadChatMessages={loadChatMessages}
                   messages={chatMessages}
                   onSendMessage={handleSendMessage}
-                  loadChatMessages={loadChatMessages}
                   isLoadingMessages={isLoadingMessages}
                   balance={balance}
                   isLoadingBalance={isLoadingBalance}
@@ -648,55 +640,119 @@ const AppContent: React.FC = () => {
                   onConnectWallet={handleConnect}
                   txSubscriptionHash={txSubscriptionHash}
                   onClearTx={handleClearTx}
+                  isAuthenticated={isConnected !== null}
+                  walletAddress={address}
                 />
               )
             }
           />
+        ) : (
           <Route
-            path="/operator-dashboard"
+            path="/*"
             element={
-              !allNodes || !listedNodes || !witheListsRequests ? (
-                <LoadingScreen message="Loading operator dashboard..." />
-              ) : (
-                <OperatorDashboardPage
-                  nodes={listedNodes.filter(op => op.operatorAddress === addressTofilter || op.moderators.find(mod => mod.moderatorAddress === addressTofilter))}
-                  availableNodes={allNodes.filter(node => node.node_operator_address === addressTofilter)}
-                  requests={witheListsRequests.operator}
-                  onCreateListing={handleCreateListing}
-                  onApproveRequest={handleApproveRequest}
-                  onRejectRequest={handleRejectRequest}
-                  onSearchOperator={setSearchOperator}
-                  isLoading={isLoadingNodes}
-                />
-              )
+              <Layout
+                isAuthenticated={isConnected !== null}
+                onConnect={handleConnect}
+                onDisconnect={handleDisconnect}
+                walletAddress={address}
+                balance={balance}
+                isLoadingBalance={isLoadingBalance}
+              >
+                <Routes>
+                  <Route path="/" element={<HomePage />} />
+                  <Route
+                    path="/nodes"
+                    element={
+                      !allNodes || !listedNodes ? (
+                        <LoadingScreen message="Loading nodes..." />
+                      ) : (
+                        <NodesPage
+                          nodes={listedNodes}
+                          isLoading={isLoadingNodes}
+                          onRequestWhitelist={handleRequestWhitelist}
+                        />
+                      )
+                    }
+                  />
+                  <Route
+                    path="/nodes/:nodeAddress"
+                    element={
+                      !allNodes || !listedNodes ? (
+                        <LoadingScreen message="Loading node details..." />
+                      ) : (
+                        <NodeDetailsPageWrapper 
+                          listedNodes={listedNodes}
+                          selectedNodeState={selectedNode}
+                          onRequestWhitelist={handleRequestWhitelist}
+                          onSubmitRequest={handleSubmitRequest}
+                          onCancelRequest={handleCancelRequest}
+                          messages={chatMessages}
+                          onSendMessage={handleSendMessage}
+                          loadChatMessages={loadChatMessages}
+                          isLoadingMessages={isLoadingMessages}
+                          balance={balance}
+                          isLoadingBalance={isLoadingBalance}
+                          onBondRequest={handleBondRequest}
+                          onUnbondRequest={handleUnbondRequest}
+                          refreshWhitelistFlag={refreshWhitelistFlag}
+                          oficialNodes={allNodes}
+                          onPaymentExecute={handlePaymentExecute}
+                          onConnectWallet={handleConnect}
+                          txSubscriptionHash={txSubscriptionHash}
+                          onClearTx={handleClearTx}
+                        />
+                      )
+                    }
+                  />
+                  <Route
+                    path="/operator-dashboard"
+                    element={
+                      !allNodes || !listedNodes || !witheListsRequests ? (
+                        <LoadingScreen message="Loading operator dashboard..." />
+                      ) : (
+                        <OperatorDashboardPage
+                          nodes={listedNodes.filter(op => op.operatorAddress === addressTofilter)}
+                          availableNodes={allNodes.filter(node => import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR ? node.node_operator_address === import.meta.env.VITE_TEST_FAKE_NODE_OPERATOR : node.node_operator_address === addressTofilter)}
+                          requests={witheListsRequests.operator}
+                          onCreateListing={handleCreateListing}
+                          onApproveRequest={handleApproveRequest}
+                          onRejectRequest={handleRejectRequest}
+                          onSearchOperator={setSearchOperator}
+                          isLoading={isLoadingNodes}
+                        />
+                      )
+                    }
+                  />
+                  <Route
+                    path="/user-requests"
+                    element={
+                      !allNodes || !listedNodes || !witheListsRequests  ? (
+                        <LoadingScreen message="Loading user requests..." />
+                      ) : (
+                        <UserRequestsPage
+                          requests={witheListsRequests.user}
+                          onSearchUser={setSearchUser}
+                          searchValue={searchUser}
+                          isConnected={isConnected !== null}
+                          isLoading={isLoadingNodes}
+                          onPaymentExecute={handlePaymentExecute}
+                          onConnectWallet={handleConnect}
+                          txSubscriptionHash={txSubscriptionHash}
+                          onClearTx={handleClearTx}
+                        />
+                      )
+                    }
+                  />
+                  <Route
+                    path="/earnings-simulator"
+                    element={<EarningsSimulatorPage />}
+                  />
+                </Routes>
+              </Layout>
             }
           />
-          <Route
-            path="/user-requests"
-            element={
-              !allNodes || !listedNodes || !witheListsRequests  ? (
-                <LoadingScreen message="Loading user requests..." />
-              ) : (
-                <UserRequestsPage
-                  requests={witheListsRequests.user}
-                  onSearchUser={setSearchUser}
-                  searchValue={searchUser}
-                  isConnected={isConnected !== null}
-                  isLoading={isLoadingNodes}
-                  onPaymentExecute={handlePaymentExecute}
-                  onConnectWallet={handleConnect}
-                  txSubscriptionHash={txSubscriptionHash}
-                  onClearTx={handleClearTx}
-                />
-              )
-            }
-          />
-          <Route
-            path="/earnings-simulator"
-            element={<EarningsSimulatorPage />}
-          />
-        </Routes>
-      </Layout>
+        )}
+      </Routes>
       <WalletConnectPopup
         isOpen={isWalletPopupOpen}
         onClose={() => setIsWalletPopupOpen(false)}
