@@ -623,6 +623,7 @@ const AppContent: React.FC = () => {
               ) : (
                 <NodeProfileLayout
                   nodes={listedNodes}
+                  onDisconnect={handleDisconnect}
                   onRequestWhitelist={handleRequestWhitelist}
                   selectedNode={selectedNode}
                   onSubmitRequest={handleSubmitRequest}
