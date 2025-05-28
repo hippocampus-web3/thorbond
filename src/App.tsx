@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect, useCallback } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Layout from './components/layout/Layout';
@@ -627,6 +627,7 @@ const AppContent: React.FC = () => {
                   selectedNode={selectedNode}
                   onSubmitRequest={handleSubmitRequest}
                   onCancelRequest={handleCancelRequest}
+                  loadChatMessages={loadChatMessages}
                   messages={chatMessages}
                   onSendMessage={handleSendMessage}
                   isLoadingMessages={isLoadingMessages}

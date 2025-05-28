@@ -21,6 +21,7 @@ interface NodeProfileLayoutProps {
   messages: ChatMessageDto[];
   onSendMessage: (nodeAddress: string, message: string) => Promise<void>;
   isLoadingMessages?: boolean;
+  loadChatMessages: (nodeAddr: string) => Promise<void>;
   balance: BaseAmount | null;
   isLoadingBalance: boolean;
   onBondRequest: (nodeAddress: string, userAddress: string, amount: number) => Promise<void>;
@@ -50,14 +51,18 @@ const NodeProfileLayout: React.FC<NodeProfileLayoutProps> = (props) => {
   };
 
   const nodeAddress = getSubdomainNodeAddress() || urlNodeAddress;
-  
-  useEffect(() => {
-    if (getSubdomainNodeAddress() && !props.nodes.some(n => n.nodeAddress === getSubdomainNodeAddress())) {
-      window.location.href = import.meta.env.VITE_RUNEBOND_URL || 'https://runebond.com';
-    }
-  }, [props.nodes]);
 
   const node = props.nodes.find(n => n.nodeAddress === nodeAddress);
+
+  if (!node) {
+    window.location.href = import.meta.env.VITE_RUNEBOND_URL || 'https://runebond.com';
+  }
+
+  useEffect(() => {
+    if (node?.nodeAddress) {
+      props.loadChatMessages(node.nodeAddress);
+    }
+  }, [node, props]);
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
