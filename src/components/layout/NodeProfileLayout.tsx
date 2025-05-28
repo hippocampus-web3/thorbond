@@ -30,6 +30,7 @@ interface NodeProfileLayoutProps {
   oficialNodes: NodesResponse;
   onPaymentExecute: (memo: string, amount: number) => Promise<void>;
   onConnectWallet: () => void;
+  onDisconnect: () => Promise<void>;
   txSubscriptionHash: string | null;
   onClearTx: () => void;
   isAuthenticated: boolean;
@@ -144,6 +145,7 @@ const NodeProfileLayout: React.FC<NodeProfileLayoutProps> = (props) => {
           balance={props.balance}
           isLoadingBalance={props.isLoadingBalance}
           onConnectWallet={props.onConnectWallet}
+          onDisconnect={props.onDisconnect}
         />
 
         {/* Main Content */}

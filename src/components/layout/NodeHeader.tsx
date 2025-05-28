@@ -14,6 +14,7 @@ interface NodeHeaderProps {
   balance: BaseAmount | null;
   isLoadingBalance: boolean;
   onConnectWallet: () => void;
+  onDisconnect: () => Promise<void>;
 }
 
 const NodeHeader: React.FC<NodeHeaderProps> = ({
@@ -24,7 +25,8 @@ const NodeHeader: React.FC<NodeHeaderProps> = ({
   walletAddress,
   balance,
   isLoadingBalance,
-  onConnectWallet
+  onConnectWallet,
+  onDisconnect
 }) => {
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
 
@@ -95,6 +97,12 @@ const NodeHeader: React.FC<NodeHeaderProps> = ({
                     <>Balance: {balance ? formatRune(balance) : '0'} RUNE</>
                   )}
                 </div>
+                <button
+                  onClick={onDisconnect}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Disconnect
+                </button>
               </div>
             ) : (
               <button
