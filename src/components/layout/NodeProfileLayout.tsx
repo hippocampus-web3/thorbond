@@ -36,9 +36,22 @@ interface NodeProfileLayoutProps {
 }
 
 const NodeProfileLayout: React.FC<NodeProfileLayoutProps> = (props) => {
-  const { nodeAddress } = useParams<{ nodeAddress: string }>();
+  const { nodeAddress: urlNodeAddress } = useParams<{ nodeAddress: string }>();
   const [init, setInit] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+
+  // Obtener la dirección del nodo del subdominio
+  const getSubdomainNodeAddress = () => {
+    const host = window.location.host;
+    const subdomain = host.split('.')[0];
+    if (subdomain && subdomain !== 'www' && subdomain !== 'runebond') {
+      return subdomain;
+    }
+    return null;
+  };
+
+  // Usar la dirección del nodo del subdominio o de la URL
+  const nodeAddress = getSubdomainNodeAddress() || urlNodeAddress;
   const node = props.nodes.find(n => n.nodeAddress === nodeAddress);
 
   const toggleDarkMode = () => {

@@ -608,11 +608,28 @@ const AppContent: React.FC = () => {
     </div>
   );
 
+  // Obtener la dirección del nodo del subdominio
+  const getSubdomainNodeAddress = () => {
+    const host = window.location.host;
+    const subdomain = host.split('.')[0];
+    if (subdomain && subdomain !== 'www' && subdomain !== 'runebond') {
+      return subdomain;
+    }
+    return null;
+  };
+
+  const subdomainNodeAddress = getSubdomainNodeAddress();
+
+  // Solo mostrar loading si hay un subdominio válido y estamos cargando
+  if (isLoadingNodes && subdomainNodeAddress) {
+    return <LoadingScreen message="Loading node profile..." />;
+  }
+
   return (
     <Router>
       <ScrollToTop />
       <Routes>
-        {nodeAddress ? (
+        {subdomainNodeAddress ? (
           <Route
             path="/*"
             element={
