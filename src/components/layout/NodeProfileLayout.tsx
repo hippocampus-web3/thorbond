@@ -106,7 +106,7 @@ const NodeProfileLayout: React.FC<NodeProfileLayoutProps> = (props) => {
         {init && (
           <Particles
             id="tsparticles"
-            className="absolute inset-0 bg-white"
+            className="absolute inset-0 bg-gray-50"
             options={particlesOptions}
           />
         )}
