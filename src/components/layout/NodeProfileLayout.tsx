@@ -62,7 +62,7 @@ const NodeProfileLayout: React.FC<NodeProfileLayoutProps> = (props) => {
     if (node?.nodeAddress) {
       props.loadChatMessages(node.nodeAddress);
     }
-  }, [node, props]);
+  }, [node, props.loadChatMessages]);
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
