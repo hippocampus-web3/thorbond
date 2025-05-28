@@ -41,6 +41,7 @@ interface NodeDetailsPageProps {
   onConnectWallet: () => void;
   txSubscriptionHash: string | null;
   onClearTx: () => void;
+  hideHeaderButtons?: boolean;
 }
 
 const API_HISTORY_URL = 'https://history.runebond.com';
@@ -63,7 +64,8 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
   onPaymentExecute,
   onConnectWallet,
   txSubscriptionHash,
-  onClearTx
+  onClearTx,
+  hideHeaderButtons = false
 }) => {
   const { nodeAddress } = useParams<{ nodeAddress: string }>();
   const navigate = useNavigate();
@@ -326,260 +328,264 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="mb-8 flex justify-between items-center">
-        <button
-          onClick={() => {
-            navigate('/nodes')
-          }}
-          className="flex items-center text-blue-600 hover:text-blue-800"
-        >
-          <ArrowLeft className="h-5 w-5 mr-2" />
-          Back to Nodes
-        </button>
+      {!hideHeaderButtons && (
+        <div className="mb-8 flex justify-between items-center">
+          <button
+            onClick={() => {
+              navigate('/nodes')
+            }}
+            className="flex items-center text-blue-600 hover:text-blue-800"
+          >
+            <ArrowLeft className="h-5 w-5 mr-2" />
+            Back to Nodes
+          </button>
 
-        <button
-          onClick={() => setIsSubscriptionModalOpen(true)}
-          className="inline-flex items-center px-4 py-2 border-2 border-indigo-500 rounded-md shadow-sm text-sm font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform transition-all duration-200 hover:scale-105"
-        >
-          <Bell className="h-5 w-5 mr-2 text-indigo-500" />
-          Subscribe to Notifications
-        </button>
-      </div>
+          <button
+            onClick={() => setIsSubscriptionModalOpen(true)}
+            className="inline-flex items-center px-4 py-2 border-2 border-indigo-500 rounded-md shadow-sm text-sm font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform transition-all duration-200 hover:scale-105"
+          >
+            <Bell className="h-5 w-5 mr-2 text-indigo-500" />
+            Subscribe to Notifications
+          </button>
+        </div>
+      )}
 
-      {selectedNode && selectedNode.nodeAddress === node.nodeAddress ? (
+      {selectedNode && selectedNode.nodeAddress === node.nodeAddress && (
         <WhitelistRequestForm
           node={selectedNode}
           onSubmit={onSubmitRequest}
           onCancel={onCancelRequest}
+          isOpen={true}
+          onClose={onCancelRequest}
         />
-      ) : (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-stretch min-h-[420px]">
-            {/* Node Details Section */}
-            <div className="lg:col-span-3 h-full flex flex-col">
-              <div className={`shadow-md rounded-lg p-4 flex flex-col h-full ${stateStyles.bgColor}`}>
-                <div className="flex justify-between items-start mb-6">
-                  <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Node Details</h1>
-                    {(node.isHidden && node.isHidden.hide || isFull || node.isYieldGuarded && node.isYieldGuarded.hide) && (
-                      <NodeRestrictionNotice primaryState={primaryState} stateStyles={stateStyles} node={node} />
-                    )}
-                    <div className="mt-4 bg-gray-50 p-4 rounded-lg">
-                      <NodeAddress address={node.nodeAddress} isNode={true} />
-                    </div>
-                    {(node.isHidden && node.isHidden.hide || isFull || node.isYieldGuarded && node.isYieldGuarded.hide) && (
-                      <div className={`mt-6 p-4 rounded-lg border ${
-                        primaryState === 'full' ? 'bg-emerald-50 border-emerald-200' : 
-                        primaryState === 'hidden' ? 'bg-yellow-50 border-yellow-200' :
-                        'bg-purple-50 border-purple-200'
-                      }`}>
-                        <h4 className={`text-sm font-medium ${
-                          primaryState === 'full' ? 'text-emerald-800' : 
-                          primaryState === 'hidden' ? 'text-yellow-800' :
-                          'text-purple-800'
-                        } mb-2`}>
-                          {stateStyles.title}
-                        </h4>
-                        <p className={`text-sm ${
-                          primaryState === 'full' ? 'text-emerald-700' : 
-                          primaryState === 'hidden' ? 'text-yellow-700' :
-                          'text-purple-700'
-                        }`}>
-                          {stateStyles.description}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                  <span className="px-3 py-1 text-sm rounded-full bg-blue-100 text-blue-800">
-                    {node.status}
-                  </span>
-                </div>
+      )}
 
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500">Operator Address</h3>
-                      <div className="mt-1">
-                        <NodeAddress address={node.operatorAddress} />
-                      </div>
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-stretch min-h-[420px]">
+          {/* Node Details Section */}
+          <div className="lg:col-span-3 h-full flex flex-col">
+            <div className={`shadow-md rounded-lg p-4 flex flex-col h-full ${stateStyles.bgColor}`}>
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">Node Details</h1>
+                  {(node.isHidden && node.isHidden.hide || isFull || node.isYieldGuarded && node.isYieldGuarded.hide) && (
+                    <NodeRestrictionNotice primaryState={primaryState} stateStyles={stateStyles} node={node} />
+                  )}
+                  <div className="mt-4 bg-gray-50 p-4 rounded-lg">
+                    <NodeAddress address={node.nodeAddress} isNode={true} />
+                  </div>
+                  {(node.isHidden && node.isHidden.hide || isFull || node.isYieldGuarded && node.isYieldGuarded.hide) && (
+                    <div className={`mt-6 p-4 rounded-lg border ${
+                      primaryState === 'full' ? 'bg-emerald-50 border-emerald-200' : 
+                      primaryState === 'hidden' ? 'bg-yellow-50 border-yellow-200' :
+                      'bg-purple-50 border-purple-200'
+                    }`}>
+                      <h4 className={`text-sm font-medium ${
+                        primaryState === 'full' ? 'text-emerald-800' : 
+                        primaryState === 'hidden' ? 'text-yellow-800' :
+                        'text-purple-800'
+                      } mb-2`}>
+                        {stateStyles.title}
+                      </h4>
+                      <p className={`text-sm ${
+                        primaryState === 'full' ? 'text-emerald-700' : 
+                        primaryState === 'hidden' ? 'text-yellow-700' :
+                        'text-purple-700'
+                      }`}>
+                        {stateStyles.description}
+                      </p>
                     </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500">Bonding Capacity</h3>
-                      <p className="mt-1 text-gray-900">{formatRune(baseAmount(node.maxRune))} RUNE</p>
+                  )}
+                </div>
+                <span className="px-3 py-1 text-sm rounded-full bg-blue-100 text-blue-800">
+                  {node.status}
+                </span>
+              </div>
+
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">Operator Address</h3>
+                    <div className="mt-1">
+                      <NodeAddress address={node.operatorAddress} />
                     </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500">Minimum Bond</h3>
-                      <p className="mt-1 text-gray-900">{formatRune(baseAmount(node.minRune))} RUNE</p>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500">Fee Percentage</h3>
-                      <p className="mt-1 text-gray-900">{node.feePercentage / 100}%</p>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500">Bond Providers</h3>
-                      <p className="mt-1 text-gray-900">{node.bondProvidersCount} / 100</p>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500">Slash Points</h3>
-                      <p className="mt-1 text-gray-900">{node.slashPoints}</p>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500">Total bond</h3>
-                      <p className="mt-1 text-gray-900">{formatRune(baseAmount(node.officialInfo.totalBond))}</p>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500">Maximum time to leave</h3>
-                      {node.maxTimeToLeave > 0 ? (
-                        <Tooltip
-                          content={
-                            <div className="max-w-xs text-sm">
-                              <div className="flex items-start gap-2">
-                                <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                                <div>
-                                  <h4 className="font-medium text-gray-900 mb-1">Next Opportunity to unlock RUNE</h4>
-                                  <p className="text-gray-600 mb-2">
-                                    Estimated maximum time before this node could leave the active set, giving you the next opportunity to unlock your bonded RUNE.
-                                  </p>
-                                  <p className="text-gray-600 mb-2">
-                                    This is a reference value, not a guarantee — actual timing may vary if the node requests to leave, or if older nodes exit voluntarily or are removed by the network.
-                                  </p>
-                                  <p className="text-gray-600 mt-1">
-                                    This estimate is stable, but currently in beta.
-                                  </p>
-                                  <a 
-                                    href="https://thorbond.gitbook.io/runebond/maximum-time-to-leave" 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="text-blue-600 hover:text-blue-800 text-sm mt-2 inline-block"
-                                  >
-                                    Learn more about time to leave
-                                  </a>
-                                </div>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">Bonding Capacity</h3>
+                    <p className="mt-1 text-gray-900">{formatRune(baseAmount(node.maxRune))} RUNE</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">Minimum Bond</h3>
+                    <p className="mt-1 text-gray-900">{formatRune(baseAmount(node.minRune))} RUNE</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">Fee Percentage</h3>
+                    <p className="mt-1 text-gray-900">{node.feePercentage / 100}%</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">Bond Providers</h3>
+                    <p className="mt-1 text-gray-900">{node.bondProvidersCount} / 100</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">Slash Points</h3>
+                    <p className="mt-1 text-gray-900">{node.slashPoints}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">Total bond</h3>
+                    <p className="mt-1 text-gray-900">{formatRune(baseAmount(node.officialInfo.totalBond))}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">Maximum time to leave</h3>
+                    {node.maxTimeToLeave > 0 ? (
+                      <Tooltip
+                        content={
+                          <div className="max-w-xs text-sm">
+                            <div className="flex items-start gap-2">
+                              <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                              <div>
+                                <h4 className="font-medium text-gray-900 mb-1">Next Opportunity to unlock RUNE</h4>
+                                <p className="text-gray-600 mb-2">
+                                  Estimated maximum time before this node could leave the active set, giving you the next opportunity to unlock your bonded RUNE.
+                                </p>
+                                <p className="text-gray-600 mb-2">
+                                  This is a reference value, not a guarantee — actual timing may vary if the node requests to leave, or if older nodes exit voluntarily or are removed by the network.
+                                </p>
+                                <p className="text-gray-600 mt-1">
+                                  This estimate is stable, but currently in beta.
+                                </p>
+                                <a 
+                                  href="https://thorbond.gitbook.io/runebond/maximum-time-to-leave" 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800 text-sm mt-2 inline-block"
+                                >
+                                  Learn more about time to leave
+                                </a>
                               </div>
                             </div>
-                          }
-                          position="bottom"
-                        >
-                          <div className="flex items-center mt-1 cursor-pointer">
-                            <Clock className="h-4 w-4 mr-1 text-gray-500" />
-                            <span className="text-gray-900">
-                              {formatTimeToLeave(node.maxTimeToLeave)}
-                            </span>
-                            <span className="ml-1 text-xs text-gray-500">(estimate)</span>
                           </div>
-                        </Tooltip>
-                      ) : (
-                        <p className="mt-1 text-gray-900">-</p>
-                      )}
-                    </div>
+                        }
+                        position="bottom"
+                      >
+                        <div className="flex items-center mt-1 cursor-pointer">
+                          <Clock className="h-4 w-4 mr-1 text-gray-500" />
+                          <span className="text-gray-900">
+                            {formatTimeToLeave(node.maxTimeToLeave)}
+                          </span>
+                          <span className="ml-1 text-xs text-gray-500">(estimate)</span>
+                        </div>
+                      </Tooltip>
+                    ) : (
+                      <p className="mt-1 text-gray-900">-</p>
+                    )}
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* APY Evolution Chart Card */}
-              <div className="bg-white shadow-md rounded-lg p-6 mt-6">
-                {loadingHistory ? (
-                  <div style={{ width: '100%', height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <LoadingSpinner />
-                  </div>
-                ) : errorHistory ? (
-                  <div style={{ width: '100%', height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'red' }}>
-                    {errorHistory}
-                  </div>
-                ) : (() => {
-                  const apyLabels: string[] = [];
-                  const apyValues: number[] = [];
-                  const apyDates: string[] = [];
-                  for (let i = 1; i < nodeHistory.length; i++) {
-                    const prev = nodeHistory[i - 1];
-                    const curr = nodeHistory[i];
-                    const prevDate = new Date(prev.snapshot.block_timestamp);
-                    const currDate = new Date(curr.snapshot.block_timestamp);
-                    let days = (currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24);
-                    if (days <= 0) days = 3;
-                    const bond = Number(prev.total_bond) || 0;
-                    const earning = Number(curr.earnings) || 0;
-                    if (bond <= 0) continue;
-                    const periodsPerYear = 365 / days;
+            {/* APY Evolution Chart Card */}
+            <div className="bg-white shadow-md rounded-lg p-6 mt-6">
+              {loadingHistory ? (
+                <div style={{ width: '100%', height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <LoadingSpinner />
+                </div>
+              ) : errorHistory ? (
+                <div style={{ width: '100%', height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'red' }}>
+                  {errorHistory}
+                </div>
+              ) : (() => {
+                const apyLabels: string[] = [];
+                const apyValues: number[] = [];
+                const apyDates: string[] = [];
+                for (let i = 1; i < nodeHistory.length; i++) {
+                  const prev = nodeHistory[i - 1];
+                  const curr = nodeHistory[i];
+                  const prevDate = new Date(prev.snapshot.block_timestamp);
+                  const currDate = new Date(curr.snapshot.block_timestamp);
+                  let days = (currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24);
+                  if (days <= 0) days = 3;
+                  const bond = Number(prev.total_bond) || 0;
+                  const earning = Number(curr.earnings) || 0;
+                  if (bond <= 0) continue;
+                  const periodsPerYear = 365 / days;
+                  const apy = (earning / bond) * periodsPerYear * 100;
+                  apyLabels.push(currDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+                  apyDates.push(currDate.toISOString());
+                  apyValues.push(Number(apy.toFixed(2)));
+                }
+
+                if (nodeHistory.length === 1) {
+                  const curr = nodeHistory[0];
+                  const bond = Number(curr.total_bond) || 0;
+                  const earning = Number(curr.earnings) || 0;
+                  if (bond > 0) {
+                    const periodsPerYear = 365 / 3;
                     const apy = (earning / bond) * periodsPerYear * 100;
+                    const currDate = new Date(curr.snapshot.block_timestamp);
                     apyLabels.push(currDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
                     apyDates.push(currDate.toISOString());
                     apyValues.push(Number(apy.toFixed(2)));
                   }
-
-                  if (nodeHistory.length === 1) {
-                    const curr = nodeHistory[0];
-                    const bond = Number(curr.total_bond) || 0;
-                    const earning = Number(curr.earnings) || 0;
-                    if (bond > 0) {
-                      const periodsPerYear = 365 / 3;
-                      const apy = (earning / bond) * periodsPerYear * 100;
-                      const currDate = new Date(curr.snapshot.block_timestamp);
-                      apyLabels.push(currDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-                      apyDates.push(currDate.toISOString());
-                      apyValues.push(Number(apy.toFixed(2)));
-                    }
-                  }
-                  return <NodeApyChart 
-                    apyLabels={apyLabels} 
-                    apyValues={apyValues} 
-                    apyDates={apyDates}
-                  />;
-                })()}
-              </div>
-            </div>
-
-            {/* Action and Chat Section */}
-            <div className="lg:col-span-2 h-full flex flex-col">
-              <div className="flex flex-col h-full space-y-4">
-                {/* Action Tabs */}
-                <NodeActionTabs
-                  node={node}
-                  onRequestWhitelist={onRequestWhitelist}
-                  onBondSubmit={handleBondSubmit}
-                  onUnbondSubmit={handleUnbondSubmit}
-                  whitelistRequest={whitelistRequest}
-                  isLoadingWhitelist={isLoadingWhitelist}
-                  balance={balance}
-                  isLoadingBalance={isLoadingBalance}
-                  onRefreshBondAmount={fetchWhitelistRequest}
-                  isOperator={address === node.operatorAddress}
-                  officialNode={officialNode}
-                />
-
-                {/* Chat Interface */}
-                <div className="flex-1 flex flex-col h-full">
-                  {isLoadingMessages ? (
-                    <div className="bg-white shadow-md rounded-lg p-4 flex items-center justify-center h-full min-h-[300px]">
-                      <LoadingSpinner />
-                    </div>
-                  ) : (
-                    <ChatInterface 
-                      messages={messages} 
-                      onSendMessage={handleSendMessageForNode} 
-                      isDisabled={!isConnected}
-                      nodeAddress={node.nodeAddress}
-                    />
-                  )}
-                </div>
-              </div>
+                }
+                return <NodeApyChart 
+                  apyLabels={apyLabels} 
+                  apyValues={apyValues} 
+                  apyDates={apyDates}
+                />;
+              })()}
             </div>
           </div>
 
-          {/* Performance Analytics Card - Full Width */}
-          <div className="bg-white shadow-md rounded-lg p-6 mt-6">
-            <div className="w-full">
-              {loadingHistory ? (
-                <div style={{ width: '100%', height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><LoadingSpinner /></div>
-              ) : errorHistory ? (
-                <div style={{ width: '100%', height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'red' }}>{errorHistory}</div>
-              ) : (
-                <NodeHistoryChart history={nodeHistory} />
-              )}
+          {/* Action and Chat Section */}
+          <div className="lg:col-span-2 h-full flex flex-col">
+            <div className="flex flex-col h-full space-y-4">
+              {/* Action Tabs */}
+              <NodeActionTabs
+                node={node}
+                onRequestWhitelist={onRequestWhitelist}
+                onBondSubmit={handleBondSubmit}
+                onUnbondSubmit={handleUnbondSubmit}
+                whitelistRequest={whitelistRequest}
+                isLoadingWhitelist={isLoadingWhitelist}
+                balance={balance}
+                isLoadingBalance={isLoadingBalance}
+                onRefreshBondAmount={fetchWhitelistRequest}
+                isOperator={address === node.operatorAddress}
+                officialNode={officialNode}
+              />
+
+              {/* Chat Interface */}
+              <div className="flex-1 flex flex-col h-full">
+                {isLoadingMessages ? (
+                  <div className="bg-white shadow-md rounded-lg p-4 flex items-center justify-center h-full min-h-[300px]">
+                    <LoadingSpinner />
+                  </div>
+                ) : (
+                  <ChatInterface 
+                    messages={messages} 
+                    onSendMessage={handleSendMessageForNode} 
+                    isDisabled={!isConnected}
+                    nodeAddress={node.nodeAddress}
+                  />
+                )}
+              </div>
             </div>
           </div>
         </div>
-      )}
+
+        {/* Performance Analytics Card - Full Width */}
+        <div className="bg-white shadow-md rounded-lg p-6 mt-6">
+          <div className="w-full">
+            {loadingHistory ? (
+              <div style={{ width: '100%', height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><LoadingSpinner /></div>
+            ) : errorHistory ? (
+              <div style={{ width: '100%', height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'red' }}>{errorHistory}</div>
+            ) : (
+              <NodeHistoryChart history={nodeHistory} />
+            )}
+          </div>
+        </div>
+      </div>
 
       <SubscriptionModal
         isOpen={isSubscriptionModalOpen}

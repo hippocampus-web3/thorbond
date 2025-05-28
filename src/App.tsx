@@ -622,6 +622,8 @@ const AppContent: React.FC = () => {
                 onConnectWallet={handleConnect}
                 txSubscriptionHash={txSubscriptionHash}
                 onClearTx={handleClearTx}
+                isAuthenticated={isConnected !== null}
+                walletAddress={address}
               />
             )
           }
@@ -648,10 +650,7 @@ const AppContent: React.FC = () => {
                       <NodesPage
                         nodes={listedNodes}
                         isLoading={isLoadingNodes}
-                        selectedNode={selectedNode}
                         onRequestWhitelist={handleRequestWhitelist}
-                        onSubmitRequest={handleSubmitRequest}
-                        onCancelRequest={handleCancelRequest}
                       />
                     )
                   }

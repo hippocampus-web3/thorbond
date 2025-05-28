@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Card, CardHeader, CardContent, CardFooter } from '../ui/Card';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import Alert from '../ui/Alert';
+import Modal from '../ui/Modal';
 import { formatRune, validateThorAddress } from '../../lib/utils';
 import { useWallet } from '../../contexts/WalletContext';
 import { baseAmount, baseToAsset } from '@xchainjs/xchain-util';
@@ -30,12 +30,16 @@ interface WhitelistRequestFormProps {
   node: NodeListingDto;
   onSubmit: (data: RequestFormData) => void;
   onCancel: () => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 const WhitelistRequestForm: React.FC<WhitelistRequestFormProps> = ({
   node,
   onSubmit,
   onCancel,
+  isOpen,
+  onClose,
 }) => {
   const { address } = useWallet();
   const [formData, setFormData] = useState<RequestFormData>({
@@ -72,38 +76,36 @@ const WhitelistRequestForm: React.FC<WhitelistRequestFormProps> = ({
   };
 
   return (
-    <Card className="max-w-2xl mx-auto">
-      <CardHeader>
-        <h2 className="text-xl font-semibold text-gray-900">Request Whitelist for Bonding</h2>
-        <p className="mt-1 text-sm text-gray-600">
-          Submit your information to request whitelisting with this node.
-        </p>
-      </CardHeader>
-      
-      <CardContent>
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
-          <div className="bg-gray-50 p-4 rounded-md mb-6">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Node Operator Details</h3>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-gray-500">Address:</span>
-                <p className="font-medium text-gray-900">{node.nodeAddress.slice(0, 10)}...{node.nodeAddress.slice(-6)}</p>
-              </div>
-              <div>
-                <span className="text-gray-500">Minimum Bond:</span>
-                <p className="font-medium text-gray-900">{formatRune(baseAmount(node.minRune))} RUNE</p>
-              </div>
-              <div>
-                <span className="text-gray-500">Fee Percentage:</span>
-                <p className="font-medium text-gray-900">{node.feePercentage / 100}%</p>
-              </div>
-              <div>
-                <span className="text-gray-500">Available Capacity:</span>
-                <p className="font-medium text-gray-900">{formatRune(baseAmount(node.maxRune))} RUNE</p>
-              </div>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Request Whitelist for Bonding"
+      size="lg"
+    >
+      <div className="space-y-6">
+        <div className="bg-gray-50 p-4 rounded-md mb-6">
+          <h3 className="text-sm font-medium text-gray-700 mb-2">Node Operator Details</h3>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="text-gray-500">Address:</span>
+              <p className="font-medium text-gray-900">{node.nodeAddress.slice(0, 10)}...{node.nodeAddress.slice(-6)}</p>
+            </div>
+            <div>
+              <span className="text-gray-500">Minimum Bond:</span>
+              <p className="font-medium text-gray-900">{formatRune(baseAmount(node.minRune))} RUNE</p>
+            </div>
+            <div>
+              <span className="text-gray-500">Fee Percentage:</span>
+              <p className="font-medium text-gray-900">{node.feePercentage / 100}%</p>
+            </div>
+            <div>
+              <span className="text-gray-500">Available Capacity:</span>
+              <p className="font-medium text-gray-900">{formatRune(baseAmount(node.maxRune))} RUNE</p>
             </div>
           </div>
-          
+        </div>
+        
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 gap-6">
             <Input
               label="THORChain Wallet Address"
@@ -133,26 +135,26 @@ const WhitelistRequestForm: React.FC<WhitelistRequestFormProps> = ({
               </Alert>
             )}
           </div>
-        </form>
-      </CardContent>
 
-      <CardFooter className="flex justify-end space-x-4">
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={onCancel}
-        >
-          Cancel
-        </Button>
-        <Button
-          type="submit"
-          onClick={handleSubmit(handleFormSubmit)}
-          disabled={!isFormValid}
-        >
-          Submit Request
-        </Button>
-      </CardFooter>
-    </Card>
+          <div className="flex justify-end space-x-4">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={onCancel}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              onClick={handleSubmit(handleFormSubmit)}
+              disabled={!isFormValid}
+            >
+              Submit Request
+            </Button>
+          </div>
+        </form>
+      </div>
+    </Modal>
   );
 };
 
