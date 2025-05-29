@@ -497,8 +497,8 @@ const RoadmapSection: React.FC = () => {
           className="mb-16"
         >
           <div className="flex justify-between items-center mb-4">
-            <span className="text-gray-900 font-medium">{formatRune(baseAmount(currentRune))}</span>
-            <span className="text-gray-900 font-medium">{formatRune(baseAmount(targetRune))}</span>
+            <span className="text-gray-900 font-medium">{formatRune(baseAmount(currentRune))} RUNE</span>
+            <span className="text-gray-900 font-medium">{formatRune(baseAmount(targetRune))} RUNE</span>
           </div>
           <div className="h-6 bg-gray-100 rounded-full overflow-hidden relative shadow-inner">
             <motion.div
