@@ -87,7 +87,7 @@ export const getSubdomainNodeAddress = (): string | null => {
   const host = window.location.host;
   const parts = host.split('.');
   
-  if (parts.length === 2 || parts.length === 3) {
+  if (parts.length > 2) {
     const subdomain = parts[0];
     if (subdomain && subdomain !== 'www' && !subdomain.includes('deploy-')) {
       return subdomain;
