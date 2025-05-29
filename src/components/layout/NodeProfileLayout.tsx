@@ -11,6 +11,7 @@ import { ChatMessageDto, NodeListingDto } from '@hippocampus-web3/runebond-clien
 import NodeHeader from './NodeHeader';
 import NodeFooter from './NodeFooter';
 import SlotMachine from '../effects/SlotMachine';
+import { getSubdomainNodeAddress } from '../../lib/utils';
 
 interface NodeProfileLayoutProps {
   nodes: NodeListingDto[];
@@ -42,16 +43,9 @@ const NodeProfileLayout: React.FC<NodeProfileLayoutProps> = (props) => {
   const [init, setInit] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  const getSubdomainNodeAddress = () => {
-    const host = window.location.host;
-    const subdomain = host.split('.')[0];
-    if (subdomain && subdomain !== 'www' && !subdomain.includes('deploy-') && subdomain !== 'runebond') {
-      return subdomain;
-    }
-    return null;
-  };
+  const subdomainNodeAddress = getSubdomainNodeAddress();
 
-  const nodeAddress = getSubdomainNodeAddress() || urlNodeAddress;
+  const nodeAddress = subdomainNodeAddress || urlNodeAddress;
 
   const node = props.nodes.find(n => n.nodeAddress === nodeAddress);
 

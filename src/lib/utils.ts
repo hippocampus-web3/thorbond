@@ -82,3 +82,16 @@ export const getAddressExplorerUrl = (address: string): string => {
 export const getTransactionExplorerUrl = (txId: string): string => {
   return `https://thorchain.net/tx/${txId}`;
 };
+
+export const getSubdomainNodeAddress = (): string | null => {
+  const host = window.location.host;
+  const parts = host.split('.');
+  
+  if (parts.length === 2 || parts.length === 3) {
+    const subdomain = parts[0];
+    if (subdomain && subdomain !== 'www' && !subdomain.includes('deploy-')) {
+      return subdomain;
+    }
+  }
+  return null;
+};

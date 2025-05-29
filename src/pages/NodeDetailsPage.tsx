@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { WhitelistRequestFormData } from '../types';
-import { formatRune } from '../lib/utils';
+import { formatRune, getSubdomainNodeAddress } from '../lib/utils';
 import { useWallet } from '../contexts/WalletContext';
 import { baseAmount } from "@xchainjs/xchain-util";
 import { Info, Trophy, EyeOff, Shield, Lock, Clock, ArrowLeft, Sparkles, Bell } from 'lucide-react';
@@ -77,15 +77,6 @@ const NodeDetailsPage: React.FC<NodeDetailsPageProps> = ({
   const [errorHistory, setErrorHistory] = useState<string | null>(null);
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
   
-  const getSubdomainNodeAddress = () => {
-    const host = window.location.host;
-    const subdomain = host.split('.')[0];
-    if (subdomain && subdomain !== 'www' && !subdomain.includes('deploy-') && subdomain !== 'runebond') {
-      return subdomain;
-    }
-    return null;
-  };
-
   const subdomainNodeAddress = getSubdomainNodeAddress();
   const nodeAddress = subdomainNodeAddress || urlNodeAddress;
 

@@ -23,6 +23,7 @@ import { NodesResponse } from '@xchainjs/xchain-thornode';
 import EarningsSimulatorPage from './pages/EarningsSimulatorPage';
 import NodeProfileLayout from './components/layout/NodeProfileLayout';
 import { ChatMessageDto, NodeListingDto, WhitelistRequestDto } from '@hippocampus-web3/runebond-client';
+import { formatRune, formatDuration, validateThorAddress, shortenAddress, getTimeAgo, getNodeExplorerUrl, getAddressExplorerUrl, getTransactionExplorerUrl, getSubdomainNodeAddress } from './lib/utils';
 
 const AppContent: React.FC = () => {
   const [listedNodes, setListedNodes] = useState<NodeListingDto[]>([]);
@@ -593,16 +594,9 @@ const AppContent: React.FC = () => {
     </div>
   );
 
-  const getSubdomainNodeAddress = () => {
-    const host = window.location.host;
-    const subdomain = host.split('.')[0];
-    if (subdomain && subdomain !== 'www' && !subdomain.includes('deploy-') && subdomain !== 'runebond') {
-      return subdomain;
-    }
-    return null;
-  };
-
   const subdomainNodeAddress = getSubdomainNodeAddress();
+
+  console.log(subdomainNodeAddress);
 
   if (isLoadingNodes && subdomainNodeAddress) {
     return <LoadingScreen message="Loading node profile..." />;

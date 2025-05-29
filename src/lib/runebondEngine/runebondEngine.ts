@@ -8,7 +8,7 @@ import {
   assetAmount,
   BaseAmount,
 } from "@xchainjs/xchain-util";
-import { NodeListingDto, WhitelistService, NodesService, OpenAPI, WhitelistRequestDto, ChatService, ChatMessageDto, StatsService, StatsResponseDto, SubscriptionsService, SubscriptionResponseDto } from '@hippocampus-web3/runebond-client';
+import { NodeListingDto, WhitelistService, NodesService, OpenAPI, WhitelistRequestDto, ChatService, ChatMessageDto, StatsService, StatsResponseDto, SubscriptionsService, SubscriptionResponseDto, NotificationChannel } from '@hippocampus-web3/runebond-client';
 import {
   createBondMemo,
   createEnableBondMemo,
@@ -381,7 +381,7 @@ class RuneBondEngine {
 
   public async createSubscription(email: string, observableAddress: string): Promise<SubscriptionResponseDto> {
     try {
-      const responseSubscriptions = await SubscriptionsService.createSubscription({ email,  observable_address: observableAddress })
+      const responseSubscriptions = await SubscriptionsService.createSubscription({ identifier: email, channel: NotificationChannel.EMAIL, observable_address: observableAddress })
       if (!responseSubscriptions.data) {
         throw Error(responseSubscriptions?.errors?.[0] || "Failed to fetch subscription")
       }
