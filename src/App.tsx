@@ -596,8 +596,6 @@ const AppContent: React.FC = () => {
 
   const subdomainNodeAddress = getSubdomainNodeAddress();
 
-  console.log(subdomainNodeAddress);
-
   if (isLoadingNodes && subdomainNodeAddress) {
     return <LoadingScreen message="Loading node profile..." />;
   }
